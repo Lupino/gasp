@@ -1,0 +1,109 @@
+app DhtApp {
+  key: "bdde6db9f3daf38f3a",
+  token: "14b61d617a9c428a95542dbd097d7a0e"
+}
+
+init {=code
+#define GL_SERIAL Serial
+#define DEBUG_SERIAL Serial
+#define SEND_DELAY_MS send_delay_ms
+code=}
+
+setup {=code
+    GL_SERIAL.begin(115200);
+    while (!GL_SERIAL) {;}
+code=}
+
+init {=code
+#define DHTPIN 9     // what digital pin we're connected to
+// Uncomment whatever type you're using!
+#define DHTTYPE DHT11   // DHT 11
+// #define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
+// #define DHTTYPE DHT21   // DHT 21 (AM2301)
+
+// https://github.com/adafruit/DHT-sensor-library.git
+#include <DHT.h>
+
+DHT dht(DHTPIN, DHTTYPE);
+
+code=}
+
+setup {=code
+    dht.begin();
+code=}
+
+func read_temp {=code
+    // Reading temperature or humidity takes about 250 milliseconds!
+    // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+    humidity = dht.readHumidity();
+    temperature = dht.readTemperature();
+    return RET_SUCC;
+code=}
+
+attr delay {
+  var: send_delay_ms,
+  type: "unsigned long",
+  default: 300,
+  min: 60,
+  max: 86400,
+  scale: 1000
+}
+
+metric temperature {
+    var: temperature,
+    type: "float",
+    max_threshold: 100,
+    min_threshold: 5,
+    max: 100,
+    min: 0,
+    threshold: 1,
+    width: 8,
+    prec: 6
+}
+
+metric humidity {
+    var: humidity,
+    type: "float",
+    max_threshold: 100,
+    min_threshold: 5,
+    max: 100,
+    min: 0,
+    threshold: 1,
+    width: 8,
+    prec: 6
+}
+
+monitor dht {
+  fn: read_temp,
+  delay_ms: 6000
+}
+
+init {=code
+    int mock_sensor_data = 0;
+code=}
+
+func read_sensor_data {=code
+    sprintf(retval, FC(F("{\"sensor_data\": %d}")), mock_sensor_data);
+    return RET_SUCC;
+code=}
+
+flag read_sensor_data {
+    retval: true
+}
+
+telemetry {
+    fn: read_sensor_data
+}
+
+command get_sensor_data {
+    fn: read_sensor_data,
+    error: "read sensor data error"
+}
+
+func some_poll {=code
+    return RET_SUCC;
+code=}
+
+loop {=code
+    some_poll();
+code=}
