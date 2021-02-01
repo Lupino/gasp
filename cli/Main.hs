@@ -37,7 +37,6 @@ printUsage = putStrLn $ unlines
     , "Examples:"
     , "  gasp new MyApp"
     , ""
-    , "Documentation is available at https://gasp-lang.dev/docs ."
     ]
 
 printVersion :: IO ()

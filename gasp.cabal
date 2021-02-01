@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1bbdd5d3ffeda0918fe1a2ef51ba45871cf7092894e8fd01918ba036a1606955
+-- hash: 7ebdf4fb164b7b396515ee225a60b9b08f6dc8f5d86348740350278a400a9e8b
 
 name:           gasp
 version:        0.1.0.0
@@ -99,7 +99,7 @@ library
     , utf8-string
   default-language: Haskell2010
 
-executable wasp
+executable gasp
   main-is: Main.hs
   other-modules:
       Command

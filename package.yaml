@@ -62,7 +62,7 @@ library:
     - utf8-string
 
 executables:
-  wasp:
+  gasp:
     main:                Main.hs
     source-dirs:         cli
     ghc-options:
