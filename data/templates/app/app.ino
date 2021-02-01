@@ -492,7 +492,7 @@ bool processTelemetries() {
     char value[MAX_VALUE_LENGTH];
     bool wantSend = false;
     size_t total_length = 0;
-    size_t length = 0
+    size_t length = 0;
     size_t i = 0;
     wantSendData[0] = '{';
     total_length += 1;
@@ -535,7 +535,7 @@ bool checkValue() {
 bool reportAttribute() {
     char value[MAX_VALUE_LENGTH];
     size_t total_length = 0;
-    size_t length = 0
+    size_t length = 0;
     size_t i = 0;
     wantSendData[0] = '{';
     total_length += 1;
