@@ -7,7 +7,7 @@ import           Data.Aeson (ToJSON (..), object, (.=))
 data Monitor = Monitor
     { monName    :: !String
     , monFunc    :: !String
-    , monDelayMs :: !String
+    , monDelayMs :: !Integer
     } deriving (Show, Eq)
 
 

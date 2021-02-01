@@ -15,8 +15,8 @@ module Lexer
   , bool
   , reserved
   , identifier
-  , integerString
-  , floatString
+  , integer
+  , float
   , stringLiteral
   , whiteSpace
   , commaSep1
@@ -133,15 +133,13 @@ integer = Token.integer gaspLexer
 naturalOrFloat :: Parser(Either Integer Double)
 naturalOrFloat = Token.naturalOrFloat gaspLexer
 
-integerString :: Parser String
-integerString = show <$> integer
-
-floatString :: Parser String
-floatString = do
+float :: Parser Double
+float = do
   v <- naturalOrFloat
   case v of
-    Left vv  -> return $ show vv
-    Right vv -> return $ show vv
+    Left vv  -> return $ fromIntegral vv
+    Right vv -> return vv
+
 -- * Parsing boolean values
 
 bool :: Parser Bool

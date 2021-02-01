@@ -13,45 +13,36 @@ import           Parser.Common
 data MetricProperty
     = Var          !String
     | Type         !String
-    | Max          !String
-    | Min          !String
-    | MinThreshold !String
-    | MaxThreshold !String
-    | Threshold    !String
-    | Width        !String
-    | Prec         !String
+    | Max          !Double
+    | Min          !Double
+    | MinThreshold !Double
+    | MaxThreshold !Double
+    | Threshold    !Double
+    | Width        !Integer
+    | Prec         !Integer
     deriving (Show, Eq)
 
 -- | Parses gasp property along with the key, "key: value".
-cusL :: Parser (String, String)
+cusL :: Parser MetricProperty
 cusL = do
   key <- identifier
   _ <- colon
   v <- case key of
-         "width" -> integerString
-         "prec"  -> integerString
-         "var"   -> identifier
-         "type"  -> stringLiteral
-         _       -> floatString
-  return (key, v)
+         "width"         -> Width <$> integer
+         "prec"          -> Prec <$> integer
+         "var"           -> Var <$> identifier
+         "type"          -> Type <$> stringLiteral
+         "threshold"     -> Threshold <$> float
+         "min_threshold" -> MinThreshold <$> float
+         "max_threshold" -> MaxThreshold <$> float
+         "min"           -> Min <$> float
+         "max"           -> Max <$> float
+         _               -> fail $ "no such " ++ key
+  return v
 
 -- | Parses supported app properties, expects format "key1: value1, key2: value2, ..."
 metricProperties :: Parser [MetricProperty]
-metricProperties =
-  map toMetricProperty <$> commaSep1 cusL
-
-
-toMetricProperty :: (String, String) -> MetricProperty
-toMetricProperty ("var", v)           = Var v
-toMetricProperty ("type", v)          = Type v
-toMetricProperty ("max", v)           = Max v
-toMetricProperty ("min", v)           = Min v
-toMetricProperty ("min_threshold", v) = MinThreshold v
-toMetricProperty ("max_threshold", v) = MaxThreshold v
-toMetricProperty ("threshold", v)     = Threshold v
-toMetricProperty ("width", v)         = Width v
-toMetricProperty ("prec", v)          = Prec v
-toMetricProperty  (k, v)              = error $ "not such " ++ k ++ ": " ++ v
+metricProperties = commaSep1 cusL
 
 getMetricVar :: String -> [MetricProperty] -> String
 getMetricVar def ps = fromMaybe def . listToMaybe $ [t | Var t <- ps]
@@ -59,25 +50,25 @@ getMetricVar def ps = fromMaybe def . listToMaybe $ [t | Var t <- ps]
 getMetricType :: String -> [MetricProperty] -> String
 getMetricType def ps = fromMaybe def . listToMaybe $ [t | Type t <- ps]
 
-getMetricMax :: String -> [MetricProperty] -> String
+getMetricMax :: Double -> [MetricProperty] -> Double
 getMetricMax def ps = fromMaybe def . listToMaybe $ [t | Max t <- ps]
 
-getMetricMin :: String -> [MetricProperty] -> String
+getMetricMin :: Double -> [MetricProperty] -> Double
 getMetricMin def ps = fromMaybe def . listToMaybe $ [t | Min t <- ps]
 
-getMetricMinThreshold :: String -> [MetricProperty] -> String
+getMetricMinThreshold :: Double -> [MetricProperty] -> Double
 getMetricMinThreshold def ps = fromMaybe def . listToMaybe $ [t | MinThreshold t <- ps]
 
-getMetricMaxThreshold :: String -> [MetricProperty] -> String
+getMetricMaxThreshold :: Double -> [MetricProperty] -> Double
 getMetricMaxThreshold def ps = fromMaybe def . listToMaybe $ [t | MaxThreshold t <- ps]
 
-getMetricThreshold :: String -> [MetricProperty] -> String
+getMetricThreshold :: Double -> [MetricProperty] -> Double
 getMetricThreshold def ps = fromMaybe def . listToMaybe $ [t | Threshold t <- ps]
 
-getMetricWidth :: String -> [MetricProperty] -> String
+getMetricWidth :: Integer -> [MetricProperty] -> Integer
 getMetricWidth def ps = fromMaybe def . listToMaybe $ [t | Width t <- ps]
 
-getMetricPrec :: String -> [MetricProperty] -> String
+getMetricPrec :: Integer -> [MetricProperty] -> Integer
 getMetricPrec def ps = fromMaybe def . listToMaybe $ [t | Prec t <- ps]
 
 -- | Top level parser, parses Metric.
@@ -85,20 +76,20 @@ metric :: Parser Metric.Metric
 metric = do
     (metricName, metricProps) <- gaspElementNameAndClosureContent reservedNameMetric metricProperties
 
-    let maxv = read (getMetricMax "100" metricProps) :: Float
-        mint = show (maxv / 100)
-        maxt = show (maxv / 2)
+    let maxv = getMetricMax 100 metricProps
+        mint = maxv / 100
+        maxt = maxv / 2
 
     return Metric.Metric
         { Metric.metricName         = metricName
         , Metric.metricVar          = getMetricVar metricName metricProps
         , Metric.metricType         = getMetricType "float" metricProps
-        , Metric.metricMax          = getMetricMax "100" metricProps
-        , Metric.metricMin          = getMetricMin "0" metricProps
+        , Metric.metricMax          = maxv
+        , Metric.metricMin          = getMetricMin 0 metricProps
         , Metric.metricMaxThreshold = getMetricMaxThreshold maxt metricProps
         , Metric.metricMinThreshold = getMetricMinThreshold mint metricProps
         , Metric.metricThreshold    = getMetricThreshold mint metricProps
-        , Metric.metricWidth        = getMetricWidth "8" metricProps
-        , Metric.metricPrec         = getMetricPrec "2" metricProps
+        , Metric.metricWidth        = fromIntegral $ getMetricWidth 8 metricProps
+        , Metric.metricPrec         = fromIntegral $ getMetricPrec 2 metricProps
         , Metric.metricAddr         = "0"
         }

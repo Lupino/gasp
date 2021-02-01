@@ -8,11 +8,11 @@ data Attr = Attr
     { attrName  :: !String -- Identifier
     , attrAddr  :: !String
     , attrVar   :: !String
-    , attrMax   :: !String
-    , attrMin   :: !String
+    , attrMax   :: !Double
+    , attrMin   :: !Double
     , attrType  :: !String
-    , attrDef   :: !String
-    , attrScale :: !String
+    , attrDef   :: !Double
+    , attrScale :: !Double
     } deriving (Show, Eq)
 
 instance ToJSON Attr where

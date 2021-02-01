@@ -13,35 +13,30 @@ import           Parser.Common
 data AttrProperty
     = Var   !String
     | Type  !String
-    | Max   !String
-    | Min   !String
-    | Def   !String
-    | Scale !String
+    | Max   !Double
+    | Min   !Double
+    | Def   !Double
+    | Scale !Double
     deriving (Show, Eq)
 
 -- | Parses gasp property along with the key, "key: value".
-cusL :: Parser (String, String)
+cusL :: Parser AttrProperty
 cusL = do
   key <- identifier
   _ <- colon
   v <- case key of
-         "var"  -> identifier
-         "type" -> stringLiteral
-         _      -> floatString
-  return (key, v)
+         "var"     -> Var <$> identifier
+         "type"    -> Type <$> stringLiteral
+         "min"     -> Min <$> float
+         "max"     -> Max <$> float
+         "default" -> Def <$> float
+         "scale"   -> Scale <$> float
+         _         -> fail $ "no such " ++ key
+  return v
 
 -- | Parses supported app properties, expects format "key1: value1, key2: value2, ..."
 attrProperties :: Parser [AttrProperty]
-attrProperties = map toAttrProperty <$> commaSep1 cusL
-
-toAttrProperty :: (String, String) -> AttrProperty
-toAttrProperty ("var", v)     = Var v
-toAttrProperty ("type", v)    = Type v
-toAttrProperty ("max", v)     = Max v
-toAttrProperty ("min", v)     = Min v
-toAttrProperty ("default", v) = Def v
-toAttrProperty ("scale", v)   = Scale v
-toAttrProperty  (k, v)        = error $ "not such " ++ k ++ ": " ++ v
+attrProperties = commaSep1 cusL
 
 getAttrVar :: String -> [AttrProperty] -> String
 getAttrVar def ps = fromMaybe def . listToMaybe $ [t | Var t <- ps]
@@ -49,16 +44,16 @@ getAttrVar def ps = fromMaybe def . listToMaybe $ [t | Var t <- ps]
 getAttrType :: String -> [AttrProperty] -> String
 getAttrType def ps = fromMaybe def . listToMaybe $ [t | Type t <- ps]
 
-getAttrMax :: String -> [AttrProperty] -> String
+getAttrMax :: Double -> [AttrProperty] -> Double
 getAttrMax def ps = fromMaybe def . listToMaybe $ [t | Max t <- ps]
 
-getAttrMin :: String -> [AttrProperty] -> String
+getAttrMin :: Double -> [AttrProperty] -> Double
 getAttrMin def ps = fromMaybe def . listToMaybe $ [t | Min t <- ps]
 
-getAttrDef :: String -> [AttrProperty] -> String
+getAttrDef :: Double -> [AttrProperty] -> Double
 getAttrDef def ps = fromMaybe def . listToMaybe $ [t | Def t <- ps]
 
-getAttrScale :: String -> [AttrProperty] -> String
+getAttrScale :: Double -> [AttrProperty] -> Double
 getAttrScale def ps = fromMaybe def . listToMaybe $ [t | Scale t <- ps]
 
 -- | Top level parser, parses Attr.
@@ -66,16 +61,16 @@ attr :: Parser Attr.Attr
 attr = do
     (attrName, attrProps) <- gaspElementNameAndClosureContent reservedNameAttr attrProperties
 
-    let scale = read (getAttrScale "1" attrProps) :: Int
-        def   = read (getAttrDef "0" attrProps) :: Int
+    let scale = getAttrScale 1 attrProps
+        def   = getAttrDef 0 attrProps
 
     return Attr.Attr
         { Attr.attrName  = attrName
         , Attr.attrAddr  = "0"
         , Attr.attrVar   = getAttrVar   attrName attrProps
         , Attr.attrType  = getAttrType  "int" attrProps
-        , Attr.attrMax   = getAttrMax   "10000" attrProps
-        , Attr.attrMin   = getAttrMin   "0" attrProps
-        , Attr.attrDef   = show (def * scale)
-        , Attr.attrScale = getAttrScale "1" attrProps
+        , Attr.attrMax   = getAttrMax   10000 attrProps
+        , Attr.attrMin   = getAttrMin   0 attrProps
+        , Attr.attrDef   = def * scale
+        , Attr.attrScale = getAttrScale 1 attrProps
         }

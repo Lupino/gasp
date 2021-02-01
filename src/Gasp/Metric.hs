@@ -9,13 +9,13 @@ data Metric = Metric
     , metricAddr         :: !String
     , metricVar          :: !String
     , metricType         :: !String
-    , metricMax          :: !String
-    , metricMin          :: !String
-    , metricMinThreshold :: !String
-    , metricMaxThreshold :: !String
-    , metricThreshold    :: !String
-    , metricWidth        :: !String
-    , metricPrec         :: !String
+    , metricMax          :: !Double
+    , metricMin          :: !Double
+    , metricMinThreshold :: !Double
+    , metricMaxThreshold :: !Double
+    , metricThreshold    :: !Double
+    , metricWidth        :: !Int
+    , metricPrec         :: !Int
     } deriving (Show, Eq)
 
 instance ToJSON Metric where
