@@ -64,7 +64,7 @@ createNewProject projectName = do
           , "  scale: 1000"
           , "}"
           , ""
-          , "metric temp {"
+          , "metric temperature {"
           , "  var: temperature,"
           , "  type: \"float\","
           , "  max: 100,"
