@@ -73,13 +73,13 @@ createNewProject projectName = do
           , "  prec: 2"
           , "}"
           , ""
-          , "func read_temp {=code"
+          , "func read_%s {=code" `printf` projectName
           , "    temperature = 25.8;"
           , "    return RET_SUCC;"
           , "code=}"
           , ""
           , "monitor %s {" `printf` projectName
-          , "  fn: read_temp,"
+          , "  fn: read_%s," `printf` projectName
           , "  delay_ms: 6000"
           , "}"
           ]

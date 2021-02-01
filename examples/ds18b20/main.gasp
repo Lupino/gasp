@@ -1,0 +1,154 @@
+app ds18b20 {
+  key: "ds18b20",
+  token: "ds18b20"
+}
+
+init {=code
+#define GL_SERIAL Serial
+#define DEBUG_SERIAL Serial
+#define SEND_DELAY_MS send_delay_ms
+code=}
+
+setup {=code
+    GL_SERIAL.begin(115200);
+    while (!GL_SERIAL) {;}
+code=}
+
+attr delay {
+  var: send_delay_ms,
+  type: "unsigned long",
+  default: 300,
+  min: 60,
+  max: 86400,
+  scale: 1000
+}
+
+// Init DS18B20 code
+
+init {=code
+#define ONE_WIRE_BUS 9
+#include <Wire.h>
+// https://github.com/PaulStoffregen/OneWire.git
+#include <OneWire.h>
+// https://github.com/milesburton/Arduino-Temperature-Control-Library.git
+#include <DallasTemperature.h>
+
+// Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
+OneWire oneWire(ONE_WIRE_BUS);
+
+// Pass our oneWire reference to Dallas Temperature.
+DallasTemperature sensors(&oneWire);
+
+// arrays to hold device address
+DeviceAddress insideThermometer;
+code=}
+
+setup {=code
+    sensors.begin();
+    #ifdef DEBUG
+    DEBUG_SERIAL.print("Found ");
+    DEBUG_SERIAL.print(sensors.getDeviceCount(), DEC);
+    DEBUG_SERIAL.println(" devices.");
+    #endif
+
+    // report parasite power requirements
+    #ifdef DEBUG
+    DEBUG_SERIAL.print("Parasite power is: ");
+    #endif
+    if (sensors.isParasitePowerMode()) {
+        #ifdef DEBUG
+        DEBUG_SERIAL.println("ON");
+        #endif
+    } else {
+        #ifdef DEBUG
+        DEBUG_SERIAL.println("OFF");
+        #endif
+    }
+
+    // Assign address manually. The addresses below will beed to be changed
+    // to valid device addresses on your bus. Device address can be retrieved
+    // by using either oneWire.search(deviceAddress) or individually via
+    // sensors.getAddress(deviceAddress, index)
+    // Note that you will need to use your specific address here
+    //insideThermometer = { 0x28, 0x1D, 0x39, 0x31, 0x2, 0x0, 0x0, 0xF0 };
+
+    // Method 1:
+    // Search for devices on the bus and assign based on an index. Ideally,
+    // you would do this to initially discover addresses on the bus and then
+    // use those addresses and manually assign them (see above) once you know
+    // the devices on your bus (and assuming they don't change).
+    if (!sensors.getAddress(insideThermometer, 0)) {
+        #ifdef DEBUG
+        DEBUG_SERIAL.print("Unable to find address for Device 0");
+        #endif
+        delay(10000);
+    }
+
+    // method 2: search()
+    // search() looks for the next device. Returns 1 if a new address has been
+    // returned. A zero might mean that the bus is shorted, there are no devices,
+    // or you have already retrieved all of them. It might be a good idea to
+    // check the CRC to make sure you didn't get garbage. The order is
+    // deterministic. You will always get the same devices in the same order
+    //
+    // Must be called before search()
+    //oneWire.reset_search();
+    // assigns the first address found to insideThermometer
+    //if (!oneWire.search(insideThermometer)) DEBUG_SERIAL.println("Unable to find address for insideThermometer");
+
+    // show the addresses we found on the bus
+    // DEBUG_SERIAL.print("Device 0 Address: ");
+    // printAddress(insideThermometer);
+    // DEBUG_SERIAL.println();
+
+    // set the resolution to 9 bit (Each Dallas/Maxim device is capable of several different resolutions)
+    sensors.setResolution(insideThermometer, 9);
+code=}
+
+metric temperature {
+  var: temperature,
+  type: "float",
+  max: 100,
+  min: 0,
+  threshold: 1,
+  prec: 2
+}
+
+func read_ds18b20 {=code
+    // call sensors.requestTemperatures() to issue a global temperature
+    // request to all devices on the bus
+    #ifdef DEBUG
+    DEBUG_SERIAL.print("Requesting temperatures...");
+    #endif
+    sensors.requestTemperatures(); // Send the command to get temperatures
+    #ifdef DEBUG
+    DEBUG_SERIAL.println("DONE");
+    #endif
+    // method 1 - slower
+    //DEBUG_SERIAL.print("Temp C: ");
+    //DEBUG_SERIAL.print(sensors.getTempC(deviceAddress));
+    //DEBUG_SERIAL.print(" Temp F: ");
+    //DEBUG_SERIAL.print(sensors.getTempF(deviceAddress)); // Makes a second call to getTempC and then converts to Fahrenheit
+
+    // method 2 - faster
+    float temperature = sensors.getTempC(insideThermometer);
+    #ifdef DEBUG
+    DEBUG_SERIAL.print("Temp C: ");
+    DEBUG_SERIAL.print(temperature);
+    DEBUG_SERIAL.print(" Temp F: ");
+    DEBUG_SERIAL.println(DallasTemperature::toFahrenheit(temperature)); // Converts temperature to Fahrenheit
+    #endif
+
+    // Check if any reads failed and exit early (to try again).
+    #ifdef DEBUG
+    if (isnan(temperature)) {
+        DEBUG_SERIAL.println(F("Failed to read from DS18B20 sensor!"));
+    }
+    #endif
+    return RET_SUCC;
+code=}
+
+monitor ds18b20 {
+  fn: read_ds18b20,
+  delay_ms: 6000
+}
