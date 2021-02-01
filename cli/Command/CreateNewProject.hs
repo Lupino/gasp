@@ -64,21 +64,21 @@ createNewProject projectName = do
           , "  scale: 1000"
           , "}"
           , ""
-          , "metric temperature {"
-          , "    var: temperature_var,"
-          , "    type: \"float\","
-          , "    max: 100,"
-          , "    min: 0,"
-          , "    threshold: 1,"
-          , "    prec: 2"
+          , "metric temp {"
+          , "  var: temperature,"
+          , "  type: \"float\","
+          , "  max: 100,"
+          , "  min: 0,"
+          , "  threshold: 1,"
+          , "  prec: 2"
           , "}"
           , ""
           , "func read_temp {=code"
-          , "    temperature_var = 25.8;"
+          , "    temperature = 25.8;"
           , "    return RET_SUCC;"
           , "code=}"
           , ""
-          , "monitor dht {"
+          , "monitor %s {" `printf` projectName
           , "  fn: read_temp,"
           , "  delay_ms: 6000"
           , "}"
@@ -87,7 +87,7 @@ createNewProject projectName = do
       gitignoreFileInGaspProjectDir :: Path (Rel Common.GaspProjectDir) File
       gitignoreFileInGaspProjectDir = SP.fromPathRelFile [P.relfile|.gitignore|]
       gitignoreFileContent = unlines
-          [ "/.gasp/"
+          [ "/build/"
           ]
 
       writeFileSP = writeFile . SP.toFilePath
