@@ -18,8 +18,8 @@ unsigned long auth_timer_ms = get_current_time_ms();
 #define AUTH_DELAY_MS 1000
 #endif
 
-#ifdef SEND_DELAY_MS
-unsigned long send_timer_ms = get_current_time_ms();
+#ifdef METRIC_DELAY_MS
+unsigned long metric_timer_ms = get_current_time_ms();
 #endif
 
 #ifndef MAX_GL_PAYLOAD_LENGTH
@@ -172,8 +172,9 @@ void loop() {
             reportAttribute();
         }
         {=# has_metric =}
-        #ifdef SEND_DELAY_MS
-        if (send_timer_ms + SEND_DELAY_MS < get_current_time_ms() || checkValue()) {
+        #ifdef METRIC_DELAY_MS
+        if (metric_timer_ms + METRIC_DELAY_MS < get_current_time_ms() || checkValue()) {
+            metric_timer_ms = get_current_time_ms();
         #else
         if (checkValue()) {
         #endif
@@ -217,9 +218,6 @@ void send_packet() {
     }
     GL_SERIAL.write('\r');
     GL_SERIAL.write('\n');
-    #ifdef SEND_DELAY_MS
-    send_timer_ms = get_current_time_ms();
-    #endif
 }
 
 void send_packet_0(const uint8_t type) {
