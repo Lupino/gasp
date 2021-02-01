@@ -47,6 +47,7 @@ bool authedLock = false;
 givelink_t * m = givelink_new(MAX_GL_PAYLOAD_LENGTH);
 
 char wantSendData[WANT_SEND_DATA_LENGTH];
+char tempSendData[WANT_SEND_DATA_LENGTH];
 char * wantSendDataTpl = (char *)malloc(WANT_SEND_DATA_LENGTH);
 
 #define RET_ERR -1
@@ -332,20 +333,20 @@ int get_{= var =}_threshold(char *retval) {
     return RET_SUCC;
 }
 
-int invalid_error(char *retval) {
+int invalid_{= var =}_error(char *retval) {
     sprintf(retval, FC(F("{\"err\": \"{= name =} is invalid\"}")));
     return RET_ERR;
 }
 
 int get_{= var =}(char *retval) {
     if (isnan({= var =})) {
-        return invalid_error(retval);
+        return invalid_{= var =}_error(retval);
     }
     if ({= var =} < {= min =}) {
-        return invalid_error(retval);
+        return invalid_{= var =}_error(retval);
     }
     if ({= var =} > {= max =}) {
-        return invalid_error(retval);
+        return invalid_{= var =}_error(retval);
     }
     char tmp[MAX_VALUE_LENGTH];
     dtostrf({= var =}, {= width =}, {= prec =}, tmp);
@@ -490,20 +491,28 @@ bool processTelemetries() {
     {=/ telemetries =}
     char value[MAX_VALUE_LENGTH];
     bool wantSend = false;
-    wantSendData[0] = '\0';
-    sprintf(wantSendData, FC(F("{")));
+    size_t total_length = 0;
+    size_t length = 0
+    size_t i = 0;
+    wantSendData[0] = '{';
+    total_length += 1;
     {=# metrics =}
-    if (!isnan({= var =}) && {= var =} >= {= min =} && {= var =} <= {max}) {
+    if (!isnan({= var =}) && {= var =} >= {= min =} && {= var =} <= {= max =}) {
         wantSend = true;
         value[0] = '\0';
         dtostrf({= var =}, {= width =}, {= prec =}, value);
-        sprintf(wantSendData, FC(F("\"{= name =}\": %s,")), value);
+        sprintf(tempSendData, FC(F("\"{= name =}\": %s,")), value);
+        length = strlen(tempSendData);
+        for (i=0; i<length; i++) {
+            wantSendData[total_length + i] = tempSendData[i];
+        }
+        total_length += length;
     }
 
     {=/ metrics =}
     if (wantSend) {
-        size_t length = strlen(wantSendData);
-        wantSendData[length-1] = '}';
+        wantSendData[total_length-1] = '}';
+        wantSendData[total_length] = '\0';
 
         send_packet_1(TELEMETRY, wantSendData);
         ret = true;
@@ -525,19 +534,34 @@ bool checkValue() {
 
 bool reportAttribute() {
     char value[MAX_VALUE_LENGTH];
-    wantSendData[0] = '\0';
-    sprintf(wantSendData, FC(F("{")));
+    size_t total_length = 0;
+    size_t length = 0
+    size_t i = 0;
+    wantSendData[0] = '{';
+    total_length += 1;
+
     {=# attrs =}
-    sprintf(wantSendData, FC(F("\"{= name =}\": %d,")), {= var =});
+    sprintf(tempSendData, FC(F("\"{= name =}\": %d,")), {= var =});
+    length = strlen(tempSendData);
+    for (i=0; i<length; i++) {
+        wantSendData[total_length + i] = tempSendData[i];
+    }
+    total_length += length;
+
     {=/ attrs =}
     {=# metrics =}
     value[0] = '\0';
     dtostrf({= var =}_threshold, {= width =}, {= prec =}, value);
-    sprintf(wantSendData, FC(F("\"{= name =}_threshold\": %s,")), value);
+    sprintf(tempSendData, FC(F("\"{= name =}_threshold\": %s,")), value);
+    length = strlen(tempSendData);
+    for (i=0; i<length; i++) {
+        wantSendData[total_length + i] = tempSendData[i];
+    }
+    total_length += length;
 
     {=/ metrics =}
-    size_t length = strlen(wantSendData);
-    wantSendData[length-1] = '}';
+    wantSendData[total_length-1] = '}';
+    wantSendData[total_length] = '\0';
 
     send_packet_1(ATTRIBUTE, wantSendData);
     return RET_SUCC;

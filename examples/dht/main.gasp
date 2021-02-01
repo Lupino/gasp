@@ -56,7 +56,7 @@ metric temperature {
     min_threshold: 5,
     max: 100,
     min: 0,
-    threshold: 1,
+    threshold: 5,
     width: 8,
     prec: 6
 }
@@ -68,7 +68,7 @@ metric humidity {
     min_threshold: 5,
     max: 100,
     min: 0,
-    threshold: 1,
+    threshold: 5,
     width: 8,
     prec: 6
 }
@@ -77,33 +77,3 @@ monitor dht {
   fn: read_temp,
   delay_ms: 6000
 }
-
-init {=code
-    int mock_sensor_data = 0;
-code=}
-
-func read_sensor_data {=code
-    sprintf(retval, FC(F("{\"sensor_data\": %d}")), mock_sensor_data);
-    return RET_SUCC;
-code=}
-
-flag read_sensor_data {
-    retval: true
-}
-
-telemetry {
-    fn: read_sensor_data
-}
-
-command get_sensor_data {
-    fn: read_sensor_data,
-    error: "read sensor data error"
-}
-
-func some_poll {=code
-    return RET_SUCC;
-code=}
-
-loop {=code
-    some_poll();
-code=}
