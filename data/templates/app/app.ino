@@ -523,7 +523,7 @@ bool reportAttribute() {
     {=/ attrs =}
     {=# metrics =}
     wantSendData[0] = '\0';
-    if (get_{= name =}_threshold(wantSendData) > RET_ERR) {
+    if (get_{= var =}_threshold(wantSendData) > RET_ERR) {
       send_packet_1(ATTRIBUTE, wantSendData);
       ret = true;
     }
