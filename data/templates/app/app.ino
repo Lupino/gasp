@@ -488,14 +488,26 @@ bool processTelemetries() {
     {=/ flag =}
 
     {=/ telemetries =}
-    {=# metrics =}
+    char value[MAX_VALUE_LENGTH];
+    bool wantSend = false;
     wantSendData[0] = '\0';
-    if (get_{= name =}(wantSendData) > RET_ERR) {
-      send_packet_1(TELEMETRY, wantSendData);
-      ret = true;
+    sprintf(wantSendData, FC(F("{")));
+    {=# metrics =}
+    if (!isnan({= var =}) && {= var =} >= {= min =} && {= var =} <= {max}) {
+        wantSend = true;
+        value[0] = '\0';
+        dtostrf({= var =}, {= width =}, {= prec =}, value);
+        sprintf(wantSendData, FC(F("\"{= name =}\": %s,")), value);
     }
 
     {=/ metrics =}
+    if (wantSend) {
+        size_t length = strlen(wantSendData);
+        wantSendData[length-1] = '}';
+
+        send_packet_1(TELEMETRY, wantSendData);
+        ret = true;
+    }
     return ret;
 }
 
@@ -512,22 +524,21 @@ bool checkValue() {
 {=/ has_metric =}
 
 bool reportAttribute() {
-    bool ret = false;
-    {=# attrs =}
+    char value[MAX_VALUE_LENGTH];
     wantSendData[0] = '\0';
-    if (get_{= var =}(wantSendData) > RET_ERR) {
-      send_packet_1(ATTRIBUTE, wantSendData);
-      ret = true;
-    }
-
+    sprintf(wantSendData, FC(F("{")));
+    {=# attrs =}
+    sprintf(wantSendData, FC(F("\"{= name =}\": %d,")), {= var =});
     {=/ attrs =}
     {=# metrics =}
-    wantSendData[0] = '\0';
-    if (get_{= var =}_threshold(wantSendData) > RET_ERR) {
-      send_packet_1(ATTRIBUTE, wantSendData);
-      ret = true;
-    }
+    value[0] = '\0';
+    dtostrf({= var =}_threshold, {= width =}, {= prec =}, value);
+    sprintf(wantSendData, FC(F("\"{= name =}_threshold\": %s,")), value);
 
     {=/ metrics =}
-    return ret;
+    size_t length = strlen(wantSendData);
+    wantSendData[length-1] = '}';
+
+    send_packet_1(ATTRIBUTE, wantSendData);
+    return RET_SUCC;
 }
