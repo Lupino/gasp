@@ -6,7 +6,7 @@ app DhtApp {
 init {=code
 #define GL_SERIAL Serial
 #define DEBUG_SERIAL Serial
-#define SEND_DELAY_MS send_delay_ms
+#define METRIC_DELAY_MS metric_delay_ms
 code=}
 
 setup {=code
@@ -41,7 +41,7 @@ func read_temp {=code
 code=}
 
 attr delay {
-  var: send_delay_ms,
+  var: metric_delay_ms,
   type: "unsigned long",
   default: 300,
   min: 60,
