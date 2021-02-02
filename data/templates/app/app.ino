@@ -42,6 +42,8 @@ uint16_t readedLen = 0;
 uint8_t  readedPayload[MAX_GL_PAYLOAD_LENGTH + 1];
 uint8_t  sendedPayload[MAX_GL_PAYLOAD_LENGTH + 1];
 
+char requestMethod[{= max_cmd_len =}];
+
 bool requireReportAttribute = false;
 
 givelink_t * m = givelink_new(MAX_GL_PAYLOAD_LENGTH);
@@ -381,7 +383,6 @@ int {= name =}() {
 int processRequest(const char *json, int length, char *retval) {
     jsmn_parser parser;
     jsmntok_t tokens[MAX_NUM_TOKENS]; /* We expect no more than 128 tokens */
-    char method[{= max_cmd_len =}];
 
     /* Prepare parser */
     jsmn_init(&parser);
@@ -392,9 +393,9 @@ int processRequest(const char *json, int length, char *retval) {
         return RET_ERR;
     }
 
-    if (jsonlookup(json, tokens, num_tokens, "method", method)) {
+    if (jsonlookup(json, tokens, num_tokens, "method", requestMethod)) {
         {=# commands =}
-        if (strcmp("{= name =}", method) == 0) {
+        if (strcmp("{= name =}", requestMethod) == 0) {
             {=# flag =}
             {=# retval =}
             {=# json =}
@@ -416,7 +417,7 @@ int processRequest(const char *json, int length, char *retval) {
         }
         {=/ commands =}
         {=# attrs =}
-        if (strcmp("set_{= name =}", method) == 0) {
+        if (strcmp("set_{= name =}", requestMethod) == 0) {
             int r = set_{= var =}(json, tokens, num_tokens, retval);
             if (r > RET_ERR) {
                 return r;
@@ -425,7 +426,7 @@ int processRequest(const char *json, int length, char *retval) {
                 return RET_ERR;
             }
         }
-        if (strcmp("get_{= name =}", method) == 0) {
+        if (strcmp("get_{= name =}", requestMethod) == 0) {
             int r = get_{= var =}(retval);
             if (r > RET_ERR) {
                 return r;
@@ -436,7 +437,7 @@ int processRequest(const char *json, int length, char *retval) {
         }
         {=/ attrs =}
         {=# metrics =}
-        if (strcmp("set_{= name =}_threshold", method) == 0) {
+        if (strcmp("set_{= name =}_threshold", requestMethod) == 0) {
             int r = set_{= var =}_threshold(json, tokens, num_tokens, retval);
             if (r > RET_ERR) {
                 return r;
@@ -445,7 +446,7 @@ int processRequest(const char *json, int length, char *retval) {
                 return RET_ERR;
             }
         }
-        if (strcmp("get_{= name =}_threshold", method) == 0) {
+        if (strcmp("get_{= name =}_threshold", requestMethod) == 0) {
             int r = get_{= var =}_threshold(retval);
             if (r > RET_ERR) {
                 return r;
@@ -454,7 +455,7 @@ int processRequest(const char *json, int length, char *retval) {
                 return RET_ERR;
             }
         }
-        if (strcmp("get_{= name =}", method) == 0) {
+        if (strcmp("get_{= name =}", requestMethod) == 0) {
             int r = get_{= var =}(retval);
             if (r > RET_ERR) {
                 return r;
