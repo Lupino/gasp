@@ -1,5 +1,5 @@
 module Gasp
-    ( Gasp
+    ( Gasp (..)
     , GaspElement (..)
     , fromGaspElems
 

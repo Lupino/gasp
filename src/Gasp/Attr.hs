@@ -26,5 +26,5 @@ instance ToJSON Attr where
         , "scaled_min" .= (attrMin  attr * attrScale attr)
         , "scale"      .= attrScale attr
         , "type"       .= attrType  attr
-        , "default"    .= attrDef   attr
+        , "default"    .= (attrDef  attr * attrScale attr)
         ]

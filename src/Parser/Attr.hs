@@ -61,16 +61,13 @@ attr :: Parser Attr.Attr
 attr = do
     (attrName, attrProps) <- gaspElementNameAndClosureContent reservedNameAttr attrProperties
 
-    let scale = getAttrScale 1 attrProps
-        def   = getAttrDef 0 attrProps
-
     return Attr.Attr
         { Attr.attrName  = attrName
         , Attr.attrAddr  = 0
-        , Attr.attrVar   = getAttrVar   attrName attrProps
-        , Attr.attrType  = getAttrType  "int" attrProps
-        , Attr.attrMax   = getAttrMax   10000 attrProps
+        , Attr.attrVar   = getAttrVar  attrName attrProps
+        , Attr.attrType  = getAttrType "int" attrProps
+        , Attr.attrMax   = getAttrMax   100 attrProps
         , Attr.attrMin   = getAttrMin   0 attrProps
-        , Attr.attrDef   = def * scale
+        , Attr.attrDef   = getAttrDef   0 attrProps
         , Attr.attrScale = getAttrScale 1 attrProps
         }
