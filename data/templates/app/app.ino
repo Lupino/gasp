@@ -42,6 +42,7 @@ uint16_t readedLen = 0;
 uint8_t  readedPayload[MAX_GL_PAYLOAD_LENGTH + 1];
 uint8_t  sendedPayload[MAX_GL_PAYLOAD_LENGTH + 1];
 
+jsmntok_t requestTokens[MAX_NUM_TOKENS]; /* We expect no more than 128 tokens */
 char requestMethod[{= max_cmd_len =}];
 
 bool requireReportAttribute = false;
@@ -382,24 +383,23 @@ int {= name =}() {
 
 int processRequest(const char *json, int length, char *retval) {
     jsmn_parser parser;
-    jsmntok_t tokens[MAX_NUM_TOKENS]; /* We expect no more than 128 tokens */
 
     /* Prepare parser */
     jsmn_init(&parser);
-    int num_tokens = jsmn_parse(&parser, json, length, tokens, MAX_NUM_TOKENS);
+    int num_tokens = jsmn_parse(&parser, json, length, requestTokens, MAX_NUM_TOKENS);
 
     if (num_tokens < 0) {
         sprintf(retval, FC(F("{\"err\": \"Failed to parse JSON: %d\"}")), num_tokens);
         return RET_ERR;
     }
 
-    if (jsonlookup(json, tokens, num_tokens, "method", requestMethod)) {
+    if (jsonlookup(json, requestTokens, num_tokens, "method", requestMethod)) {
         {=# commands =}
         if (strcmp("{= name =}", requestMethod) == 0) {
             {=# flag =}
             {=# retval =}
             {=# json =}
-            int r = {= fn =}(json, tokens, num_tokens, retval);
+            int r = {= fn =}(json, requestTokens, num_tokens, retval);
             {=/ json =}
             {=^ json =}
             int r = {= fn =}(retval);
@@ -418,7 +418,7 @@ int processRequest(const char *json, int length, char *retval) {
         {=/ commands =}
         {=# attrs =}
         if (strcmp("set_{= name =}", requestMethod) == 0) {
-            int r = set_{= var =}(json, tokens, num_tokens, retval);
+            int r = set_{= var =}(json, requestTokens, num_tokens, retval);
             if (r > RET_ERR) {
                 return r;
             } else {
@@ -438,7 +438,7 @@ int processRequest(const char *json, int length, char *retval) {
         {=/ attrs =}
         {=# metrics =}
         if (strcmp("set_{= name =}_threshold", requestMethod) == 0) {
-            int r = set_{= var =}_threshold(json, tokens, num_tokens, retval);
+            int r = set_{= var =}_threshold(json, requestTokens, num_tokens, retval);
             if (r > RET_ERR) {
                 return r;
             } else {
