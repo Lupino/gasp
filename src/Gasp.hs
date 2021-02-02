@@ -215,16 +215,6 @@ setTelemetryFlag flags telem = telem
   }
 
 
-setAttrsAddr :: Int -> [Attr] -> [Attr]
-setAttrsAddr _ [] = []
-setAttrsAddr addr (x:xs) = x { attrAddr = show addr }: setAttrsAddr (addr + 4) xs
-
-
-setMetricsAddr :: Int -> [Metric] -> [Metric]
-setMetricsAddr _ [] = []
-setMetricsAddr addr (x:xs) = x { metricAddr = show addr }: setMetricsAddr (addr + 4) xs
-
-
 getCommandLength :: GaspElement -> Int
 getCommandLength (GaspElementCmd cmd)   = length $ cmdFunc cmd
 getCommandLength (GaspElementAttr attr) = length (attrName attr) + 4
@@ -235,10 +225,19 @@ getMaxCommandLength :: Gasp -> Int
 getMaxCommandLength = maximum . map getCommandLength . gaspElements
 
 
+autoAddrGasp :: Gasp -> Gasp
+autoAddrGasp = fromGaspElems . go 1 . gaspElements
+  where go :: Int -> [GaspElement] -> [GaspElement]
+        go _ []        = []
+        go addr (GaspElementAttr x:xs) = GaspElementAttr x {attrAddr = addr} : go (addr + 4) xs
+        go addr (GaspElementMetric x:xs) = GaspElementMetric x {metricAddr = addr} : go (addr + 4) xs
+        go addr (x:xs) = x : go addr xs
+
+
 -- * ToJSON instances.
 
 instance ToJSON Gasp where
-    toJSON gasp = object
+    toJSON gasp0 = object
         [ "app"         .= getApp gasp
         , "commands"    .= map (setCommandFlag flags) (getCmds gasp)
         , "telemetries" .= map (setTelemetryFlag flags) (getTelemetries gasp)
@@ -246,16 +245,15 @@ instance ToJSON Gasp where
         , "loops"       .= getLoops gasp
         , "setups"      .= getSetups gasp
         , "inits"       .= getInits gasp
-        , "attrs"       .= setAttrsAddr startAttrAddr attrs
+        , "attrs"       .= attrs
         , "has_attr"    .= (length attrs > 0)
-        , "metrics"     .= setMetricsAddr startMetricAddr metrics
+        , "metrics"     .= metrics
         , "has_metric"  .= (length metrics > 0)
         , "use_eeprom"  .= (length metrics > 0 || length attrs > 0)
         , "max_cmd_len" .= (getMaxCommandLength gasp + 1)
         , "monitors"    .= getMonitors gasp
         ]
-        where flags = getFlags gasp
+        where gasp  = autoAddrGasp gasp0
+              flags = getFlags gasp
               attrs = getAttrs gasp
               metrics = getMetrics gasp
-              startAttrAddr = 1
-              startMetricAddr = startAttrAddr + (length attrs * 4)

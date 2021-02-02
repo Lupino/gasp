@@ -6,7 +6,7 @@ import           Data.Aeson (ToJSON (..), object, (.=))
 
 data Metric = Metric
     { metricName         :: !String -- Identifier
-    , metricAddr         :: !String
+    , metricAddr         :: !Int
     , metricVar          :: !String
     , metricType         :: !String
     , metricMax          :: !Double

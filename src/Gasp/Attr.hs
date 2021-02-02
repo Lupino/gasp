@@ -6,7 +6,7 @@ import           Data.Aeson (ToJSON (..), object, (.=))
 
 data Attr = Attr
     { attrName  :: !String -- Identifier
-    , attrAddr  :: !String
+    , attrAddr  :: !Int
     , attrVar   :: !String
     , attrMax   :: !Double
     , attrMin   :: !Double

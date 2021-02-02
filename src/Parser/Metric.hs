@@ -85,5 +85,5 @@ metric = do
         , Metric.metricMinThreshold = getMetricMinThreshold mint metricProps
         , Metric.metricThreshold    = getMetricThreshold mint metricProps
         , Metric.metricPrec         = fromIntegral $ getMetricPrec 2 metricProps
-        , Metric.metricAddr         = "0"
+        , Metric.metricAddr         = 0
         }

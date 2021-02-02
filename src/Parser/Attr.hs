@@ -66,7 +66,7 @@ attr = do
 
     return Attr.Attr
         { Attr.attrName  = attrName
-        , Attr.attrAddr  = "0"
+        , Attr.attrAddr  = 0
         , Attr.attrVar   = getAttrVar   attrName attrProps
         , Attr.attrType  = getAttrType  "int" attrProps
         , Attr.attrMax   = getAttrMax   10000 attrProps
