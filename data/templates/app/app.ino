@@ -297,7 +297,7 @@ int set_{= var =}(const char *json, jsmntok_t *tokens, int num_tokens, char *ret
         {= var =} = tmp * {= scale =};
         EEPROM.put({= addr =}, tmp);
     }
-    sprintf(retval, FC(F("{\"{= name =}\": %d}")), {= var =});
+    sprintf(retval, FC(F("{\"{= name =}\": %d}")), ({= type =}){= var =} / {= scale =});
     return RET_ATTR;
 }
 int get_{= var =}(char *retval) {
@@ -540,7 +540,7 @@ bool reportAttribute() {
     total_length += 1;
 
     {=# attrs =}
-    sprintf(tempSendData, FC(F("\"{= name =}\": %d,")), {= var =});
+    sprintf(tempSendData, FC(F("\"{= name =}\": %d,")), ({= type =}){= var =} / {= scale =});
     length = strlen(tempSendData);
     for (i=0; i<length; i++) {
         wantSendData[total_length + i] = tempSendData[i];
