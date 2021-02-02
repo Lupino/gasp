@@ -277,8 +277,8 @@ bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char 
     for (int i = 1; i < num_tokens; i++) {
         if (jsoneq(json, &tokens[i], name)) {
             /* We may use strndup() to fetch string value */
-            sprintf(value, "%.*s", tokens[i + 1].end - tokens[i + 1].start,
-                   json + tokens[i + 1].start);
+            memcpy(value, json+tokens[i+1].start, tokens[i + 1].end - tokens[i + 1].start);
+            value[tokens[i + 1].end - tokens[i + 1].start] = '\0';
             return true;
         }
     }
@@ -505,6 +505,7 @@ bool processTelemetries() {
             wantSendData[total_length + i] = tempSendData[i];
         }
         total_length += length;
+        last_{= var =} = {= var =};
     }
 
     {=/ metrics =}
