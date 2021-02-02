@@ -17,12 +17,14 @@ data Attr = Attr
 
 instance ToJSON Attr where
     toJSON attr = object
-        [ "name"    .= attrName  attr
-        , "addr"    .= attrAddr  attr
-        , "var"     .= attrVar   attr
-        , "max"     .= attrMax   attr
-        , "min"     .= attrMin   attr
-        , "scale"   .= attrScale attr
-        , "type"    .= attrType attr
-        , "default" .= attrDef  attr
+        [ "name"       .= attrName  attr
+        , "addr"       .= attrAddr  attr
+        , "var"        .= attrVar   attr
+        , "max"        .= attrMax   attr
+        , "min"        .= attrMin   attr
+        , "scaled_max" .= (attrMax  attr * attrScale attr)
+        , "scaled_min" .= (attrMin  attr * attrScale attr)
+        , "scale"      .= attrScale attr
+        , "type"       .= attrType  attr
+        , "default"    .= attrDef   attr
         ]

@@ -82,7 +82,7 @@ void setup() {
     {=# attrs =}
     if (first_run_flag == 1) {
         EEPROM.get({= addr =}, {= var =});
-        if ({= var =} > {= max =} * {= scale =} || {= var =} < {= min =} * {= scale =}) {
+        if ({= var =} > {= scaled_max =} || {= var =} < {= scaled_min =}) {
             {= var =} = {= default =};
         }
     } else {
