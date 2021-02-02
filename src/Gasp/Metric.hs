@@ -14,21 +14,24 @@ data Metric = Metric
     , metricMinThreshold :: !Double
     , metricMaxThreshold :: !Double
     , metricThreshold    :: !Double
-    , metricWidth        :: !Int
     , metricPrec         :: !Int
     } deriving (Show, Eq)
 
+calcWitdh :: Double -> Int
+calcWitdh v = length $ show (floor v :: Int)
+
 instance ToJSON Metric where
     toJSON metric = object
-        [ "name"          .= metricName metric
-        , "var"           .= metricVar  metric
-        , "type"          .= metricType metric
-        , "max"           .= metricMax metric
-        , "min"           .= metricMin metric
-        , "min_threshold" .= metricMinThreshold metric
-        , "max_threshold" .= metricMaxThreshold metric
-        , "threshold"     .= metricThreshold metric
-        , "width"         .= metricWidth metric
-        , "prec"          .= metricPrec metric
-        , "addr"          .= metricAddr metric
+        [ "name"            .= metricName metric
+        , "var"             .= metricVar  metric
+        , "type"            .= metricType metric
+        , "max"             .= metricMax metric
+        , "min"             .= metricMin metric
+        , "min_threshold"   .= metricMinThreshold metric
+        , "max_threshold"   .= metricMaxThreshold metric
+        , "threshold"       .= metricThreshold metric
+        , "threshold_width" .= calcWitdh (metricMaxThreshold metric)
+        , "width"           .= calcWitdh (metricMax metric)
+        , "prec"            .= metricPrec metric
+        , "addr"            .= metricAddr metric
         ]

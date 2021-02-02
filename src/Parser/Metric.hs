@@ -18,7 +18,6 @@ data MetricProperty
     | MinThreshold !Double
     | MaxThreshold !Double
     | Threshold    !Double
-    | Width        !Integer
     | Prec         !Integer
     deriving (Show, Eq)
 
@@ -28,7 +27,6 @@ cusL = do
   key <- identifier
   _ <- colon
   v <- case key of
-         "width"         -> Width <$> integer
          "prec"          -> Prec <$> integer
          "var"           -> Var <$> identifier
          "type"          -> Type <$> stringLiteral
@@ -65,9 +63,6 @@ getMetricMaxThreshold def ps = fromMaybe def . listToMaybe $ [t | MaxThreshold t
 getMetricThreshold :: Double -> [MetricProperty] -> Double
 getMetricThreshold def ps = fromMaybe def . listToMaybe $ [t | Threshold t <- ps]
 
-getMetricWidth :: Integer -> [MetricProperty] -> Integer
-getMetricWidth def ps = fromMaybe def . listToMaybe $ [t | Width t <- ps]
-
 getMetricPrec :: Integer -> [MetricProperty] -> Integer
 getMetricPrec def ps = fromMaybe def . listToMaybe $ [t | Prec t <- ps]
 
@@ -89,7 +84,6 @@ metric = do
         , Metric.metricMaxThreshold = getMetricMaxThreshold maxt metricProps
         , Metric.metricMinThreshold = getMetricMinThreshold mint metricProps
         , Metric.metricThreshold    = getMetricThreshold mint metricProps
-        , Metric.metricWidth        = fromIntegral $ getMetricWidth 8 metricProps
         , Metric.metricPrec         = fromIntegral $ getMetricPrec 2 metricProps
         , Metric.metricAddr         = "0"
         }

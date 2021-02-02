@@ -324,14 +324,14 @@ int set_{= var =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens,
         EEPROM.put({= addr =}, {= var =}_threshold);
     }
     value[0] = '\0';
-    dtostrf({= var =}_threshold, {= width =}, {= prec =}, value);
+    dtostrf({= var =}_threshold, {= threshold_width =}, {= prec =}, value);
     sprintf(retval, FC(F("{\"{= name =}_threshold\": %s}")), value);
     return RET_ATTR;
 }
 
 int get_{= var =}_threshold(char *retval) {
     char tmp[MAX_VALUE_LENGTH];
-    dtostrf({= var =}_threshold, {= width =}, {= prec =}, tmp);
+    dtostrf({= var =}_threshold, {= threshold_width =}, {= prec =}, tmp);
     sprintf(retval, FC(F("{\"{= name =}_threshold\": %s}")), tmp);
     return RET_SUCC;
 }
@@ -551,7 +551,7 @@ bool reportAttribute() {
     {=/ attrs =}
     {=# metrics =}
     value[0] = '\0';
-    dtostrf({= var =}_threshold, {= width =}, {= prec =}, value);
+    dtostrf({= var =}_threshold, {= threshold_width =}, {= prec =}, value);
     sprintf(tempSendData, FC(F("\"{= name =}_threshold\": %s,")), value);
     length = strlen(tempSendData);
     for (i=0; i<length; i++) {
