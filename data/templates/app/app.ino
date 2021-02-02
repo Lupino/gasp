@@ -42,7 +42,7 @@ uint16_t readedLen = 0;
 uint8_t  readedPayload[MAX_GL_PAYLOAD_LENGTH + 1];
 uint8_t  sendedPayload[MAX_GL_PAYLOAD_LENGTH + 1];
 
-bool authedLock = false;
+bool requireReportAttribute = false;
 
 givelink_t * m = givelink_new(MAX_GL_PAYLOAD_LENGTH);
 
@@ -167,8 +167,8 @@ void loop() {
     }
 
     if (givelink_authed()) {
-        if (!authedLock) {
-            authedLock = false;
+        if (requireReportAttribute) {
+            requireReportAttribute = false;
             reportAttribute();
         }
         {=# has_metric =}
@@ -182,7 +182,7 @@ void loop() {
         }
         {=/ has_metric =}
     } else {
-        authedLock = true;
+        requireReportAttribute = true;
         if (auth_timer_ms + AUTH_DELAY_MS < get_current_time_ms()) {
             send_packet_0(AUTHREQ);
             auth_timer_ms = get_current_time_ms();
