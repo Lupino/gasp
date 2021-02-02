@@ -33,8 +33,8 @@ unsigned long metric_timer_ms = get_current_time_ms();
 #define MAX_NUM_TOKENS 10
 #endif
 
-#ifndef MAX_VALUE_LENGTH
-#define MAX_VALUE_LENGTH 10
+#ifndef MAX_REQUEST_VALUE_LENGTH
+#define MAX_REQUEST_VALUE_LENGTH {= max_cmd_len =}
 #endif
 
 uint16_t lastPayloadId = 0;
@@ -46,6 +46,7 @@ uint8_t  sendedPayload[MAX_GL_PAYLOAD_LENGTH + 1];
 jsmn_parser requestJsmnParser;
 jsmntok_t requestJsmnTokens[MAX_NUM_TOKENS]; /* We expect no more than 128 tokens */
 char requestMethod[{= max_cmd_len =}];
+char requestValue[MAX_REQUEST_VALUE_LENGTH];
 
 bool requireReportAttribute = false;
 
@@ -292,9 +293,8 @@ bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char 
 
 {=# attrs =}
 int set_{= var =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
-    char value[MAX_VALUE_LENGTH];
-    if (jsonlookup(json, tokens, num_tokens, "data", value)) {
-        {= type =} tmp = atoi(value);
+    if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
+        {= type =} tmp = atoi(requestValue);
         if (tmp > {= max =} || tmp < {= min =}) {
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min =}, {= max =}]\"}")));
           return RET_ERR;
@@ -302,7 +302,7 @@ int set_{= var =}(const char *json, jsmntok_t *tokens, int num_tokens, char *ret
         {= var =} = tmp * {= scale =};
         EEPROM.put({= addr =}, tmp);
     }
-    sprintf(retval, FC(F("{\"{= name =}\": %d}")), ({= type =}){= var =} / {= scale =});
+    get_{= var =}(retval);
     return RET_ATTR;
 }
 int get_{= var =}(char *retval) {
@@ -313,9 +313,8 @@ int get_{= var =}(char *retval) {
 {=/ attrs =}
 {=# metrics =}
 int set_{= var =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
-    char value[MAX_VALUE_LENGTH];
-    if (jsonlookup(json, tokens, num_tokens, "data", value)) {
-        {= type =} tmp = atof(value);
+    if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
+        {= type =} tmp = atof(requestValue);
         if (tmp < {= min_threshold =} || tmp > {= max_threshold =}) {
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min_threshold =}, {= max_threshold =}]\"}")));
           return RET_ERR;
@@ -323,16 +322,13 @@ int set_{= var =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens,
         {= var =}_threshold = tmp;
         EEPROM.put({= addr =}, {= var =}_threshold);
     }
-    value[0] = '\0';
-    dtostrf({= var =}_threshold, {= threshold_width =}, {= prec =}, value);
-    sprintf(retval, FC(F("{\"{= name =}_threshold\": %s}")), value);
+    get_{= var =}_threshold(retval);
     return RET_ATTR;
 }
 
 int get_{= var =}_threshold(char *retval) {
-    char tmp[MAX_VALUE_LENGTH];
-    dtostrf({= var =}_threshold, {= threshold_width =}, {= prec =}, tmp);
-    sprintf(retval, FC(F("{\"{= name =}_threshold\": %s}")), tmp);
+    dtostrf({= var =}_threshold, {= threshold_width =}, {= prec =}, requestValue);
+    sprintf(retval, FC(F("{\"{= name =}_threshold\": %s}")), requestValue);
     return RET_SUCC;
 }
 
@@ -351,7 +347,7 @@ int get_{= var =}(char *retval) {
     if ({= var =} > {= max =}) {
         return invalid_{= var =}_error(retval);
     }
-    char tmp[MAX_VALUE_LENGTH];
+    char tmp[MAX_REQUEST_VALUE_LENGTH];
     dtostrf({= var =}, {= width =}, {= prec =}, tmp);
     last_{= var =} = {= var =};
     sprintf(retval, FC(F("{\"{= name =}\": %s}")), tmp);
@@ -488,7 +484,6 @@ bool processTelemetries() {
     {=/ flag =}
 
     {=/ telemetries =}
-    char value[MAX_VALUE_LENGTH];
     bool wantSend = false;
     size_t total_length = 0;
     size_t length = 0;
@@ -498,9 +493,9 @@ bool processTelemetries() {
     {=# metrics =}
     if (!isnan({= var =}) && {= var =} >= {= min =} && {= var =} <= {= max =}) {
         wantSend = true;
-        value[0] = '\0';
-        dtostrf({= var =}, {= width =}, {= prec =}, value);
-        sprintf(tempSendData, FC(F("\"{= name =}\": %s,")), value);
+        requestValue[0] = '\0';
+        dtostrf({= var =}, {= width =}, {= prec =}, requestValue);
+        sprintf(tempSendData, FC(F("\"{= name =}\": %s,")), requestValue);
         length = strlen(tempSendData);
         for (i=0; i<length; i++) {
             wantSendData[total_length + i] = tempSendData[i];
@@ -533,7 +528,6 @@ bool checkValue() {
 {=/ has_metric =}
 
 bool reportAttribute() {
-    char value[MAX_VALUE_LENGTH];
     size_t total_length = 0;
     size_t length = 0;
     size_t i = 0;
@@ -550,9 +544,9 @@ bool reportAttribute() {
 
     {=/ attrs =}
     {=# metrics =}
-    value[0] = '\0';
-    dtostrf({= var =}_threshold, {= threshold_width =}, {= prec =}, value);
-    sprintf(tempSendData, FC(F("\"{= name =}_threshold\": %s,")), value);
+    requestValue[0] = '\0';
+    dtostrf({= var =}_threshold, {= threshold_width =}, {= prec =}, requestValue);
+    sprintf(tempSendData, FC(F("\"{= name =}_threshold\": %s,")), requestValue);
     length = strlen(tempSendData);
     for (i=0; i<length; i++) {
         wantSendData[total_length + i] = tempSendData[i];
