@@ -42,6 +42,7 @@ uint16_t readedLen = 0;
 uint8_t  readedPayload[MAX_GL_PAYLOAD_LENGTH + 1];
 uint8_t  sendedPayload[MAX_GL_PAYLOAD_LENGTH + 1];
 
+jsmn_parser requestJsmnParser;
 jsmntok_t requestTokens[MAX_NUM_TOKENS]; /* We expect no more than 128 tokens */
 char requestMethod[{= max_cmd_len =}];
 
@@ -382,11 +383,9 @@ int {= name =}() {
 {=/ functions =}
 
 int processRequest(const char *json, int length, char *retval) {
-    jsmn_parser parser;
-
     /* Prepare parser */
-    jsmn_init(&parser);
-    int num_tokens = jsmn_parse(&parser, json, length, requestTokens, MAX_NUM_TOKENS);
+    jsmn_init(&requestJsmnParser);
+    int num_tokens = jsmn_parse(&requestJsmnParser, json, length, requestTokens, MAX_NUM_TOKENS);
 
     if (num_tokens < 0) {
         sprintf(retval, FC(F("{\"err\": \"Failed to parse JSON: %d\"}")), num_tokens);
