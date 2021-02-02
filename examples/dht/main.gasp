@@ -57,8 +57,7 @@ metric temperature {
     max: 100,
     min: 0,
     threshold: 5,
-    width: 8,
-    prec: 6
+    prec: 2
 }
 
 metric humidity {
@@ -69,8 +68,7 @@ metric humidity {
     max: 100,
     min: 0,
     threshold: 5,
-    width: 8,
-    prec: 6
+    prec: 2
 }
 
 monitor dht {
