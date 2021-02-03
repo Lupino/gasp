@@ -52,5 +52,22 @@ flag reset_system {
 }
 
 command reset_system {
-    fn: reset_system
+    fn: reset_system,
+    doc: {=md
+@Command:
+
+```
+{
+    "method": "reset_system"
+}
+```
+
+@Return:
+
+```
+{
+    "result": "OK"
+}
+```
+md=}
 }

@@ -145,6 +145,7 @@
 
 {=# commands =}
 
+{=^ has_doc =}
 @Command:
 
 ```json
@@ -168,4 +169,9 @@
     "err": "{= error =}"
 }
 ```
+{=/ has_doc =}
+{=# has_doc =}
+{=& doc =}
+{=/ has_doc =}
+
 {=/ commands =}
