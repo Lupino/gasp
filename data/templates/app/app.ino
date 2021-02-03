@@ -31,6 +31,7 @@ unsigned long auth_timer_ms = get_current_time_ms();
 #define MAX_PING_FAILED 10
 #endif
 
+unsigned long pong_timer_ms = get_current_time_ms();
 unsigned long ping_timer_ms = get_current_time_ms();
 bool ponged = true;
 int ping_failed = 0;
@@ -218,13 +219,15 @@ void loop() {
             send_packet_0(PING);
             ponged = false;
             ping_timer_ms = get_current_time_ms();
+            pong_timer_ms = get_current_time_ms();
         }
 
         if (ponged) {
             ping_failed = 0;
         } else {
-            if (ping_timer_ms + PONG_DELAY_MS < get_current_time_ms()) {
+            if (pong_timer_ms + PONG_DELAY_MS < get_current_time_ms()) {
                 ping_failed += 1;
+                pong_timer_ms = get_current_time_ms();
 
                 if (ping_failed > MAX_PING_FAILED) {
                     reset();
