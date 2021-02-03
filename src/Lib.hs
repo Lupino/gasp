@@ -23,10 +23,8 @@ compile gaspFile outDir dataDir = do
     gaspStr <- readFile (toFilePath gaspFile)
 
     case parseGasp gaspStr of
-        Left err   -> return $ Left (show err)
-        Right gasp0 -> do
-          gasp <- preprocessGasp gasp0
-          generateCode gasp
+        Left err    -> return $ Left (show err)
+        Right gasp0 -> preprocessGasp gasp0 >>= generateCode
   where
     generateCode gasp = writeAppCode gasp outDir dataDir >> return (Right ())
 

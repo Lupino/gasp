@@ -1,6 +1,6 @@
 module Gasp.Flag
     ( Flag (..)
-    , defFlag
+    , initFlag
     ) where
 
 import           Data.Aeson (ToJSON (..), object, (.=))
@@ -9,12 +9,15 @@ data Flag = Flag
     { flagJson   :: !Bool
     , flagFunc   :: !String
     , flagRetval :: !Bool
-    } deriving (Show, Eq)
+    } deriving (Show)
 
-defFlag :: Flag
-defFlag = Flag
+instance Eq Flag where
+  x == y = flagFunc x == flagFunc y
+
+initFlag :: String -> Flag
+initFlag func = Flag
   { flagJson   = False
-  , flagFunc   = ""
+  , flagFunc   = func
   , flagRetval = False
   }
 

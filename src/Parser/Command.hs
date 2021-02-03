@@ -5,7 +5,7 @@ module Parser.Command
 import           Data.Maybe         (fromMaybe, listToMaybe)
 import           Data.Text          (pack)
 import qualified Gasp.Command       as Command
-import           Gasp.Flag          (defFlag)
+import           Gasp.Flag          (initFlag)
 import           Lexer
 import           Parser.Common
 import           Text.Parsec
@@ -49,7 +49,7 @@ command = do
     return Command.Command
         { Command.cmdName = cmdName
         , Command.cmdFunc = getCmdFunc cmdProps
-        , Command.cmdFlag = defFlag
+        , Command.cmdFlag = initFlag (getCmdFunc cmdProps)
         , Command.cmdErrS = getCmdErrS cmdProps
         , Command.cmdDocS = pack (getCmdDocS cmdProps)
         }

@@ -5,7 +5,7 @@ module Parser.Function
 import qualified Data.Text          as Text
 import           Text.Parsec.String (Parser)
 
-import           Gasp.Flag          (defFlag)
+import           Gasp.Flag          (initFlag)
 import           Gasp.Function
 import qualified Lexer              as L
 import qualified Parser.Common      as P
@@ -18,5 +18,5 @@ function = do
     return Function
         { funcName = name
         , funcCode = Text.pack code
-        , funcFlag = defFlag
+        , funcFlag = initFlag name
         }

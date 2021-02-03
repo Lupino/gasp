@@ -4,7 +4,7 @@ module Parser.Telemetry
 
 import           Text.Parsec.String (Parser)
 
-import           Gasp.Flag          (defFlag)
+import           Gasp.Flag          (initFlag)
 import qualified Gasp.Telemetry     as Telem
 import qualified Lexer              as L
 
@@ -15,5 +15,5 @@ telemetry = do
 
     return Telem.Telemetry
       { Telem.telemFunc = func
-      , Telem.telemFlag = defFlag
+      , Telem.telemFlag = initFlag func
       }

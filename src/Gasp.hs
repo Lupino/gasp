@@ -185,7 +185,11 @@ addEvery gasp every = gasp { gaspElements = (GaspElementEvery every):(gaspElemen
 -- * Flags
 
 getFlags:: Gasp -> [Flag]
-getFlags gasp = [flag | (GaspElementFlag flag) <- gaspElements gasp]
+getFlags gasp =
+  map (flip autoRetvalFlag elems) (collectFlags flags elems)
+  where flags = [flag | (GaspElementFlag flag) <- gaspElements gasp]
+        elems = gaspElements gasp
+
 
 addFlag :: Gasp -> Flag -> Gasp
 addFlag gasp flag = gasp { gaspElements = (GaspElementFlag flag):(gaspElements gasp) }
@@ -193,25 +197,25 @@ addFlag gasp flag = gasp { gaspElements = (GaspElementFlag flag):(gaspElements g
 getFlag :: [Flag] -> Flag -> Flag
 getFlag [] flag = flag
 getFlag (x:xs) flag
-  | flagFunc x == flagFunc flag = x
+  | x == flag = x
   | otherwise = getFlag xs flag
 
 
 setFunctionFlag :: [Flag] -> Function -> Function
 setFunctionFlag flags func = func
-  { funcFlag = getFlag flags (funcFlag func) {flagFunc = funcName func}
+  { funcFlag = getFlag flags (funcFlag func)
   }
 
 
 setCommandFlag :: [Flag] -> Command -> Command
 setCommandFlag flags cmd = cmd
-  { cmdFlag = getFlag flags (cmdFlag cmd) {flagFunc = cmdFunc cmd}
+  { cmdFlag = getFlag flags (cmdFlag cmd)
   }
 
 
 setTelemetryFlag :: [Flag] -> Telemetry -> Telemetry
 setTelemetryFlag flags telem = telem
-  { telemFlag = getFlag flags (telemFlag telem) {flagFunc = telemFunc telem}
+  { telemFlag = getFlag flags (telemFlag telem)
   }
 
 
@@ -240,13 +244,25 @@ prepareGasp flags = fromGaspElems . go 1 . gaspElements
 autoRetvalFlag :: Flag -> [GaspElement] -> Flag
 autoRetvalFlag flag [] = flag
 autoRetvalFlag flag (GaspElementCmd x:xs)
-  | cmdFunc x == flagFunc flag = flag { flagRetval = True }
+  | cmdFlag x == flag = flag { flagRetval = True }
   | otherwise = autoRetvalFlag flag xs
 autoRetvalFlag flag (GaspElementTelemetry x:xs)
-  | telemFunc x == flagFunc flag = flag { flagRetval = True }
+  | telemFlag x == flag = flag { flagRetval = True }
   | otherwise = autoRetvalFlag flag xs
 autoRetvalFlag flag (_:xs) = autoRetvalFlag flag xs
 
+collectFlags :: [Flag] -> [GaspElement] -> [Flag]
+collectFlags flags [] = flags
+collectFlags flags (GaspElementTelemetry x:xs)
+  | telemFlag x `elem` flags = flags
+  | otherwise = collectFlags (telemFlag x : flags) xs
+collectFlags flags (GaspElementCmd x:xs)
+  | cmdFlag x `elem` flags = flags
+  | otherwise = collectFlags (cmdFlag x : flags) xs
+collectFlags flags (GaspElementFunction x:xs)
+  | funcFlag x `elem` flags = flags
+  | otherwise = collectFlags (funcFlag x : flags) xs
+collectFlags flags (_:xs) = collectFlags flags xs
 
 -- * ToJSON instances.
 
@@ -267,8 +283,7 @@ instance ToJSON Gasp where
         , "max_cmd_len" .= (getMaxCommandLength gasp + 1)
         , "actions"     .= getEverys gasp
         ]
-        where flags = map (flip autoRetvalFlag (gaspElements gasp0)) $ getFlags gasp0
-              gasp  = prepareGasp flags gasp0
+        where gasp = prepareGasp (getFlags gasp0) gasp0
               attrs = getAttrs gasp
               metrics = getMetrics gasp
               telems  = getTelemetries gasp
