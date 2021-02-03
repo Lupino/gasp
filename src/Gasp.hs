@@ -237,6 +237,17 @@ prepareGasp flags = fromGaspElems . go 1 . gaspElements
         go addr (x:xs) = x : go addr xs
 
 
+autoRetvalFlag :: Flag -> [GaspElement] -> Flag
+autoRetvalFlag flag [] = flag
+autoRetvalFlag flag (GaspElementCmd x:xs)
+  | cmdFunc x == flagFunc flag = flag { flagRetval = True }
+  | otherwise = autoRetvalFlag flag xs
+autoRetvalFlag flag (GaspElementTelemetry x:xs)
+  | telemFunc x == flagFunc flag = flag { flagRetval = True }
+  | otherwise = autoRetvalFlag flag xs
+autoRetvalFlag flag (_:xs) = autoRetvalFlag flag xs
+
+
 -- * ToJSON instances.
 
 instance ToJSON Gasp where
@@ -256,7 +267,7 @@ instance ToJSON Gasp where
         , "max_cmd_len" .= (getMaxCommandLength gasp + 1)
         , "actions"     .= getEverys gasp
         ]
-        where flags = getFlags gasp0
+        where flags = map (flip autoRetvalFlag (gaspElements gasp0)) $ getFlags gasp0
               gasp  = prepareGasp flags gasp0
               attrs = getAttrs gasp
               metrics = getMetrics gasp
