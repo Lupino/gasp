@@ -49,7 +49,6 @@ uint8_t  sendedPayload[MAX_GL_PAYLOAD_LENGTH + 1];
 
 jsmn_parser requestJsmnParser;
 jsmntok_t requestJsmnTokens[MAX_NUM_TOKENS]; /* We expect no more than 128 tokens */
-char requestMethod[{= max_cmd_len =}];
 char requestValue[MAX_REQUEST_VALUE_LENGTH];
 {=# use_eeprom =}
 
@@ -275,27 +274,35 @@ char * ltrim(char *s) {
   return s;
 }
 
-bool jsoneq(const char *json, jsmntok_t *tokens, const char *s) {
-  if (tokens->type == JSMN_STRING && (int)strlen(s) == tokens->end - tokens->start &&
-      strncmp(json + tokens->start, s, tokens->end - tokens->start) == 0) {
+bool jsoneq(const char *json, jsmntok_t *token, const char *s) {
+  if (token->type == JSMN_STRING && (int)strlen(s) == token->end - token->start &&
+      strncmp(json + token->start, s, token->end - token->start) == 0) {
     return true;
   }
   return false;
 }
 
-bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char *name, char *value) {
+int jsonfind(const char *json, jsmntok_t *tokens, int num_tokens, const char *name) {
     /* Assume the top-level element is an object */
     if (num_tokens < 1 || tokens[0].type != JSMN_OBJECT) {
-      return false;
+      return 0;
     }
     /* Loop over all keys of the root object */
     for (int i = 1; i < num_tokens; i++) {
         if (jsoneq(json, &tokens[i], name)) {
-            /* We may use strndup() to fetch string value */
-            memcpy(value, json+tokens[i+1].start, tokens[i + 1].end - tokens[i + 1].start);
-            value[tokens[i + 1].end - tokens[i + 1].start] = '\0';
-            return true;
+            return i + 1;
         }
+    }
+    return 0;
+}
+
+bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char *name, char *value) {
+    int token = jsonfind(json, tokens, num_tokens, name);
+
+    if (token > 1) {
+        memcpy(value, json+tokens[token].start, tokens[token].end - tokens[token].start);
+        value[tokens[token].end - tokens[token].start] = '\0';
+        return true;
     }
     return false;
 }
@@ -397,9 +404,11 @@ int processRequest(const char *json, int length, char *retval) {
         return RET_ERR;
     }
 
-    if (jsonlookup(json, requestJsmnTokens, num_tokens, "method", requestMethod)) {
+    int token = jsonfind(json, requestJsmnTokens, num_tokens, "method");
+
+    if (token > 1) {
         {=# commands =}
-        if (strcmp("{= name =}", requestMethod) == 0) {
+        if (jsoneq(json, &requestJsmnTokens[token], FC(F("{= name =}")))) {
             {=# flag =}
             {=# retval =}
             {=# json =}
@@ -421,7 +430,7 @@ int processRequest(const char *json, int length, char *retval) {
         }
         {=/ commands =}
         {=# attrs =}
-        if (strcmp("set_{= name =}", requestMethod) == 0) {
+        if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_{= name =}")))) {
             int r = set_{= var =}(json, requestJsmnTokens, num_tokens, retval);
             if (r > RET_ERR) {
                 return r;
@@ -430,7 +439,7 @@ int processRequest(const char *json, int length, char *retval) {
                 return RET_ERR;
             }
         }
-        if (strcmp("get_{= name =}", requestMethod) == 0) {
+        if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}")))) {
             int r = get_{= var =}(retval);
             if (r > RET_ERR) {
                 return r;
@@ -441,7 +450,7 @@ int processRequest(const char *json, int length, char *retval) {
         }
         {=/ attrs =}
         {=# metrics =}
-        if (strcmp("set_{= name =}_threshold", requestMethod) == 0) {
+        if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_{= name =}_threshold")))) {
             int r = set_{= var =}_threshold(json, requestJsmnTokens, num_tokens, retval);
             if (r > RET_ERR) {
                 return r;
@@ -450,7 +459,7 @@ int processRequest(const char *json, int length, char *retval) {
                 return RET_ERR;
             }
         }
-        if (strcmp("get_{= name =}_threshold", requestMethod) == 0) {
+        if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}_threshold")))) {
             int r = get_{= var =}_threshold(retval);
             if (r > RET_ERR) {
                 return r;
@@ -459,7 +468,7 @@ int processRequest(const char *json, int length, char *retval) {
                 return RET_ERR;
             }
         }
-        if (strcmp("get_{= name =}", requestMethod) == 0) {
+        if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}")))) {
             int r = get_{= var =}(retval);
             if (r > RET_ERR) {
                 return r;
