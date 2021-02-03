@@ -67,30 +67,25 @@ metric temperature {
     var: temperature,
     type: "float",
     max_threshold: 100,
-    min_threshold: 5,
+    min_threshold: 1,
     max: 100,
     min: 0,
     threshold: 1,
-    width: 8,
-    prec: 6
+    prec: 2
 }
 
 metric humidity {
     var: humidity,
     type: "float",
     max_threshold: 100,
-    min_threshold: 5,
+    min_threshold: 1,
     max: 100,
     min: 0,
     threshold: 1,
-    width: 8,
-    prec: 6
+    prec: 2
 }
 
-monitor dht {
-  fn: read_temp,
-  delay_ms: 6000
-}
+every read_temp 6000
 
 init {=code
     int mock_sensor_data = 0;
@@ -105,9 +100,7 @@ flag read_sensor_data {
     retval: true
 }
 
-telemetry {
-    fn: read_sensor_data
-}
+telemetry read_sensor_data
 
 command get_sensor_data {
     fn: read_sensor_data,
