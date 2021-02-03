@@ -354,6 +354,7 @@ bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char 
 }
 
 {=# attrs =}
+{=# gen_set =}
 int set_{= var =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
         {= type =} tmp = atoi(requestValue);
@@ -367,6 +368,8 @@ int set_{= var =}(const char *json, jsmntok_t *tokens, int num_tokens, char *ret
     get_{= var =}(retval);
     return RET_ATTR;
 }
+
+{=/ gen_set =}
 int get_{= var =}(char *retval) {
     sprintf(retval, FC(F("{\"{= name =}\": %d}")), ({= type =}){= var =} / {= scale =});
     return RET_SUCC;
@@ -476,6 +479,7 @@ int processRequest(const char *json, int length, char *retval) {
         }
         {=/ commands =}
         {=# attrs =}
+        {=# gen_set =}
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_{= name =}")))) {
             int r = set_{= var =}(json, requestJsmnTokens, num_tokens, retval);
             if (r > RET_ERR) {
@@ -485,6 +489,7 @@ int processRequest(const char *json, int length, char *retval) {
                 return RET_ERR;
             }
         }
+        {=/ gen_set =}
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}")))) {
             int r = get_{= var =}(retval);
             if (r > RET_ERR) {
