@@ -1,0 +1,56 @@
+app dht {
+  key: "bdde6db9f3daf38f3a",
+  token: "14b61d617a9c428a95542dbd097d7a0e"
+}
+
+init {=code
+#define GL_SERIAL Serial
+#define DEBUG_SERIAL Serial
+code=}
+
+setup {=code
+    GL_SERIAL.begin(115200);
+    while (!GL_SERIAL) {;}
+code=}
+
+init {=code
+bool blink_state = LOW;
+code=}
+
+setup {=code
+    pinMode(LED_BUILTIN, OUTPUT);
+code=}
+
+func toggle_blink {=code
+    if (blink_state == LOW) {
+        blink_state = HIGH;
+    } else {
+        blink_state = LOW;
+    }
+    digitalWrite(LED_BUILTIN, blink_state);
+code=}
+
+every toggle_blink 1000
+
+init {=code
+bool want_reboot = false;
+code=}
+
+loop {=code
+    if (want_reboot) {
+        reset();
+    }
+code=}
+
+func reset_system {=code
+    want_reboot = true;
+    return RET_SUCC;
+code=}
+
+flag reset_system {
+    retval: true
+}
+
+command reset_system {
+    fn: reset_system
+}
