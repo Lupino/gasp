@@ -28,7 +28,6 @@ func toggle_blink {=code
         blink_state = LOW;
     }
     digitalWrite(LED_BUILTIN, blink_state);
-    return RET_SUCC;
 code=}
 
 every toggle_blink 1000
@@ -45,12 +44,7 @@ code=}
 
 func reset_system {=code
     want_reboot = true;
-    return RET_SUCC;
 code=}
-
-flag reset_system {
-    retval: true
-}
 
 command reset_system {
     fn: reset_system,

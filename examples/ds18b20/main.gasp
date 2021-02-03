@@ -145,7 +145,6 @@ func read_ds18b20 {=code
         DEBUG_SERIAL.println(F("Failed to read from DS18B20 sensor!"));
     }
     #endif
-    return RET_SUCC;
 code=}
 
 every read_ds18b20 6000

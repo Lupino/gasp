@@ -53,18 +53,6 @@ func close_led {=code
     return RET_ATTR;
 code=}
 
-flag toggle_led {
-    retval: true
-}
-
-flag open_led {
-    retval: true
-}
-
-flag close_led {
-    retval: true
-}
-
 command toggle {
   fn: toggle_led,
   doc: {=md

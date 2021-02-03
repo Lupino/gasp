@@ -37,7 +37,6 @@ func read_temp {=code
     // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
     humidity = dht.readHumidity();
     temperature = dht.readTemperature();
-    return RET_SUCC;
 code=}
 
 attr delay {

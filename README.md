@@ -51,7 +51,6 @@ func read_temp {=code
     // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
     humidity = dht.readHumidity();
     temperature = dht.readTemperature();
-    return RET_SUCC;
 code=}
 
 attr delay {
@@ -86,34 +85,6 @@ metric humidity {
 }
 
 every read_temp 6000
-
-init {=code
-    int mock_sensor_data = 0;
-code=}
-
-func read_sensor_data {=code
-    sprintf(retval, FC(F("{\"sensor_data\": %d}")), mock_sensor_data);
-    return RET_SUCC;
-code=}
-
-flag read_sensor_data {
-    retval: true
-}
-
-telemetry read_sensor_data
-
-command get_sensor_data {
-    fn: read_sensor_data,
-    error: "read sensor data error"
-}
-
-func some_poll {=code
-    return RET_SUCC;
-code=}
-
-loop {=code
-    some_poll();
-code=}
 ```
 
 Source files (`.wasp`, `.ino`, `.c`, `.h`, ...) are compiled (transpiled) by `gaspc` (Gasp compiler) into the iot technology stack of your choice (e.g. Arduino + sensor + ...).
