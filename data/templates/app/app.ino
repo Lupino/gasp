@@ -270,6 +270,11 @@ unsigned long get_current_time_ms() {
     return millis();
 }
 
+char * ltrim(char *s) {
+  while (*s == ' ') s++;
+  return s;
+}
+
 bool jsoneq(const char *json, jsmntok_t *tokens, const char *s) {
   if (tokens->type == JSMN_STRING && (int)strlen(s) == tokens->end - tokens->start &&
       strncmp(json + tokens->start, s, tokens->end - tokens->start) == 0) {
@@ -332,7 +337,7 @@ int set_{= var =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens,
 
 int get_{= var =}_threshold(char *retval) {
     dtostrf({= var =}_threshold, {= threshold_width =}, {= prec =}, requestValue);
-    sprintf(retval, FC(F("{\"{= name =}_threshold\": %s}")), requestValue);
+    sprintf(retval, FC(F("{\"{= name =}_threshold\": %s}")), ltrim(requestValue));
     return RET_SUCC;
 }
 
@@ -351,10 +356,9 @@ int get_{= var =}(char *retval) {
     if ({= var =} > {= max =}) {
         return invalid_{= var =}_error(retval);
     }
-    char tmp[MAX_REQUEST_VALUE_LENGTH];
-    dtostrf({= var =}, {= width =}, {= prec =}, tmp);
+    dtostrf({= var =}, {= width =}, {= prec =}, requestValue);
     last_{= var =} = {= var =};
-    sprintf(retval, FC(F("{\"{= name =}\": %s}")), tmp);
+    sprintf(retval, FC(F("{\"{= name =}\": %s}")), ltrim(requestValue));
     return RET_SUCC;
 }
 
@@ -500,7 +504,7 @@ bool processTelemetries() {
         wantSend = true;
         requestValue[0] = '\0';
         dtostrf({= var =}, {= width =}, {= prec =}, requestValue);
-        sprintf(tempSendData, FC(F("\"{= name =}\": %s,")), requestValue);
+        sprintf(tempSendData, FC(F("\"{= name =}\": %s,")), ltrim(requestValue));
         length = strlen(tempSendData);
         for (i=0; i<length; i++) {
             wantSendData[total_length + i] = tempSendData[i];
@@ -551,7 +555,7 @@ bool reportAttribute() {
     {=# metrics =}
     requestValue[0] = '\0';
     dtostrf({= var =}_threshold, {= threshold_width =}, {= prec =}, requestValue);
-    sprintf(tempSendData, FC(F("\"{= name =}_threshold\": %s,")), requestValue);
+    sprintf(tempSendData, FC(F("\"{= name =}_threshold\": %s,")), ltrim(requestValue));
     length = strlen(tempSendData);
     for (i=0; i<length; i++) {
         wantSendData[total_length + i] = tempSendData[i];
