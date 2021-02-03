@@ -23,7 +23,8 @@ module Lexer
   , colon
   ) where
 
-import           Text.Parsec          (alphaNum, char, letter, (<|>))
+import           Text.Parsec          (alphaNum, char, letter, many, oneOf,
+                                       (<|>))
 import           Text.Parsec.Language (emptyDef)
 import           Text.Parsec.String   (Parser)
 import qualified Text.Parsec.Token    as Token
@@ -133,12 +134,21 @@ integer = Token.integer gaspLexer
 naturalOrFloat :: Parser(Either Integer Double)
 naturalOrFloat = Token.naturalOrFloat gaspLexer
 
-float :: Parser Double
-float = do
+_float :: Parser Double
+_float = do
   v <- naturalOrFloat
   case v of
     Left vv  -> return $ fromIntegral vv
     Right vv -> return vv
+
+float :: Parser Double
+float = do
+  sign <- many (oneOf ['-', '+'])
+  case sign of
+    "-" -> (0-) <$> _float
+    ""  -> _float
+    "+" -> _float
+    _   -> fail $ "unexpected \"" ++ sign ++ "\""
 
 -- * Parsing boolean values
 
