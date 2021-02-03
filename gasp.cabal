@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7ebdf4fb164b7b396515ee225a60b9b08f6dc8f5d86348740350278a400a9e8b
+-- hash: 24fe871e2e17a35e5afaf770b53cb4bdfe6b1fc7d7d99ea9d6357619f3749943
 
 name:           gasp
 version:        0.1.0.0
@@ -35,12 +35,12 @@ library
       Gasp.App
       Gasp.Attr
       Gasp.Command
+      Gasp.Every
       Gasp.Flag
       Gasp.Function
       Gasp.Init
       Gasp.Loop
       Gasp.Metric
-      Gasp.Monitor
       Gasp.Setup
       Gasp.Telemetry
       Generator
@@ -59,12 +59,12 @@ library
       Parser.Attr
       Parser.Command
       Parser.Common
+      Parser.Every
       Parser.Flag
       Parser.Function
       Parser.Init
       Parser.Loop
       Parser.Metric
-      Parser.Monitor
       Parser.Setup
       Parser.Telemetry
       StrongPath

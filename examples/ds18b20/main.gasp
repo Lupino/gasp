@@ -148,7 +148,4 @@ func read_ds18b20 {=code
     return RET_SUCC;
 code=}
 
-monitor ds18b20 {
-  fn: read_ds18b20,
-  delay_ms: 6000
-}
+every read_ds18b20 6000

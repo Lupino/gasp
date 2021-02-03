@@ -93,9 +93,9 @@ char * wantSendDataTpl = (char *)malloc(WANT_SEND_DATA_LENGTH);
 {= type =} {= var =}_threshold = {= threshold =};
 
 {=/ metrics =}
-{=# monitors =}
-unsigned long monitor_{= name =}_timer_ms = get_current_time_ms();
-{=/ monitors =}
+{=# actions =}
+unsigned long {= fn =}_timer_ms = get_current_time_ms();
+{=/ actions =}
 
 void setup() {
     // wdt init
@@ -244,12 +244,12 @@ void loop() {
         }
     }
 
-    {=# monitors =}
-    if (monitor_{= name =}_timer_ms + {= delay_ms =} < get_current_time_ms()) {
+    {=# actions =}
+    if ({= fn =}_timer_ms + {= delay_ms =} < get_current_time_ms()) {
         {= fn =}();
-        monitor_{= name =}_timer_ms = get_current_time_ms();
+        {= fn =}_timer_ms = get_current_time_ms();
     }
-    {=/ monitors =}
+    {=/ actions =}
 }
 
 void send_packet() {

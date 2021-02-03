@@ -71,7 +71,4 @@ metric humidity {
     prec: 2
 }
 
-monitor dht {
-  fn: read_temp,
-  delay_ms: 6000
-}
+every read_temp 6000

@@ -12,12 +12,12 @@ import           Lexer
 import           Parser.App         (app)
 import           Parser.Attr        (attr)
 import           Parser.Command     (command)
+import           Parser.Every       (every)
 import           Parser.Flag        (flag)
 import           Parser.Function    (function)
 import           Parser.Init        (initP)
 import           Parser.Loop        (loop)
 import           Parser.Metric      (metric)
-import           Parser.Monitor     (monitor)
 import           Parser.Setup       (setup)
 import           Parser.Telemetry   (telemetry)
 
@@ -35,7 +35,7 @@ gaspElement
     <|> gaspElementFlag
     <|> gaspElementAttr
     <|> gaspElementMetric
-    <|> gaspElementMonitor
+    <|> gaspElementEvery
 
 gaspElementApp :: Parser Gasp.GaspElement
 gaspElementApp = Gasp.GaspElementApp <$> app
@@ -67,8 +67,8 @@ gaspElementAttr = Gasp.GaspElementAttr <$> attr
 gaspElementMetric :: Parser Gasp.GaspElement
 gaspElementMetric = Gasp.GaspElementMetric <$> metric
 
-gaspElementMonitor :: Parser Gasp.GaspElement
-gaspElementMonitor = Gasp.GaspElementMonitor <$> monitor
+gaspElementEvery :: Parser Gasp.GaspElement
+gaspElementEvery = Gasp.GaspElementEvery <$> every
 
 
 -- | Top level parser, produces Gasp.

@@ -44,9 +44,9 @@ module Gasp
     , getMetrics
     , addMetric
 
-    , module Gasp.Monitor
-    , getMonitors
-    , addMonitor
+    , module Gasp.Every
+    , getEverys
+    , addEvery
     ) where
 
 import           Data.Aeson     (ToJSON (..), object, (.=))
@@ -54,12 +54,12 @@ import           Data.Aeson     (ToJSON (..), object, (.=))
 import           Gasp.App
 import           Gasp.Attr
 import           Gasp.Command
+import           Gasp.Every
 import           Gasp.Flag
 import           Gasp.Function
 import           Gasp.Init
 import           Gasp.Loop
 import           Gasp.Metric
-import           Gasp.Monitor
 import           Gasp.Setup
 import           Gasp.Telemetry
 
@@ -81,7 +81,7 @@ data GaspElement
     | GaspElementFlag !Flag
     | GaspElementAttr !Attr
     | GaspElementMetric !Metric
-    | GaspElementMonitor !Monitor
+    | GaspElementEvery !Every
     deriving (Show, Eq)
 
 fromGaspElems :: [GaspElement] -> Gasp
@@ -174,13 +174,13 @@ getMetrics gasp = [metric | (GaspElementMetric metric) <- gaspElements gasp]
 addMetric :: Gasp -> Metric -> Gasp
 addMetric gasp metric = gasp { gaspElements = (GaspElementMetric metric):(gaspElements gasp) }
 
--- * Monitors
+-- * Everys
 
-getMonitors:: Gasp -> [Monitor]
-getMonitors gasp = [mon | (GaspElementMonitor mon) <- gaspElements gasp]
+getEverys:: Gasp -> [Every]
+getEverys gasp = [every | (GaspElementEvery every) <- gaspElements gasp]
 
-addMonitor :: Gasp -> Monitor -> Gasp
-addMonitor gasp mon = gasp { gaspElements = (GaspElementMonitor mon):(gaspElements gasp) }
+addEvery :: Gasp -> Every -> Gasp
+addEvery gasp every = gasp { gaspElements = (GaspElementEvery every):(gaspElements gasp) }
 
 -- * Flags
 
@@ -254,7 +254,7 @@ instance ToJSON Gasp where
         , "has_metric"  .= (length metrics > 0 || length telems > 0)
         , "use_eeprom"  .= (length metrics > 0 || length attrs > 0)
         , "max_cmd_len" .= (getMaxCommandLength gasp + 1)
-        , "monitors"    .= getMonitors gasp
+        , "actions"     .= getEverys gasp
         ]
         where flags = getFlags gasp0
               gasp  = prepareGasp flags gasp0

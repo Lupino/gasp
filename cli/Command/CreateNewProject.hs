@@ -78,10 +78,7 @@ createNewProject projectName = do
           , "    return RET_SUCC;"
           , "code=}"
           , ""
-          , "monitor %s {" `printf` projectName
-          , "  fn: read_%s," `printf` projectName
-          , "  delay_ms: 6000"
-          , "}"
+          , "every read_%s 6000" `printf` projectName
           ]
 
       gitignoreFileInGaspProjectDir :: Path (Rel Common.GaspProjectDir) File

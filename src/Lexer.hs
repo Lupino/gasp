@@ -9,7 +9,7 @@ module Lexer
   , reservedNameFlag
   , reservedNameAttr
   , reservedNameMetric
-  , reservedNameMonitor
+  , reservedNameEvery
   , braces
   , symbol
   , bool
@@ -61,8 +61,8 @@ reservedNameAttr = "attr"
 reservedNameMetric :: String
 reservedNameMetric = "metric"
 
-reservedNameMonitor :: String
-reservedNameMonitor = "monitor"
+reservedNameEvery :: String
+reservedNameEvery = "every"
 
 -- * Data types.
 
@@ -85,7 +85,7 @@ reservedNames =
     , reservedNameFlag
     , reservedNameAttr
     , reservedNameMetric
-    , reservedNameMonitor
+    , reservedNameEvery
     -- * Data types
     , reservedNameBooleanTrue
     , reservedNameBooleanFalse
