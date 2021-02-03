@@ -51,8 +51,10 @@ jsmn_parser requestJsmnParser;
 jsmntok_t requestJsmnTokens[MAX_NUM_TOKENS]; /* We expect no more than 128 tokens */
 char requestMethod[{= max_cmd_len =}];
 char requestValue[MAX_REQUEST_VALUE_LENGTH];
+{=# use_eeprom =}
 
 bool requireReportAttribute = false;
+{=/ use_eeprom =}
 
 givelink_t * m = givelink_new(MAX_GL_PAYLOAD_LENGTH);
 
@@ -87,7 +89,6 @@ void setup() {
     {=# use_eeprom =}
     byte first_run_flag = 0;
     EEPROM.get(0, first_run_flag);
-    {=/ use_eeprom =}
 
     {=# attrs =}
     if (first_run_flag == 1) {
@@ -111,13 +112,12 @@ void setup() {
     }
 
     {=/ metrics =}
-    {=# use_eeprom =}
     if (first_run_flag != 0) {
       first_run_flag = 1;
       EEPROM.put(0, first_run_flag);
     }
-    {=/ use_eeprom =}
 
+    {=/ use_eeprom =}
     {=# setups =}
     {=& code =}
 
@@ -177,10 +177,12 @@ void loop() {
     }
 
     if (givelink_authed()) {
+        {=# use_eeprom =}
         if (requireReportAttribute) {
             requireReportAttribute = false;
             reportAttribute();
         }
+        {=/ use_eeprom =}
         {=# has_metric =}
         if (metric_timer_ms + METRIC_DELAY_MS < get_current_time_ms() || checkValue()) {
             metric_timer_ms = get_current_time_ms();
@@ -188,7 +190,9 @@ void loop() {
         }
         {=/ has_metric =}
     } else {
+        {=# use_eeprom =}
         requireReportAttribute = true;
+        {=/ use_eeprom =}
         if (auth_timer_ms + AUTH_DELAY_MS < get_current_time_ms()) {
             send_packet_0(AUTHREQ);
             auth_timer_ms = get_current_time_ms();
@@ -465,6 +469,7 @@ int processRequest(const char *json, int length, char *retval) {
     return RET_ERR;
 }
 
+{=# has_metric =}
 bool processTelemetries() {
     bool ret = false;
     {=# telemetries =}
@@ -515,7 +520,6 @@ bool processTelemetries() {
     return ret;
 }
 
-{=# has_metric =}
 bool checkValue() {
     {=# metrics =}
     if (!isnan({= var =}) && {= var =} >= {= min =} && {= var =} <= {= max =} && abs(last_{= var =} - {= var =}) > {= var =}_threshold) {
@@ -525,8 +529,9 @@ bool checkValue() {
     {=/ metrics =}
     return false;
 }
-{=/ has_metric =}
 
+{=/ has_metric =}
+{=# use_eeprom =}
 bool reportAttribute() {
     size_t total_length = 0;
     size_t length = 0;
@@ -560,3 +565,4 @@ bool reportAttribute() {
     send_packet_1(ATTRIBUTE, wantSendData);
     return RET_SUCC;
 }
+{=/ use_eeprom =}

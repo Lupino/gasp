@@ -240,7 +240,7 @@ instance ToJSON Gasp where
     toJSON gasp0 = object
         [ "app"         .= getApp gasp
         , "commands"    .= map (setCommandFlag flags) (getCmds gasp)
-        , "telemetries" .= map (setTelemetryFlag flags) (getTelemetries gasp)
+        , "telemetries" .= telems
         , "functions"   .= map (setFunctionFlag flags) (getFunctions gasp)
         , "loops"       .= getLoops gasp
         , "setups"      .= getSetups gasp
@@ -248,7 +248,7 @@ instance ToJSON Gasp where
         , "attrs"       .= attrs
         , "has_attr"    .= (length attrs > 0)
         , "metrics"     .= metrics
-        , "has_metric"  .= (length metrics > 0)
+        , "has_metric"  .= (length metrics > 0 || length telems > 0)
         , "use_eeprom"  .= (length metrics > 0 || length attrs > 0)
         , "max_cmd_len" .= (getMaxCommandLength gasp + 1)
         , "monitors"    .= getMonitors gasp
@@ -257,3 +257,4 @@ instance ToJSON Gasp where
               flags = getFlags gasp
               attrs = getAttrs gasp
               metrics = getMetrics gasp
+              telems  = map (setTelemetryFlag flags) (getTelemetries gasp)
