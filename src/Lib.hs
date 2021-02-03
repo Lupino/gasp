@@ -35,6 +35,11 @@ preprocessGasp :: Gasp -> IO Gasp
 preprocessGasp gasp = Gasp <$> mapM mapFunc (gaspElements gasp)
   where mapFunc :: GaspElement -> IO GaspElement
         mapFunc (GaspElementAttr x)   = do
+          when (attrScale x <= 0) $ gaspError $ concat
+            [ "[error] attr %s: " `printf` attrName x
+            , "except scale > 0, but got "
+            , "scale=%f ," `printf` attrScale x
+            ]
           when (attrMin x >= attrMax x) $ gaspError $ concat
             [ "[error] attr %s: " `printf` attrName x
             , "except min < max, but got "
@@ -51,7 +56,7 @@ preprocessGasp gasp = Gasp <$> mapM mapFunc (gaspElements gasp)
           return $ GaspElementAttr x {attrDef = defv}
           where (valid, defv) = getCenterValue (attrMin x, attrMax x) (attrDef x)
         mapFunc (GaspElementMetric x) = do
-          when (metricPrec x > 0) $ gaspError $ concat
+          when (metricPrec x < 1) $ gaspError $ concat
             [ "[error] metric %s: " `printf` metricName x
             , "except prec > 0, but got "
             , "prec=%d ," `printf` metricPrec x
