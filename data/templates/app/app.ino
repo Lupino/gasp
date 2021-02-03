@@ -17,10 +17,14 @@ unsigned long auth_timer_ms = get_current_time_ms();
 #ifndef AUTH_DELAY_MS
 #define AUTH_DELAY_MS 1000
 #endif
+{=# has_metric =}
 
-#ifdef METRIC_DELAY_MS
-unsigned long metric_timer_ms = get_current_time_ms();
+#ifndef METRIC_DELAY_MS
+#define METRIC_DELAY_MS 1800000
 #endif
+
+unsigned long metric_timer_ms = get_current_time_ms();
+{=/ has_metric =}
 
 #ifndef MAX_GL_PAYLOAD_LENGTH
 #define MAX_GL_PAYLOAD_LENGTH 127
@@ -178,12 +182,8 @@ void loop() {
             reportAttribute();
         }
         {=# has_metric =}
-        #ifdef METRIC_DELAY_MS
         if (metric_timer_ms + METRIC_DELAY_MS < get_current_time_ms() || checkValue()) {
             metric_timer_ms = get_current_time_ms();
-        #else
-        if (checkValue()) {
-        #endif
             processTelemetries();
         }
         {=/ has_metric =}

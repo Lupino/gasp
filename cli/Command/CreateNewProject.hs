@@ -58,7 +58,7 @@ createNewProject projectName = do
           , "attr delay {"
           , "  var: metric_delay_ms,"
           , "  type: \"unsigned long\","
-          , "  default: 300,"
+          , "  default: 1800,"
           , "  min: 60,"
           , "  max: 86400,"
           , "  scale: 1000"
