@@ -3,11 +3,12 @@
 # App {= name =}
 {=/ app =}
 
-# Commands
+## Commands
 
 {=# attrs =}
 
-## Edit attribute {= name =}
+{=# gen_set =}
+### Edit attribute {= name =}
 
 @Command:
 
@@ -38,7 +39,8 @@
 }
 ```
 
-## Get attribute {= name =}
+{=/ gen_set =}
+### Get attribute {= name =}
 
 @Command:
 
@@ -61,7 +63,7 @@
 {=/ attrs =}
 {=# metrics =}
 
-## Edit metric {= name =} report threshold
+### Edit metric {= name =} report threshold
 
 @Command:
 
@@ -92,7 +94,7 @@
 }
 ```
 
-## Get metric {= name =} report threshold
+### Get metric {= name =} report threshold
 
 @Command:
 
@@ -112,7 +114,7 @@
 
 - {= name =}_threshold is between [{= min_threshold =}, {= max_threshold =}]
 
-## Get metric {= name =}
+### Get metric {= name =}
 
 @Command:
 
@@ -141,11 +143,14 @@
 ```
 {=/ metrics =}
 
-# Custom commands
+## Custom commands
 
 {=# commands =}
 
 {=^ has_doc =}
+
+### Command {= name =}
+
 @Command:
 
 ```json

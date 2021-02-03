@@ -1,4 +1,4 @@
-app dht {
+app reset {
   key: "bdde6db9f3daf38f3a",
   token: "14b61d617a9c428a95542dbd097d7a0e"
 }
@@ -14,7 +14,7 @@ setup {=code
 code=}
 
 init {=code
-bool blink_state = LOW;
+int blink_state = LOW;
 code=}
 
 setup {=code
@@ -28,6 +28,7 @@ func toggle_blink {=code
         blink_state = LOW;
     }
     digitalWrite(LED_BUILTIN, blink_state);
+    return RET_SUCC;
 code=}
 
 every toggle_blink 1000

@@ -1,6 +1,6 @@
 app ds18b20 {
-  key: "ds18b20",
-  token: "ds18b20"
+  key: "bdde6db9f3daf38f3a",
+  token: "14b61d617a9c428a95542dbd097d7a0e"
 }
 
 init {=code

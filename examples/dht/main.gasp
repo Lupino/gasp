@@ -1,4 +1,4 @@
-app DhtApp {
+app dht {
   key: "bdde6db9f3daf38f3a",
   token: "14b61d617a9c428a95542dbd097d7a0e"
 }

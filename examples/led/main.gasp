@@ -1,0 +1,135 @@
+app led {
+  key: "bdde6db9f3daf38f3a",
+  token: "14b61d617a9c428a95542dbd097d7a0e"
+}
+
+init {=code
+#define GL_SERIAL Serial
+#define DEBUG_SERIAL Serial
+code=}
+
+setup {=code
+    GL_SERIAL.begin(115200);
+    while (!GL_SERIAL) {;}
+code=}
+
+attr led_state {
+  type: "int",
+  max: 1,
+  min: 0,
+  gen_set: false
+}
+
+setup {=code
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, led_state);
+code=}
+
+
+func toggle_led {=code
+    if (led_state == LOW) {
+        led_state = HIGH;
+    } else {
+        led_state = LOW;
+    }
+    digitalWrite(LED_BUILTIN, led_state);
+    get_led_state(retval);
+    return RET_ATTR;
+code=}
+
+
+func open_led {=code
+    led_state = HIGH;
+    digitalWrite(LED_BUILTIN, led_state);
+    get_led_state(retval);
+    return RET_ATTR;
+code=}
+
+
+func close_led {=code
+    led_state = LOW;
+    digitalWrite(LED_BUILTIN, led_state);
+    get_led_state(retval);
+    return RET_ATTR;
+code=}
+
+flag toggle_led {
+    retval: true
+}
+
+flag open_led {
+    retval: true
+}
+
+flag close_led {
+    retval: true
+}
+
+command toggle {
+  fn: toggle_led,
+  doc: {=md
+### Toggle led
+
+@Command:
+
+```
+{
+    "method": "toggle"
+}
+```
+
+@Return:
+
+```
+{
+    "led_state": 0
+}
+```
+md=}
+}
+
+command open {
+  fn: open_led,
+  doc: {=md
+### Open led
+
+@Command:
+
+```
+{
+    "method": "open"
+}
+```
+
+@Return:
+
+```
+{
+    "led_state": 1
+}
+```
+md=}
+}
+
+command close {
+  fn: close_led,
+  doc: {=md
+### Close led
+
+@Command:
+
+```
+{
+    "method": "close"
+}
+```
+
+@Return:
+
+```
+{
+    "led_state": 0
+}
+```
+md=}
+}
