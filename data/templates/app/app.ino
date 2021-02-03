@@ -440,6 +440,9 @@ int {= name =}() {
 {=/ retval =}
 {=/ flag =}
     {=& code =}
+    {=^ return =}
+    return RET_SUCC;
+    {=/ return =}
 }
 {=/ functions =}
 
