@@ -1,4 +1,5 @@
 {{={= =}=}}
+#include <avr/wdt.h>
 #include <givelink.h>
 #include <jsmn.h>
 {=# use_eeprom =}
@@ -17,6 +18,22 @@ unsigned long auth_timer_ms = get_current_time_ms();
 #ifndef AUTH_DELAY_MS
 #define AUTH_DELAY_MS 1000
 #endif
+
+#ifndef PONG_DELAY_MS
+#define PONG_DELAY_MS 6000
+#endif
+
+#ifndef PING_DELAY_MS
+#define PING_DELAY_MS 300000
+#endif
+
+#ifndef MAX_PING_FAILED
+#define MAX_PING_FAILED 10
+#endif
+
+unsigned long ping_timer_ms = get_current_time_ms();
+bool ponged = true;
+int ping_failed = 0;
 {=# has_metric =}
 
 #ifndef METRIC_DELAY_MS
@@ -80,7 +97,11 @@ unsigned long monitor_{= name =}_timer_ms = get_current_time_ms();
 {=/ monitors =}
 
 void setup() {
-    // put your setup code here, to run once:
+    // wdt init
+    MCUSR = 0;
+    wdt_disable();
+    wdt_enable(WDTO_8S);
+    // end wdt init
     {=# app =}
     givelink_init("{= key =}", "{= token =}");
     {=/ app =}
@@ -127,6 +148,7 @@ void setup() {
 }
 
 void loop() {
+    wdt_reset();
     {=# loops =}
     {=& code =}
     {=/ loops =}
@@ -164,6 +186,9 @@ void loop() {
                         send_packet_1(ATTRIBUTE, wantSendData);
                     }
                 }
+                if (m -> type == SUCCESS) {
+                    ponged = true;
+                }
             }
             readedLen = 0;
         }
@@ -188,6 +213,24 @@ void loop() {
             processTelemetries();
         }
         {=/ has_metric =}
+
+        if (ping_timer_ms + PING_DELAY_MS < get_current_time_ms()) {
+            send_packet_0(PING);
+            ponged = false;
+            ping_timer_ms = get_current_time_ms();
+        }
+
+        if (ponged) {
+            ping_failed = 0;
+        } else {
+            if (ping_timer_ms + PONG_DELAY_MS < get_current_time_ms()) {
+                ping_failed += 1;
+
+                if (ping_failed > MAX_PING_FAILED) {
+                    reset();
+                }
+            }
+        }
     } else {
         {=# use_eeprom =}
         requireReportAttribute = true;
@@ -579,3 +622,11 @@ bool reportAttribute() {
     return RET_SUCC;
 }
 {=/ use_eeprom =}
+
+void reset() {
+    wdt_disable();
+    wdt_enable(WDTO_15MS);
+    for (;;) {
+
+    }
+}
