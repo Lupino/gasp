@@ -225,12 +225,15 @@ getMaxCommandLength :: Gasp -> Int
 getMaxCommandLength = maximum . map getCommandLength . gaspElements
 
 
-autoAddrGasp :: Gasp -> Gasp
-autoAddrGasp = fromGaspElems . go 1 . gaspElements
+prepareGasp :: [Flag] -> Gasp -> Gasp
+prepareGasp flags = fromGaspElems . go 1 . gaspElements
   where go :: Int -> [GaspElement] -> [GaspElement]
         go _ []        = []
         go addr (GaspElementAttr x:xs) = GaspElementAttr x {attrAddr = addr} : go (addr + 4) xs
         go addr (GaspElementMetric x:xs) = GaspElementMetric x {metricAddr = addr} : go (addr + 4) xs
+        go addr (GaspElementTelemetry x:xs) = GaspElementTelemetry (setTelemetryFlag flags x) : go addr xs
+        go addr (GaspElementCmd x:xs) = GaspElementCmd (setCommandFlag flags x) : go addr xs
+        go addr (GaspElementFunction x:xs) = GaspElementFunction (setFunctionFlag flags x) : go addr xs
         go addr (x:xs) = x : go addr xs
 
 
@@ -239,9 +242,9 @@ autoAddrGasp = fromGaspElems . go 1 . gaspElements
 instance ToJSON Gasp where
     toJSON gasp0 = object
         [ "app"         .= getApp gasp
-        , "commands"    .= map (setCommandFlag flags) (getCmds gasp)
+        , "commands"    .= getCmds gasp
         , "telemetries" .= telems
-        , "functions"   .= map (setFunctionFlag flags) (getFunctions gasp)
+        , "functions"   .= getFunctions gasp
         , "loops"       .= getLoops gasp
         , "setups"      .= getSetups gasp
         , "inits"       .= getInits gasp
@@ -253,8 +256,8 @@ instance ToJSON Gasp where
         , "max_cmd_len" .= (getMaxCommandLength gasp + 1)
         , "monitors"    .= getMonitors gasp
         ]
-        where gasp  = autoAddrGasp gasp0
-              flags = getFlags gasp
+        where flags = getFlags gasp0
+              gasp  = prepareGasp flags gasp0
               attrs = getAttrs gasp
               metrics = getMetrics gasp
-              telems  = map (setTelemetryFlag flags) (getTelemetries gasp)
+              telems  = getTelemetries gasp
