@@ -4,9 +4,13 @@ module Lib
     , DataDir
     ) where
 
+import           CompileOptions      (CompileOptions)
+import qualified CompileOptions
 import           Control.Monad       (unless)
-import           Gasp                (Attr (..), Gasp (..), GaspElement (..),
-                                      Metric (..))
+import qualified ExternalCode
+import           Gasp                (Attr (..), Gasp (gaspElements),
+                                      GaspElement (..), Metric (..),
+                                      setExternalCodeFiles)
 import           Generator           (writeAppCode)
 import           Generator.Common    (ProjectRootDir)
 import           Generator.Templates (DataDir)
@@ -18,19 +22,31 @@ import qualified Util.Terminal       as Term
 
 type CompileError = String
 
-compile :: Path Abs File -> Path Abs (Dir ProjectRootDir) -> Path Abs (Dir DataDir) -> IO (Either CompileError ())
-compile gaspFile outDir dataDir = do
+compile
+  :: Path Abs File
+  -> Path Abs (Dir ProjectRootDir)
+  -> Path Abs (Dir DataDir)
+  -> CompileOptions
+  -> IO (Either CompileError ())
+compile gaspFile outDir dataDir options = do
     gaspStr <- readFile (toFilePath gaspFile)
 
     case parseGasp gaspStr of
         Left err    -> return $ Left (show err)
-        Right gasp0 -> preprocessGasp gasp0 >>= generateCode
+        Right gasp ->
+          enrichGaspASTBasedOnCompileOptions gasp options
+            >>= preprocessGasp
+            >>=  generateCode
   where
     generateCode gasp = writeAppCode gasp outDir dataDir >> return (Right ())
 
 
 preprocessGasp :: Gasp -> IO Gasp
-preprocessGasp gasp = Gasp <$> mapM mapFunc (gaspElements gasp)
+preprocessGasp gasp = do
+  elems <- mapM mapFunc (gaspElements gasp)
+  return gasp
+    { gaspElements = elems
+    }
   where mapFunc :: GaspElement -> IO GaspElement
         mapFunc (GaspElementAttr x)   = do
           unless (attrScale x > 0) $ gaspError $ concat
@@ -101,3 +117,8 @@ gaspError what = putStrLn $ Term.applyStyles [Term.Red] what
 
 gaspWarn :: String -> IO ()
 gaspWarn what = putStrLn $ Term.applyStyles [Term.Cyan] what
+
+enrichGaspASTBasedOnCompileOptions :: Gasp -> CompileOptions -> IO Gasp
+enrichGaspASTBasedOnCompileOptions gasp options = do
+    externalCodeFiles <- ExternalCode.readFiles (CompileOptions.externalCodeDirPath options)
+    return (gasp `setExternalCodeFiles` externalCodeFiles)

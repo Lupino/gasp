@@ -3,17 +3,17 @@ module Command.Compile
     , compile
     ) where
 
-import           Control.Monad.Except   (throwError)
-import           Control.Monad.IO.Class (liftIO)
-import           Data.List              (find, isSuffixOf)
-import qualified Path                   as P
-
 import           Command                (Command, CommandError (..))
 import           Command.Common         (findGaspDataDir,
                                          findGaspProjectRootDirFromCwd,
                                          gaspSaysC)
 import qualified Common
+import           CompileOptions         (CompileOptions (..))
+import           Control.Monad.Except   (throwError)
+import           Control.Monad.IO.Class (liftIO)
+import           Data.List              (find, isSuffixOf)
 import qualified Lib
+import qualified Path                   as P
 import           StrongPath             (Abs, Dir, Path, (</>))
 import qualified StrongPath             as SP
 import qualified Util.IO
@@ -41,7 +41,7 @@ compileIO gaspProjectDir outDir gaspDataDir = do
     maybeGaspFile <- findGaspFile gaspProjectDir
     case maybeGaspFile of
         Nothing -> return $ Left "No *.gasp file present in the root of Gasp project."
-        Just gaspFile -> Lib.compile gaspFile outDir gaspDataDir
+        Just gaspFile -> Lib.compile gaspFile outDir gaspDataDir options
   where
     findGaspFile :: Path Abs (Dir d) -> IO (Maybe (Path Abs SP.File))
     findGaspFile dir = do
@@ -51,3 +51,7 @@ compileIO gaspProjectDir outDir gaspDataDir = do
     isGaspFile :: P.Path P.Rel P.File -> Bool
     isGaspFile path = ".gasp" `isSuffixOf` P.toFilePath path
                       && (length (P.toFilePath path) > length (".gasp" :: String))
+
+    options = CompileOptions
+        { externalCodeDirPath = gaspProjectDir </> Common.extCodeDirInGaspProjectDir
+        }

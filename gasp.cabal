@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ae1e4a53a64a6393c907b8d046553cda068d49ee8d5412bbb0b2bee57adb97a1
+-- hash: 2b0a6dff6f74b732660f03b038a37df9b65de121ce3184b7f8b332ccbd7a5ea0
 
 name:           gasp
 version:        0.1.0.0
@@ -31,6 +31,8 @@ source-repository head
 
 library
   exposed-modules:
+      CompileOptions
+      ExternalCode
       Gasp
       Gasp.App
       Gasp.Attr
@@ -47,7 +49,10 @@ library
       Generator.AppGenerator
       Generator.AppGenerator.Common
       Generator.Common
+      Generator.ExternalCodeGenerator
+      Generator.ExternalCodeGenerator.Common
       Generator.FileDraft
+      Generator.FileDraft.CopyFileDraft
       Generator.FileDraft.TemplateFileDraft
       Generator.FileDraft.Writeable
       Generator.FileDraft.WriteableMonad

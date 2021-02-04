@@ -2,6 +2,7 @@ module Common
     ( GaspProjectDir
     , buildGaspDirInGaspProjectDir
     , buildGaspRootFileInGaspProjectDir
+    , extCodeDirInGaspProjectDir
     , gaspSays
     ) where
 
@@ -11,6 +12,7 @@ import qualified Generator.Common
 import           StrongPath       (Dir, File, Path, Rel)
 import qualified StrongPath       as SP
 import qualified Util.Terminal    as Term
+import           ExternalCode (SourceExternalCodeDir)
 
 
 data GaspProjectDir -- Root dir of Gasp project, containing source files.
@@ -24,3 +26,6 @@ buildGaspRootFileInGaspProjectDir = SP.fromPathRelFile [P.relfile|.gasproot|]
 
 gaspSays :: String -> IO ()
 gaspSays what = putStrLn $ Term.applyStyles [Term.Yellow] what
+
+extCodeDirInGaspProjectDir :: Path (Rel GaspProjectDir) (Dir SourceExternalCodeDir)
+extCodeDirInGaspProjectDir = SP.fromPathRelDir [P.reldir|src|]

@@ -46,10 +46,14 @@ module Gasp
     , module Gasp.Every
     , getEverys
     , addEvery
+
+    , setExternalCodeFiles
+    , getExternalCodeFiles
     ) where
 
 import           Data.Aeson     (ToJSON (..), object, (.=))
 
+import qualified ExternalCode
 import           Gasp.App
 import           Gasp.Attr
 import           Gasp.Command
@@ -67,6 +71,7 @@ import           Gasp.Telemetry
 
 data Gasp = Gasp
     { gaspElements      :: [GaspElement]
+    , externalCodeFiles :: [ExternalCode.File]
     } deriving (Show, Eq)
 
 data GaspElement
@@ -85,7 +90,16 @@ data GaspElement
 fromGaspElems :: [GaspElement] -> Gasp
 fromGaspElems elems = Gasp
     { gaspElements = elems
+    , externalCodeFiles = []
     }
+
+-- * External code files
+
+getExternalCodeFiles :: Gasp -> [ExternalCode.File]
+getExternalCodeFiles = externalCodeFiles
+
+setExternalCodeFiles :: Gasp -> [ExternalCode.File] -> Gasp
+setExternalCodeFiles wasp files = wasp { externalCodeFiles = files }
 
 -- * App
 
