@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2b0a6dff6f74b732660f03b038a37df9b65de121ce3184b7f8b332ccbd7a5ea0
+-- hash: fb1423127a40e4f8896e335f69766e8e84b042500510e4627d515732f5bf1692
 
 name:           gasp
 version:        0.1.0.0
@@ -143,6 +143,7 @@ test-suite gasp-test
   other-modules:
       Fixtures
       Generator.AppGeneratorTest
+      Generator.FileDraft.CopyFileDraftTest
       Generator.FileDraft.TemplateFileDraftTest
       Generator.MockWriteableMonad
       Parser.CommonTest

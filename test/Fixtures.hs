@@ -5,6 +5,7 @@ import qualified Path            as P
 import qualified System.FilePath as FP
 
 import           Gasp
+import           Gasp.App
 
 app :: App
 app = App

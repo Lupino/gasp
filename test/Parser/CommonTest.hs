@@ -27,7 +27,7 @@ spec_parseGaspCommon = do
                 `shouldBe` Right ("someApp", 'a')
 
         it "When given gasp element declaration with invalid name, returns Left" $ do
-            (isLeft $ parseGaspElementNameAndClosureContent "app" whiteSpace "app 1someApp { }")
+            isLeft (parseGaspElementNameAndClosureContent "app" whiteSpace "app 1someApp { }")
                 `shouldBe` True
 
     describe "Parsing gasp closure" $ do
@@ -36,7 +36,7 @@ spec_parseGaspCommon = do
                 `shouldBe` Right "content"
 
         it "Does not parse a closure with brackets []" $ do
-            (isLeft $ runGaspParser (gaspClosure (symbol "content")) "[ content ]")
+            isLeft (runGaspParser (gaspClosure (symbol "content")) "[ content ]")
                 `shouldBe` True
 
 
