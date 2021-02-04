@@ -6,8 +6,8 @@ module Gasp.Function
 
 import           Data.Aeson (ToJSON (..), object, (.=))
 import           Data.Text  (Text)
-import qualified Data.Text  as T (breakOnEnd, length, lines, strip, take,
-                                  takeEnd, words)
+import qualified Data.Text  as T (breakOnEnd, dropEnd, length, lines, strip,
+                                  take, takeEnd, words)
 import           Gasp.Flag  (Flag)
 
 data Function = Function
@@ -42,12 +42,12 @@ hasToken :: Text -> Text -> Bool
 hasToken tok txt
   | endC `elem` validEndC && startC `elem` validStartC = True
   | tokLen > prevLen = False
-  | otherwise = hasToken tok prev
+  | otherwise = hasToken tok $ T.dropEnd tokLen prev
   where (prev, next) = T.breakOnEnd tok txt
         tokLen = T.length tok
         prevLen = T.length prev
         endC = T.take 1 next
-        startC = T.take 1 $ T.takeEnd 7 prev
+        startC = T.take 1 $ T.takeEnd (tokLen + 1) prev
         validEndC = [" ", ",", ")"]
         validStartC = [" ", ",", "("]
 
@@ -55,4 +55,4 @@ hasRetval :: Function -> Bool
 hasRetval = hasToken "retval" . funcCode
 
 hasJson :: Function -> Bool
-hasJson = hasToken "json" . funcCode
+hasJson = hasToken "tokens" . funcCode
