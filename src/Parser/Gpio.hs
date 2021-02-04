@@ -27,7 +27,7 @@ propParser = do
     "link"  -> Link <$> identifier
     "fn"    -> Func <$> identifier
     "emit"  -> Emit <$> identifier
-    "state" -> Emit <$> identifier
+    "state" -> State <$> identifier
     _       -> fail $ "no such " ++ key
 
 -- | Parses supported app properties, expects format "key1: value1, key2: value2, ..."
