@@ -469,6 +469,15 @@ int processRequest(const char *json, int length, char *retval) {
             {=^ json =}
             int r = {= fn =}(retval);
             {=/ json =}
+            {=/ retval =}
+            {=^ retval =}
+            {=# json =}
+            int r = {= fn =}(json, requestJsmnTokens, num_tokens);
+            {=/ json =}
+            {=^ json =}
+            int r = {= fn =}();
+            {=/ json =}
+            {=/ retval =}
             if (r > RET_ERR) {
                 return r;
             } else {
@@ -477,7 +486,6 @@ int processRequest(const char *json, int length, char *retval) {
                 {=/ error =}
                 return RET_ERR;
             }
-            {=/ retval =}
             {=/ flag =}
         }
         {=/ commands =}
