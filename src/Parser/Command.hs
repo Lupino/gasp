@@ -10,6 +10,7 @@ import           Lexer
 import           Parser.Common
 import           Text.Parsec
 import           Text.Parsec.String (Parser)
+import           Text.Printf        (printf)
 
 -- | A type that describes supported app properties.
 data CommandProperty
@@ -35,8 +36,8 @@ cmdPropertyDocS = DocS <$> gaspProperty "doc" (gaspNamedClosure "md")
 getCmdFunc :: [CommandProperty] -> String
 getCmdFunc ps = head $ [t | Func t <- ps]
 
-getCmdErrS :: [CommandProperty] -> String
-getCmdErrS ps = fromMaybe "unknow" . listToMaybe $ [t | ErrS t <- ps]
+getCmdErrS :: String -> [CommandProperty] -> String
+getCmdErrS err ps = fromMaybe err . listToMaybe $ [t | ErrS t <- ps]
 
 getCmdDocS :: [CommandProperty] -> String
 getCmdDocS ps = fromMaybe "" . listToMaybe $ [t | DocS t <- ps]
@@ -50,6 +51,6 @@ command = do
         { Command.cmdName = cmdName
         , Command.cmdFunc = getCmdFunc cmdProps
         , Command.cmdFlag = initFlag (getCmdFunc cmdProps)
-        , Command.cmdErrS = getCmdErrS cmdProps
+        , Command.cmdErrS = getCmdErrS ("call %s failed" `printf` cmdName) cmdProps
         , Command.cmdDocS = pack (getCmdDocS cmdProps)
         }
