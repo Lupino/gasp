@@ -22,6 +22,7 @@ module Lexer
   , colon
   ) where
 
+import           Data.Functor         (($>))
 import           Text.Parsec          (alphaNum, char, letter, many, oneOf,
                                        (<|>))
 import           Text.Parsec.Language (emptyDef)
@@ -151,7 +152,7 @@ bool :: Parser Bool
 bool = boolTrue <|> boolFalse
 
 boolTrue :: Parser Bool
-boolTrue = reserved reservedNameBooleanTrue *> return True
+boolTrue = reserved reservedNameBooleanTrue $> True
 
 boolFalse :: Parser Bool
-boolFalse = reserved reservedNameBooleanFalse *> return False
+boolFalse = reserved reservedNameBooleanFalse $> False

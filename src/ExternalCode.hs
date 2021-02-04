@@ -7,28 +7,29 @@ module ExternalCode
     , SourceExternalCodeDir
     ) where
 
-import qualified Data.Text.Lazy as TextL
+import           Data.Text         (Text)
+import qualified Data.Text.Lazy    as TextL
 import qualified Data.Text.Lazy.IO as TextL.IO
-import Data.Text (Text)
 
+import           Data.Functor      ((<&>))
+import           StrongPath        (Abs, Dir, Path, Rel, (</>))
+import qualified StrongPath        as SP
 import qualified Util.IO
-import StrongPath (Path, Abs, Rel, Dir, (</>))
-import qualified StrongPath as SP
 
 -- | External code directory in Wasp source, from which external code files are read.
 data SourceExternalCodeDir
 
 data File = File
     { _pathInExtCodeDir :: !(Path (Rel SourceExternalCodeDir) SP.File)
-    , _extCodeDirPath :: !(Path Abs (Dir SourceExternalCodeDir))
-    , _text :: TextL.Text  -- ^ File content. It will throw error when evaluated if file is not textual file.
+    , _extCodeDirPath   :: !(Path Abs (Dir SourceExternalCodeDir))
+    , _text             :: TextL.Text  -- ^ File content. It will throw error when evaluated if file is not textual file.
     }
 
 instance Show File where
     show = show . _pathInExtCodeDir
 
 instance Eq File where
-    f1 == f2 = (_pathInExtCodeDir f1) == (_pathInExtCodeDir f2)
+    f1 == f2 = _pathInExtCodeDir f1 == _pathInExtCodeDir f2
 
 -- | Returns path relative to the external code directory.
 filePathInExtCodeDir :: File -> Path (Rel SourceExternalCodeDir) SP.File
@@ -45,7 +46,7 @@ fileAbsPath file = _extCodeDirPath file </> _pathInExtCodeDir file
 -- | Returns all files contained in the specified external code dir, recursively.
 readFiles :: Path Abs (Dir SourceExternalCodeDir) -> IO [File]
 readFiles extCodeDirPath = do
-    relFilePaths <- Util.IO.listDirectoryDeep (SP.toPathAbsDir extCodeDirPath) >>= return . (map SP.fromPathRelFile)
+    relFilePaths <- Util.IO.listDirectoryDeep (SP.toPathAbsDir extCodeDirPath) <&> map SP.fromPathRelFile
     let absFilePaths = map (extCodeDirPath </>) relFilePaths
     -- NOTE: We read text from all the files, regardless if they are text files or not, because
     --   we don't know if they are a text file or not.
@@ -61,6 +62,6 @@ readFiles extCodeDirPath = do
     --     In generator, when creating TextFileDraft, give it function/logic for text transformation,
     --     and it will be taken care of when draft will be written to the disk.
     fileTexts <- mapM (TextL.IO.readFile . SP.toFilePath) absFilePaths
-    let files = map (\(path, text) -> File path extCodeDirPath text) (zip relFilePaths fileTexts)
+    let files = zipWith (`File` extCodeDirPath) relFilePaths fileTexts
     return files
 

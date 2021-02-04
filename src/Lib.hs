@@ -8,9 +8,9 @@ import           CompileOptions      (CompileOptions)
 import qualified CompileOptions
 import           Control.Monad       (unless)
 import qualified ExternalCode
-import           Gasp                (Attr (..), Gasp (gaspElements),
-                                      GaspElement (..), Metric (..),
-                                      setExternalCodeFiles)
+import           Gasp                (Attr (..), Gasp, GaspElement (..),
+                                      Metric (..), getGaspElems,
+                                      setExternalCodeFiles, setGaspElems)
 import           Generator           (writeAppCode)
 import           Generator.Common    (ProjectRootDir)
 import           Generator.Templates (DataDir)
@@ -42,11 +42,7 @@ compile gaspFile outDir dataDir options = do
 
 
 preprocessGasp :: Gasp -> IO Gasp
-preprocessGasp gasp = do
-  elems <- mapM mapFunc (gaspElements gasp)
-  return gasp
-    { gaspElements = elems
-    }
+preprocessGasp gasp = setGaspElems gasp <$> mapM mapFunc (getGaspElems gasp)
   where mapFunc :: GaspElement -> IO GaspElement
         mapFunc (GaspElementAttr x)   = do
           unless (attrScale x > 0) $ gaspError $ concat
@@ -110,7 +106,7 @@ preprocessGasp gasp = do
 
 getCenterValue :: (Ord a) => (a, a) -> a -> (Bool, a)
 getCenterValue (minv, maxv) defv =
-  ((defv >= minv && defv <= maxv), max minv (min maxv defv))
+  (defv >= minv && defv <= maxv, max minv (min maxv defv))
 
 gaspError :: String -> IO ()
 gaspError what = putStrLn $ Term.applyStyles [Term.Red] what

@@ -22,7 +22,7 @@ import qualified Lexer              as L
 
 -- | Runs given gasp parser on a specified input.
 runGaspParser :: Parser a -> String -> Either ParseError a
-runGaspParser gaspParser input = parse gaspParser sourceName input
+runGaspParser gaspParser = parse gaspParser sourceName
   where
     -- NOTE(matija): this is used by Parsec only when reporting errors, but we currently
     -- don't provide source name (e.g. .gasp file name) to this method so leaving it empty
@@ -85,7 +85,7 @@ gaspClosure = L.braces
 gaspNamedClosure :: String -> Parser String
 gaspNamedClosure name = do
     _ <- closureStart
-    strip <$> (manyTill anyChar (try closureEnd))
+    strip <$> manyTill anyChar (try closureEnd)
   where
       closureStart = L.symbol ("{=" ++ name)
       closureEnd = L.symbol (name ++ "=}")

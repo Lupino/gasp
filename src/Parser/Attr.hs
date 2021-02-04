@@ -25,16 +25,15 @@ cusL :: Parser AttrProperty
 cusL = do
   key <- identifier
   _ <- colon
-  v <- case key of
-         "var"     -> Var <$> identifier
-         "type"    -> Type <$> stringLiteral
-         "min"     -> Min <$> float
-         "max"     -> Max <$> float
-         "default" -> Def <$> float
-         "scale"   -> Scale <$> float
-         "gen_set" -> GenSet <$> bool
-         _         -> fail $ "no such " ++ key
-  return v
+  case key of
+    "var"     -> Var <$> identifier
+    "type"    -> Type <$> stringLiteral
+    "min"     -> Min <$> float
+    "max"     -> Max <$> float
+    "default" -> Def <$> float
+    "scale"   -> Scale <$> float
+    "gen_set" -> GenSet <$> bool
+    _         -> fail $ "no such " ++ key
 
 -- | Parses supported app properties, expects format "key1: value1, key2: value2, ..."
 attrProperties :: Parser [AttrProperty]

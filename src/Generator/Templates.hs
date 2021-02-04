@@ -35,7 +35,7 @@ getTemplateFileAbsPath dataDir tmplFilePathInTemplatesDir =
     tmplFilePathInDataDir = templatesDirPathInDataDir </> tmplFilePathInTemplatesDir
 
     absPathOfTemplateFileInDataDir :: Path (Rel DataDir) File -> Path Abs File
-    absPathOfTemplateFileInDataDir filePath = (dataDir </> filePath)
+    absPathOfTemplateFileInDataDir filePath = dataDir </> filePath
 
 templatesDirPathInDataDir :: Path (Rel DataDir) (Dir TemplatesDir)
 templatesDirPathInDataDir = SP.fromPathRelDir [P.reldir|templates|]
@@ -65,7 +65,7 @@ compileMustacheTemplate dataDir relTmplPath = do
     absTmplPath = getTemplateFileAbsPath dataDir relTmplPath
 
 areAllErrorsSectionDataNotFound :: [SubstitutionError] -> Bool
-areAllErrorsSectionDataNotFound subsErrors = all isSectionDataNotFoundError subsErrors
+areAllErrorsSectionDataNotFound = all isSectionDataNotFoundError
   where
     isSectionDataNotFoundError e = case e of
         SectionTargetNotFound _ -> True
@@ -80,7 +80,7 @@ renderMustacheTemplate mustacheTemplate templateData = do
     -- NOTE(matija): Mustache reports errors when object does
     -- not have a property specified in the template, which we use to implement
     -- conditionals. This is why we ignore these errors.
-    if (null errors) || (areAllErrorsSectionDataNotFound errors)
-        then (return fileText)
-        else (error $ "Unexpected errors occured while rendering template: "
-            ++ (show errors))
+    if null errors || areAllErrorsSectionDataNotFound errors
+        then return fileText
+        else error $ "Unexpected errors occured while rendering template: "
+            ++ show errors

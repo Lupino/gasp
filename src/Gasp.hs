@@ -1,51 +1,12 @@
 module Gasp
-    ( Gasp (..)
+    ( Gasp
     , GaspElement (..)
     , fromGaspElems
-
-    , module Gasp.App
-    , fromApp
-    , getApp
-    , setApp
-
-    , module Gasp.Command
-    , getCmds
-    , addCmd
-
-    , module Gasp.Function
-    , getFunctions
-    , addFunction
-
-    , module Gasp.Telemetry
-    , getTelemetries
-    , addTelemetry
-
-    , module Gasp.Init
-    , getInits
-    , addInit
-
-    , module Gasp.Setup
-    , getSetups
-    , addSetup
-
-    , module Gasp.Loop
-    , getLoops
-    , addLoop
-
-    , module Gasp.Flag
-    , getFlags
+    , setGaspElems
+    , getGaspElems
 
     , module Gasp.Attr
-    , getAttrs
-    , addAttr
-
     , module Gasp.Metric
-    , getMetrics
-    , addMetric
-
-    , module Gasp.Every
-    , getEverys
-    , addEvery
 
     , setExternalCodeFiles
     , getExternalCodeFiles
@@ -93,6 +54,12 @@ fromGaspElems elems = Gasp
     , externalCodeFiles = []
     }
 
+setGaspElems :: Gasp -> [GaspElement] -> Gasp
+setGaspElems gasp elems = gasp {gaspElements = elems}
+
+getGaspElems :: Gasp -> [GaspElement]
+getGaspElems = gaspElements
+
 -- * External code files
 
 getExternalCodeFiles :: Gasp -> [ExternalCode.File]
@@ -105,99 +72,62 @@ setExternalCodeFiles wasp files = wasp { externalCodeFiles = files }
 
 getApp :: Gasp -> App
 getApp gasp = let apps = getApps gasp in
-    if (length apps /= 1)
+    if length apps /= 1
     then error "Gasp has to contain exactly one GaspElementApp element!"
     else head apps
 
-isAppElem :: GaspElement -> Bool
-isAppElem GaspElementApp{} = True
-isAppElem _                = False
-
 getApps :: Gasp -> [App]
 getApps gasp = [app | (GaspElementApp app) <- gaspElements gasp]
-
-setApp :: Gasp -> App -> Gasp
-setApp gasp app = gasp { gaspElements = (GaspElementApp app) : (filter (not . isAppElem) (gaspElements gasp)) }
-
-fromApp :: App -> Gasp
-fromApp app = fromGaspElems [GaspElementApp app]
 
 -- * Commands
 
 getCmds :: Gasp -> [Command]
 getCmds gasp = [cmd | (GaspElementCmd cmd) <- gaspElements gasp]
 
-addCmd :: Gasp -> Command -> Gasp
-addCmd gasp cmd = gasp { gaspElements = (GaspElementCmd cmd):(gaspElements gasp) }
-
 -- * Functions
 
 getFunctions:: Gasp -> [Function]
 getFunctions gasp = [func | (GaspElementFunction func) <- gaspElements gasp]
-
-addFunction :: Gasp -> Function -> Gasp
-addFunction gasp func = gasp { gaspElements = (GaspElementFunction func):(gaspElements gasp) }
 
 -- * Telemetries
 
 getTelemetries:: Gasp -> [Telemetry]
 getTelemetries gasp = [t | (GaspElementTelemetry t) <- gaspElements gasp]
 
-addTelemetry :: Gasp -> Telemetry -> Gasp
-addTelemetry gasp t = gasp { gaspElements = (GaspElementTelemetry t):(gaspElements gasp) }
-
 -- * Loops
 
 getLoops:: Gasp -> [Loop]
 getLoops gasp = [loop | (GaspElementLoop loop) <- gaspElements gasp]
-
-addLoop :: Gasp -> Loop -> Gasp
-addLoop gasp loop = gasp { gaspElements = (GaspElementLoop loop):(gaspElements gasp) }
 
 -- * Setups
 
 getSetups:: Gasp -> [Setup]
 getSetups gasp = [setup | (GaspElementSetup setup) <- gaspElements gasp]
 
-addSetup :: Gasp -> Setup -> Gasp
-addSetup gasp setup = gasp { gaspElements = (GaspElementSetup setup):(gaspElements gasp) }
-
 -- * Inits
 
 getInits:: Gasp -> [Init]
 getInits gasp = [initv | (GaspElementInit initv) <- gaspElements gasp]
-
-addInit :: Gasp -> Init -> Gasp
-addInit gasp initv = gasp { gaspElements = (GaspElementInit initv):(gaspElements gasp) }
 
 -- * Attrs
 
 getAttrs:: Gasp -> [Attr]
 getAttrs gasp = [attr | (GaspElementAttr attr) <- gaspElements gasp]
 
-addAttr :: Gasp -> Attr -> Gasp
-addAttr gasp attr = gasp { gaspElements = (GaspElementAttr attr):(gaspElements gasp) }
-
 -- * Metrics
 
 getMetrics:: Gasp -> [Metric]
 getMetrics gasp = [metric | (GaspElementMetric metric) <- gaspElements gasp]
-
-addMetric :: Gasp -> Metric -> Gasp
-addMetric gasp metric = gasp { gaspElements = (GaspElementMetric metric):(gaspElements gasp) }
 
 -- * Everys
 
 getEverys:: Gasp -> [Every]
 getEverys gasp = [every | (GaspElementEvery every) <- gaspElements gasp]
 
-addEvery :: Gasp -> Every -> Gasp
-addEvery gasp every = gasp { gaspElements = (GaspElementEvery every):(gaspElements gasp) }
-
 -- * Flags
 
 getFlags:: Gasp -> [Flag]
-getFlags gasp = map (flip guessFlag elems) (collectFlags [] elems)
+getFlags gasp = map (`guessFlag` elems) (collectFlags [] elems)
   where elems = gaspElements gasp
 
 
@@ -282,10 +212,10 @@ instance ToJSON Gasp where
         , "setups"      .= getSetups gasp
         , "inits"       .= getInits gasp
         , "attrs"       .= attrs
-        , "has_attr"    .= (length attrs > 0)
+        , "has_attr"    .= not (null attrs)
         , "metrics"     .= metrics
-        , "has_metric"  .= (length metrics > 0 || length telems > 0)
-        , "use_eeprom"  .= (length metrics > 0 || length attrs > 0)
+        , "has_metric"  .= (not (null metrics) || not (null telems))
+        , "use_eeprom"  .= (not (null metrics) || not (null attrs))
         , "max_cmd_len" .= (getMaxCommandLength gasp + 1)
         , "actions"     .= getEverys gasp
         ]

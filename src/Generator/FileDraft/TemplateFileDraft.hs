@@ -34,6 +34,6 @@ instance Writeable TemplateFileDraft where
                 writeFileFromText (SP.toFilePath absDraftDstPath) content
       where
         absDraftDstPath :: Path Abs File
-        absDraftDstPath = absDstDirPath </> (_dstPath draft)
+        absDraftDstPath = absDstDirPath </> _dstPath draft
 
         absDraftSrcPath = getTemplateFileAbsPath (_dataPath draft) (_srcPathInTmplDir draft)

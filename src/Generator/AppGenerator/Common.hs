@@ -39,19 +39,18 @@ makeSimpleTemplateFD
   -> Path Abs (Dir DataDir)
   -> Gasp -> FileDraft
 makeSimpleTemplateFD srcPath dataPath gasp = makeTemplateFD srcPath dataPath dstPath (Just $ Aeson.toJSON gasp)
-    where dstPath = (SP.castRel srcPath) :: Path (Rel AppRootDir) File
+    where dstPath = SP.castRel srcPath :: Path (Rel AppRootDir) File
 
 makeTemplateFD :: Path (Rel AppTemplatesDir) File
                -> Path Abs (Dir DataDir)
                -> Path (Rel AppRootDir) File
                -> Maybe Aeson.Value
                -> FileDraft
-makeTemplateFD relSrcPath dataPath relDstPath tmplData =
+makeTemplateFD relSrcPath dataPath relDstPath =
     createTemplateFileDraft
         (appRootDirInProjectRootDir </> relDstPath)
         dataPath
         (appTemplatesDirInTemplatesDir </> relSrcPath)
-        tmplData
 
 -- | Path where app app templates reside.
 appTemplatesDirInTemplatesDir :: Path (Rel TemplatesDir) (Dir AppTemplatesDir)

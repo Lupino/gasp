@@ -26,17 +26,16 @@ cusL :: Parser MetricProperty
 cusL = do
   key <- identifier
   _ <- colon
-  v <- case key of
-         "prec"          -> Prec <$> integer
-         "var"           -> Var <$> identifier
-         "type"          -> Type <$> stringLiteral
-         "threshold"     -> Threshold <$> float
-         "min_threshold" -> MinThreshold <$> float
-         "max_threshold" -> MaxThreshold <$> float
-         "min"           -> Min <$> float
-         "max"           -> Max <$> float
-         _               -> fail $ "no such " ++ key
-  return v
+  case key of
+    "prec"          -> Prec <$> integer
+    "var"           -> Var <$> identifier
+    "type"          -> Type <$> stringLiteral
+    "threshold"     -> Threshold <$> float
+    "min_threshold" -> MinThreshold <$> float
+    "max_threshold" -> MaxThreshold <$> float
+    "min"           -> Min <$> float
+    "max"           -> Max <$> float
+    _               -> fail $ "no such " ++ key
 
 -- | Parses supported app properties, expects format "key1: value1, key2: value2, ..."
 metricProperties :: Parser [MetricProperty]

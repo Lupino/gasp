@@ -58,7 +58,7 @@ parseRelFP :: MonadThrow m
 parseRelFP constructor validSeparators pathParser fp =
     let (prefix, fp') = extractRelPathPrefix validSeparators fp
         fp'' = if fp' == "" then "." else fp' -- Because Path Rel parsers can't handle just "".
-    in (\p -> constructor p prefix) <$> pathParser fp''
+    in (`constructor` prefix) <$> pathParser fp''
 
 -- | Extracts a multiple "../" from start of the file path.
 --   If path is completely ../../.., also handles the last one.
