@@ -246,13 +246,13 @@ guessFlag flag (_:xs) = guessFlag flag xs
 collectFlags :: [Flag] -> [GaspElement] -> [Flag]
 collectFlags flags [] = flags
 collectFlags flags (GaspElementTelemetry x:xs)
-  | telemFlag x `elem` flags = flags
+  | telemFlag x `elem` flags = collectFlags flags xs
   | otherwise = collectFlags (telemFlag x : flags) xs
 collectFlags flags (GaspElementCmd x:xs)
-  | cmdFlag x `elem` flags = flags
+  | cmdFlag x `elem` flags = collectFlags flags xs
   | otherwise = collectFlags (cmdFlag x : flags) xs
 collectFlags flags (GaspElementFunction x:xs)
-  | funcFlag x `elem` flags = flags
+  | funcFlag x `elem` flags = collectFlags flags xs
   | otherwise = collectFlags (funcFlag x : flags) xs
 collectFlags flags (_:xs) = collectFlags flags xs
 
