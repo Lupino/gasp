@@ -72,15 +72,16 @@ metric = do
     (metricName, metricProps) <- gaspElementNameAndClosureContent reservedNameMetric metricProperties
 
     let maxv = getMetricMax 100 metricProps
-        mint = maxv / 100
-        maxt = maxv / 2
+        minv = getMetricMin 0 metricProps
+        maxt = (maxv - minv) / 2
+        mint = maxt / 50
 
     return Metric.Metric
         { Metric.metricName         = metricName
         , Metric.metricVar          = getMetricVar metricName metricProps
         , Metric.metricType         = getMetricType "float" metricProps
         , Metric.metricMax          = maxv
-        , Metric.metricMin          = getMetricMin 0 metricProps
+        , Metric.metricMin          = minv
         , Metric.metricMaxThreshold = getMetricMaxThreshold maxt metricProps
         , Metric.metricMinThreshold = getMetricMinThreshold mint metricProps
         , Metric.metricThreshold    = getMetricThreshold mint metricProps
