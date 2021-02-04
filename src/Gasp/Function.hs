@@ -39,8 +39,13 @@ lastReturn = go . T.lines
 
 
 hasToken :: Text -> Text -> Bool
-hasToken tok txt = endC `elem` validEndC && startC `elem` validStartC
+hasToken tok txt
+  | endC `elem` validEndC && startC `elem` validStartC = True
+  | tokLen > prevLen = False
+  | otherwise = hasToken tok prev
   where (prev, next) = T.breakOnEnd tok txt
+        tokLen = T.length tok
+        prevLen = T.length prev
         endC = T.take 1 next
         startC = T.take 1 $ T.takeEnd 7 prev
         validEndC = [" ", ",", ")"]
