@@ -4,7 +4,7 @@ module Lib
     , DataDir
     ) where
 
-import           Control.Monad       (unless, when)
+import           Control.Monad       (unless)
 import           Gasp                (Attr (..), Gasp (..), GaspElement (..),
                                       Metric (..))
 import           Generator           (writeAppCode)
@@ -33,12 +33,12 @@ preprocessGasp :: Gasp -> IO Gasp
 preprocessGasp gasp = Gasp <$> mapM mapFunc (gaspElements gasp)
   where mapFunc :: GaspElement -> IO GaspElement
         mapFunc (GaspElementAttr x)   = do
-          when (attrScale x <= 0) $ gaspError $ concat
+          unless (attrScale x > 0) $ gaspError $ concat
             [ "[error] attr %s: " `printf` attrName x
             , "except scale > 0, but got "
             , "scale=%f ," `printf` attrScale x
             ]
-          when (attrMin x >= attrMax x) $ gaspError $ concat
+          unless (attrMin x < attrMax x) $ gaspError $ concat
             [ "[error] attr %s: " `printf` attrName x
             , "except min < max, but got "
             , "min=%f ," `printf` attrMin x
@@ -54,21 +54,31 @@ preprocessGasp gasp = Gasp <$> mapM mapFunc (gaspElements gasp)
           return $ GaspElementAttr x {attrDef = defv}
           where (valid, defv) = getCenterValue (attrMin x, attrMax x) (attrDef x)
         mapFunc (GaspElementMetric x) = do
-          when (metricPrec x < 1) $ gaspError $ concat
+          unless (metricPrec x > 0) $ gaspError $ concat
             [ "[error] metric %s: " `printf` metricName x
             , "except prec > 0, but got "
             , "prec=%d ," `printf` metricPrec x
             ]
-          when (metricMin x >= metricMax x) $ gaspError $ concat
+          unless (metricMin x < metricMax x) $ gaspError $ concat
             [ "[error] metric %s: " `printf` metricName x
             , "except min < max, but got "
             , "min=%f ," `printf` metricMin x
             , "max=%f ," `printf` metricMax x
             ]
-          when (metricMinThreshold x >= metricMaxThreshold x) $ gaspError $ concat
+          unless (metricMinThreshold x < metricMaxThreshold x) $ gaspError $ concat
             [ "[error] metric %s: " `printf` metricName x
             , "except min_threshold < max_threshold, but got "
             , "min_threshold=%f ," `printf` metricMinThreshold x
+            , "max_threshold=%f ," `printf` metricMaxThreshold x
+            ]
+          unless (metricMinThreshold x > 0) $ gaspError $ concat
+            [ "[error] metric %s: " `printf` metricName x
+            , "except min_threshold > 0, but got "
+            , "min_threshold=%f ," `printf` metricMinThreshold x
+            ]
+          unless (metricMaxThreshold x > 0) $ gaspError $ concat
+            [ "[error] metric %s: " `printf` metricName x
+            , "except max_threshold > 0, but got "
             , "max_threshold=%f ," `printf` metricMaxThreshold x
             ]
           unless valid $ gaspWarn $ concat
