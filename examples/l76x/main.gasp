@@ -1,0 +1,106 @@
+app l76x {
+  key: "bdde6db9f3daf38f3a",
+  token: "14b61d617a9c428a95542dbd097d7a0e"
+}
+
+init {=code
+#define GL_SERIAL Serial
+#define DEBUG_SERIAL Serial
+#define METRIC_DELAY_MS metric_delay_ms
+code=}
+
+setup {=code
+    GL_SERIAL.begin(115200);
+    while (!GL_SERIAL) {;}
+code=}
+
+attr delay {
+  var: metric_delay_ms,
+  type: "unsigned long",
+  default: 1800,
+  min: 60,
+  max: 86400,
+  scale: 1000
+}
+
+init {=code
+#include <SoftwareSerial.h>
+#include "DEV_Config.h"
+#include "L76X.h"
+uint8_t L76X_buff[100] = {0};
+uint16_t L76X_buff_size = 0;
+GNRMC GPS1;
+Coordinates coord;
+code=}
+
+setup {=code
+    DEV_Set_Baudrate(115200);
+    L76X_Send_Command(SET_NMEA_OUTPUT);
+    L76X_Send_Command(SET_NMEA_BAUDRATE_9600);
+    DEV_Delay_ms(500);
+
+    DEV_Set_Baudrate(9600);
+    DEV_Delay_ms(500);
+    L76X_Send_Command(SET_NMEA_OUTPUT);
+    L76X_Send_Command(SET_POS_FIX_10S);
+code=}
+
+loop {=code
+    while (DEV_Uart_Avaliable() > 0) {
+        uint8_t outByte = DEV_Uart_Read();
+        if (L76X_recv(L76X_buff, &L76X_buff_size, outByte)) {
+            #ifdef DEBUG
+            DEBUG_SERIAL.print("Buff: ");
+            for (int i = 0; i < L76X_buff_size; i ++) {
+                DEBUG_SERIAL.write(L76X_buff[i]);
+            }
+            DEBUG_SERIAL.println("");
+            #endif
+
+            GPS1 = L76X_Gat_GNRMC(L76X_buff, L76X_buff_size);
+            #ifdef DEBUG
+            DEBUG_SERIAL.print("Time:");
+            DEBUG_SERIAL.print(GPS1.Time_H);
+            DEBUG_SERIAL.print(":");
+            DEBUG_SERIAL.print(GPS1.Time_M);
+            DEBUG_SERIAL.print(":");
+            DEBUG_SERIAL.println(GPS1.Time_S);
+            #endif
+            L76X_buff_size = 0;
+        }
+    }
+code=}
+
+metric lat {
+  var: gps_lat,
+  type: "float",
+  max: 180,
+  min: -180,
+  max_threshold: 1,
+  min_threshold: 0.00001,
+  threshold: 0.00001,
+  prec: 6
+}
+
+metric lon {
+  var: gps_lon,
+  type: "float",
+  max: 180,
+  min: -180,
+  max_threshold: 1,
+  min_threshold: 0.00001,
+  threshold: 0.00001,
+  prec: 6
+}
+
+func read_l76x {=code
+    if (GPS1.Status == 0) {
+        return RET_ERR;
+    }
+
+    coord = L76X_Baidu_Coordinates();
+    gps_lon = coord.Lon;
+    gps_lat = coord.Lat;
+code=}
+
+every read_l76x 6000
