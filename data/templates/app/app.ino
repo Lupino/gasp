@@ -1,18 +1,27 @@
 {{={= =}=}}
+{=# use_remote =}
 #include <avr/wdt.h>
 #include <givelink.h>
 #include <jsmn.h>
+
+{=/ use_remote =}
 {=# use_eeprom =}
 #include <EEPROM.h>
+
 {=/ use_eeprom =}
+{=# has_func =}
+#define RET_ERR -1
+#define RET_SUCC 0
+
+{=/ has_func =}
+unsigned long get_current_time_ms();
 
 {=# inits =}
 {=& code =}
 
 {=/ inits =}
 
-unsigned long get_current_time_ms();
-
+{=# use_remote =}
 unsigned long auth_timer_ms = get_current_time_ms();
 
 #ifndef AUTH_DELAY_MS
@@ -79,9 +88,6 @@ char wantSendData[WANT_SEND_DATA_LENGTH];
 char tempSendData[WANT_SEND_DATA_LENGTH];
 char * wantSendDataTpl = (char *)malloc(WANT_SEND_DATA_LENGTH);
 
-#define RET_ERR -1
-#define RET_SUCC 0
-
 {=# attrs =}
 {= type =} {= var =} = {= default =};
 {= type =} last_{= var =} = {= default =};
@@ -94,6 +100,7 @@ char * wantSendDataTpl = (char *)malloc(WANT_SEND_DATA_LENGTH);
 {= type =} last_{= var =}_threshold = {= threshold =};
 
 {=/ metrics =}
+{=/ use_remote =}
 {=# actions =}
 unsigned long {= fn =}_timer_ms = get_current_time_ms();
 {=/ actions =}
@@ -117,6 +124,7 @@ int last_gpio_{= name =}_state = {= state =};
 {=/ has_gpio =}
 
 void setup() {
+    {=# use_remote =}
     // wdt init
     MCUSR = 0;
     wdt_disable();
@@ -126,6 +134,7 @@ void setup() {
     givelink_init("{= key =}", "{= token =}");
     {=/ app =}
 
+    {=/ use_remote =}
     {=# use_eeprom =}
     byte first_run_flag = 0;
     EEPROM.get(0, first_run_flag);
@@ -152,6 +161,12 @@ void setup() {
     }
 
     {=/ metrics =}
+    if (first_run_flag != 0) {
+      first_run_flag = 1;
+      EEPROM.put(0, first_run_flag);
+    }
+
+    {=/ use_eeprom =}
     {=# has_gpio =}
     {=# gpios =}
     {=# has_fn =}
@@ -163,26 +178,25 @@ void setup() {
 
     {=/ gpios =}
     {=/ has_gpio =}
-    if (first_run_flag != 0) {
-      first_run_flag = 1;
-      EEPROM.put(0, first_run_flag);
-    }
-
-    {=/ use_eeprom =}
     {=# setups =}
     {=& code =}
 
     {=/ setups =}
+    {=# use_remote =}
     #ifdef DEBUG
     DEBUG_SERIAL.println(F("Setup"));
     #endif
+    {=/ use_remote =}
 }
 
 void loop() {
+    {=# use_remote =}
     wdt_reset();
+    {=/ use_remote =}
     {=# loops =}
     {=& code =}
     {=/ loops =}
+    {=# use_remote =}
     while (GL_SERIAL.available() > 0) {
         uint8_t outByte = GL_SERIAL.read();
         if (givelink_recv(readedPayload, &readedLen, outByte)) {
@@ -270,6 +284,7 @@ void loop() {
         }
     }
 
+    {=/ use_remote =}
     {=# actions =}
     if ({= fn =}_timer_ms + {= delay_ms =} < get_current_time_ms()) {
         {= fn =}();
@@ -318,6 +333,11 @@ void loop() {
     {=/ has_gpio =}
 }
 
+unsigned long get_current_time_ms() {
+    return millis();
+}
+
+{=# use_remote =}
 void send_packet() {
     #ifdef DEBUG
     DEBUG_SERIAL.print(F("Send Id: "));
@@ -377,10 +397,6 @@ char * FC(const __FlashStringHelper *ifsh) {
     return wantSendDataTpl;
 }
 
-unsigned long get_current_time_ms() {
-    return millis();
-}
-
 char * ltrim(char *s) {
   while (*s == ' ') s++;
   return s;
@@ -419,6 +435,7 @@ bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char 
     return false;
 }
 
+{=/ use_remote =}
 {=# attrs =}
 {=# gen_set =}
 int set_{= var =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
@@ -498,13 +515,13 @@ void close_{= name =}() {
 void toggle_{= name =}() {
     {=# has_link =}
     if ({= link =} == {= open =}) {
-        {= link =} == {= close =};
+        {= link =} = {= close =};
     } else {
-        {= link =} == {= open =};
+        {= link =} = {= open =};
     }
     {=/ has_link =}
     {=^ has_link =}
-    if gpio_{= name =}_state == {= open =}) {
+    if (gpio_{= name =}_state == {= open =}) {
         close_{= name =}();
     } else {
         open_{= name =}();
@@ -541,6 +558,7 @@ int {= name =}() {
 }
 {=/ functions =}
 
+{=# use_remote =}
 int processRequest(const char *json, int length, char *retval) {
     /* Prepare parser */
     jsmn_init(&requestJsmnParser);
@@ -764,3 +782,4 @@ void reset() {
 
     }
 }
+{=/ use_remote =}
