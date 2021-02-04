@@ -38,7 +38,6 @@ func open_led {=code
     led_state = HIGH;
     digitalWrite(LED_BUILTIN, led_state);
     get_led_state(retval);
-    return RET_ATTR;
 code=}
 
 
@@ -46,7 +45,6 @@ func close_led {=code
     led_state = LOW;
     digitalWrite(LED_BUILTIN, led_state);
     get_led_state(retval);
-    return RET_ATTR;
 code=}
 
 command toggle {

@@ -81,16 +81,17 @@ char * wantSendDataTpl = (char *)malloc(WANT_SEND_DATA_LENGTH);
 
 #define RET_ERR -1
 #define RET_SUCC 0
-#define RET_ATTR 1
 
 {=# attrs =}
 {= type =} {= var =} = {= default =};
+{= type =} last_{= var =} = {= default =};
 
 {=/ attrs =}
 {=# metrics =}
 {= type =} {= var =} = 0;
 {= type =} last_{= var =} = 0;
 {= type =} {= var =}_threshold = {= threshold =};
+{= type =} last_{= var =}_threshold = {= threshold =};
 
 {=/ metrics =}
 {=# actions =}
@@ -182,10 +183,6 @@ void loop() {
                         }
                     }
                     send_packet_rsp(wantSendData);
-
-                    if (ret == RET_ATTR) {
-                        send_packet_1(ATTRIBUTE, wantSendData);
-                    }
                 }
                 if (m -> type == SUCCESS) {
                     ponged = true;
@@ -203,9 +200,9 @@ void loop() {
 
     if (givelink_authed()) {
         {=# use_eeprom =}
+        reportAttribute(requireReportAttribute);
         if (requireReportAttribute) {
             requireReportAttribute = false;
-            reportAttribute();
         }
         {=/ use_eeprom =}
         {=# has_metric =}
@@ -366,7 +363,7 @@ int set_{= var =}(const char *json, jsmntok_t *tokens, int num_tokens, char *ret
         EEPROM.put({= addr =}, tmp);
     }
     get_{= var =}(retval);
-    return RET_ATTR;
+    return RET_SUCC;
 }
 
 {=/ gen_set =}
@@ -388,7 +385,7 @@ int set_{= var =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens,
         EEPROM.put({= addr =}, {= var =}_threshold);
     }
     get_{= var =}_threshold(retval);
-    return RET_ATTR;
+    return RET_SUCC;
 }
 
 int get_{= var =}_threshold(char *retval) {
@@ -607,37 +604,57 @@ bool checkValue() {
 
 {=/ has_metric =}
 {=# use_eeprom =}
-bool reportAttribute() {
+bool reportAttribute(bool force) {
     size_t total_length = 0;
     size_t length = 0;
     size_t i = 0;
+    bool report = true;
+    bool wantSend = false;
     wantSendData[0] = '{';
     total_length += 1;
 
     {=# attrs =}
-    sprintf(tempSendData, FC(F("\"{= name =}\": %d,")), ({= type =}){= var =} / {= scale =});
-    length = strlen(tempSendData);
-    for (i=0; i<length; i++) {
-        wantSendData[total_length + i] = tempSendData[i];
+    report = last_{= var =} != {= var =};
+    if (force) {
+        report = true;
     }
-    total_length += length;
+    if (report) {
+        sprintf(tempSendData, FC(F("\"{= name =}\": %d,")), ({= type =}){= var =} / {= scale =});
+        length = strlen(tempSendData);
+        for (i=0; i<length; i++) {
+            wantSendData[total_length + i] = tempSendData[i];
+        }
+        total_length += length;
+        last_{= var =} = {= var =};
+        wantSend = true;
+    }
 
     {=/ attrs =}
     {=# metrics =}
-    requestValue[0] = '\0';
-    dtostrf({= var =}_threshold, {= threshold_width =}, {= prec =}, requestValue);
-    sprintf(tempSendData, FC(F("\"{= name =}_threshold\": %s,")), ltrim(requestValue));
-    length = strlen(tempSendData);
-    for (i=0; i<length; i++) {
-        wantSendData[total_length + i] = tempSendData[i];
+    report = last_{= var =}_threshold != {= var =}_threshold;
+    if (force) {
+        report = true;
     }
-    total_length += length;
+    if (report) {
+        requestValue[0] = '\0';
+        dtostrf({= var =}_threshold, {= threshold_width =}, {= prec =}, requestValue);
+        sprintf(tempSendData, FC(F("\"{= name =}_threshold\": %s,")), ltrim(requestValue));
+        length = strlen(tempSendData);
+        for (i=0; i<length; i++) {
+            wantSendData[total_length + i] = tempSendData[i];
+        }
+        total_length += length;
+        last_{= var =}_threshold = {= var =}_threshold;
+        wantSend = true;
+    }
 
     {=/ metrics =}
-    wantSendData[total_length-1] = '}';
-    wantSendData[total_length] = '\0';
+    if (wantSend) {
+        wantSendData[total_length-1] = '}';
+        wantSendData[total_length] = '\0';
 
-    send_packet_1(ATTRIBUTE, wantSendData);
+        send_packet_1(ATTRIBUTE, wantSendData);
+    }
     return RET_SUCC;
 }
 {=/ use_eeprom =}
