@@ -6,7 +6,6 @@ module Lexer
   , reservedNameLoop
   , reservedNameSetup
   , reservedNameInit
-  , reservedNameFlag
   , reservedNameAttr
   , reservedNameMetric
   , reservedNameEvery
@@ -52,9 +51,6 @@ reservedNameSetup = "setup"
 reservedNameInit :: String
 reservedNameInit = "init"
 
-reservedNameFlag :: String
-reservedNameFlag = "flag"
-
 reservedNameAttr :: String
 reservedNameAttr = "attr"
 
@@ -82,7 +78,6 @@ reservedNames =
     , reservedNameLoop
     , reservedNameSetup
     , reservedNameInit
-    , reservedNameFlag
     , reservedNameAttr
     , reservedNameMetric
     , reservedNameEvery

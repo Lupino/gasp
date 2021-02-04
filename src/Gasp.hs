@@ -34,7 +34,6 @@ module Gasp
 
     , module Gasp.Flag
     , getFlags
-    , addFlag
 
     , module Gasp.Attr
     , getAttrs
@@ -78,7 +77,6 @@ data GaspElement
     | GaspElementInit !Init
     | GaspElementSetup !Setup
     | GaspElementLoop !Loop
-    | GaspElementFlag !Flag
     | GaspElementAttr !Attr
     | GaspElementMetric !Metric
     | GaspElementEvery !Every
@@ -185,14 +183,9 @@ addEvery gasp every = gasp { gaspElements = (GaspElementEvery every):(gaspElemen
 -- * Flags
 
 getFlags:: Gasp -> [Flag]
-getFlags gasp =
-  map (flip guessFlag elems) (collectFlags flags elems)
-  where flags = [flag | (GaspElementFlag flag) <- gaspElements gasp]
-        elems = gaspElements gasp
+getFlags gasp = map (flip guessFlag elems) (collectFlags [] elems)
+  where elems = gaspElements gasp
 
-
-addFlag :: Gasp -> Flag -> Gasp
-addFlag gasp flag = gasp { gaspElements = (GaspElementFlag flag):(gaspElements gasp) }
 
 getFlag :: [Flag] -> Flag -> Flag
 getFlag [] flag = flag

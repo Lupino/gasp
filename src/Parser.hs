@@ -13,7 +13,6 @@ import           Parser.App         (app)
 import           Parser.Attr        (attr)
 import           Parser.Command     (command)
 import           Parser.Every       (every)
-import           Parser.Flag        (flag)
 import           Parser.Function    (function)
 import           Parser.Init        (initP)
 import           Parser.Loop        (loop)
@@ -32,7 +31,6 @@ gaspElement
     <|> gaspElementLoop
     <|> gaspElementSetup
     <|> gaspElementInit
-    <|> gaspElementFlag
     <|> gaspElementAttr
     <|> gaspElementMetric
     <|> gaspElementEvery
@@ -57,9 +55,6 @@ gaspElementSetup = Gasp.GaspElementSetup <$> setup
 
 gaspElementInit :: Parser Gasp.GaspElement
 gaspElementInit = Gasp.GaspElementInit <$> initP
-
-gaspElementFlag :: Parser Gasp.GaspElement
-gaspElementFlag = Gasp.GaspElementFlag <$> flag
 
 gaspElementAttr :: Parser Gasp.GaspElement
 gaspElementAttr = Gasp.GaspElementAttr <$> attr
