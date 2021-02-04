@@ -4,13 +4,10 @@ module Generator.ExternalCodeGenerator.Common
     , asGenExtFile
     ) where
 
-import           Data.Text        (Text)
-import qualified Path             as P
-
-import           ExternalCode     (SourceExternalCodeDir)
-import           Generator.Common (ProjectRootDir)
-import           StrongPath       (Dir, File, Path, Rel)
-import qualified StrongPath       as SP
+import           ExternalCode (SourceExternalCodeDir)
+import qualified Path         as P
+import           StrongPath   (File, Path, Rel)
+import qualified StrongPath   as SP
 
 
 data GeneratedExternalCodeDir -- ^ Path to the directory where ext code will be generated.

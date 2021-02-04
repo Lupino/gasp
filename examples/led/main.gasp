@@ -28,13 +28,9 @@ code=}
 
 func toggle_led {=code
     if (led_state == LOW) {
-        led_state = HIGH;
-    } else {
-        led_state = LOW;
+        return open_led(retval);
     }
-    digitalWrite(LED_BUILTIN, led_state);
-    get_led_state(retval);
-    return RET_ATTR;
+    return close_led(retval);
 code=}
 
 

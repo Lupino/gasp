@@ -5,8 +5,8 @@ module Command
     , CommandError(..)
     ) where
 
-import Control.Monad.Except (ExceptT, MonadError, runExceptT)
-import Control.Monad.IO.Class (MonadIO)
+import           Control.Monad.Except   (ExceptT, MonadError, runExceptT)
+import           Control.Monad.IO.Class (MonadIO)
 
 
 newtype Command a = Command { _runCommand :: ExceptT CommandError IO a }

@@ -32,7 +32,7 @@ createNewProject projectName = do
     liftIO $ do
         putStrLn $ Term.applyStyles [Term.Green] $ "Created new Gasp project in ./" ++ projectName ++ " directory!"
         putStrLn $ "Move into created directory and type '"
-            ++ (Term.applyStyles [Term.Bold] "gasp compile")
+            ++ Term.applyStyles [Term.Bold] "gasp compile"
             ++ "' to compile the app."
 
   where

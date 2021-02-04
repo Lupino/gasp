@@ -4,7 +4,6 @@ module Generator.FileDraft.Writeable
 
 import           Generator.Common                   (ProjectRootDir)
 import           Generator.FileDraft.WriteableMonad
-import           Generator.Templates                (DataDir)
 import           StrongPath                         (Abs, Dir, Path)
 
 
