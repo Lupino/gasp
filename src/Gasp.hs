@@ -186,7 +186,7 @@ addEvery gasp every = gasp { gaspElements = (GaspElementEvery every):(gaspElemen
 
 getFlags:: Gasp -> [Flag]
 getFlags gasp =
-  map (flip autoRetvalFlag elems) (collectFlags flags elems)
+  map (flip guessFlag elems) (collectFlags flags elems)
   where flags = [flag | (GaspElementFlag flag) <- gaspElements gasp]
         elems = gaspElements gasp
 
@@ -240,16 +240,15 @@ prepareGasp flags = fromGaspElems . go 1 . gaspElements
         go addr (GaspElementFunction x:xs) = GaspElementFunction (setFunctionFlag flags x) : go addr xs
         go addr (x:xs) = x : go addr xs
 
-
-autoRetvalFlag :: Flag -> [GaspElement] -> Flag
-autoRetvalFlag flag [] = flag
-autoRetvalFlag flag (GaspElementCmd x:xs)
-  | cmdFlag x == flag = flag { flagRetval = True }
-  | otherwise = autoRetvalFlag flag xs
-autoRetvalFlag flag (GaspElementTelemetry x:xs)
-  | telemFlag x == flag = flag { flagRetval = True }
-  | otherwise = autoRetvalFlag flag xs
-autoRetvalFlag flag (_:xs) = autoRetvalFlag flag xs
+guessFlag :: Flag -> [GaspElement] -> Flag
+guessFlag flag [] = flag
+guessFlag flag (GaspElementFunction x:xs)
+  | funcFlag x == flag = flag
+    { flagRetval = hasRetval x
+    , flagJson = hasJson x
+    }
+  | otherwise = guessFlag flag xs
+guessFlag flag (_:xs) = guessFlag flag xs
 
 collectFlags :: [Flag] -> [GaspElement] -> [Flag]
 collectFlags flags [] = flags
