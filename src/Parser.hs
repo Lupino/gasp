@@ -2,25 +2,22 @@ module Parser
     ( parseGasp
     ) where
 
-import           Text.Parsec        (ParseError, eof, many1, (<|>))
-import           Text.Parsec.String (Parser)
-
 import qualified Gasp
-
 import           Lexer
-
 import           Parser.App         (app)
 import           Parser.Attr        (attr)
 import           Parser.Command     (command)
+import           Parser.Common      (runGaspParser)
 import           Parser.Every       (every)
 import           Parser.Function    (function)
+import           Parser.Gpio        (gpio)
 import           Parser.Init        (initP)
 import           Parser.Loop        (loop)
 import           Parser.Metric      (metric)
 import           Parser.Setup       (setup)
 import           Parser.Telemetry   (telemetry)
-
-import           Parser.Common      (runGaspParser)
+import           Text.Parsec        (ParseError, eof, many1, (<|>))
+import           Text.Parsec.String (Parser)
 
 gaspElement :: Parser Gasp.GaspElement
 gaspElement
@@ -34,6 +31,7 @@ gaspElement
     <|> gaspElementAttr
     <|> gaspElementMetric
     <|> gaspElementEvery
+    <|> gaspElementGpio
 
 gaspElementApp :: Parser Gasp.GaspElement
 gaspElementApp = Gasp.GaspElementApp <$> app
@@ -64,6 +62,9 @@ gaspElementMetric = Gasp.GaspElementMetric <$> metric
 
 gaspElementEvery :: Parser Gasp.GaspElement
 gaspElementEvery = Gasp.GaspElementEvery <$> every
+
+gaspElementGpio :: Parser Gasp.GaspElement
+gaspElementGpio = Gasp.GaspElementGpio <$> gpio
 
 
 -- | Top level parser, produces Gasp.

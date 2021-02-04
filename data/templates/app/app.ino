@@ -98,6 +98,24 @@ char * wantSendDataTpl = (char *)malloc(WANT_SEND_DATA_LENGTH);
 unsigned long {= fn =}_timer_ms = get_current_time_ms();
 {=/ actions =}
 
+{=# has_input =}
+#ifndef DEBOUNCE_DELAY_MS
+#define DEBOUNCE_DELAY_MS 50
+#endif
+int gpio_reading = 0;
+{=/ has_input =}
+{=# has_gpio =}
+{=# gpios =}
+int gpio_{= name =}_pin = {= pin =};
+int gpio_{= name =}_state = {= state =};
+{=# has_fn =}
+unsigned long last_gpio_{= name =}_debounce_time_ms = get_current_time_ms();
+int last_gpio_{= name =}_state = {= state =};
+{=/ has_fn =}
+
+{=/ gpios =}
+{=/ has_gpio =}
+
 void setup() {
     // wdt init
     MCUSR = 0;
@@ -134,6 +152,17 @@ void setup() {
     }
 
     {=/ metrics =}
+    {=# has_gpio =}
+    {=# gpios =}
+    {=# has_fn =}
+    pinMode(gpio_{= name =}_pin, INPUT);
+    {=/ has_fn =}
+    {=^ has_fn =}
+    pinMode(gpio_{= name =}_pin, OUTPUT);
+    {=/ has_fn =}
+
+    {=/ gpios =}
+    {=/ has_gpio =}
     if (first_run_flag != 0) {
       first_run_flag = 1;
       EEPROM.put(0, first_run_flag);
@@ -247,6 +276,32 @@ void loop() {
         {= fn =}_timer_ms = get_current_time_ms();
     }
     {=/ actions =}
+    {=# has_gpio =}
+    {=# gpios =}
+    {=# has_fn =}
+    gpio_reading = digitalRead(gpio_{= name =}_pin);
+    if (gpio_reading != last_gpio_{= name =}_state) {
+        last_gpio_{= name =}_debounce_time_ms = get_current_time_ms();
+    }
+    if ((get_current_time_ms() - last_gpio_{= name =}_debounce_time_ms) > DEBOUNCE_DELAY_MS) {
+        if (gpio_reading != gpio_{= name =}_state) {
+          gpio_{= name =}_state = gpio_reading;
+          if (gpio_{= name =}_state == {= emit =}) {
+            {= fn =}();
+          }
+        }
+    }
+    last_gpio_{= name =}_state = gpio_reading;
+    {=/ has_fn =}
+    {=# has_link =}
+    if ({= link =} != gpio_{= name =}_state) {
+        gpio_{= name =}_state = {= link =};
+        digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
+    }
+    {=/ has_link =}
+
+    {=/ gpios =}
+    {=/ has_gpio =}
 }
 
 void send_packet() {

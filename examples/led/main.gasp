@@ -20,12 +20,6 @@ attr led_state {
   gen_set: false
 }
 
-setup {=code
-    pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, led_state);
-code=}
-
-
 func toggle_led {=code
     if (led_state == LOW) {
         return open_led(retval);
@@ -36,14 +30,12 @@ code=}
 
 func open_led {=code
     led_state = HIGH;
-    digitalWrite(LED_BUILTIN, led_state);
     get_led_state(retval);
 code=}
 
 
 func close_led {=code
     led_state = LOW;
-    digitalWrite(LED_BUILTIN, led_state);
     get_led_state(retval);
 code=}
 
@@ -115,3 +107,22 @@ command close {
 ```
 md=}
 }
+
+gpio blinker {
+    pin: "LED_BUILTIN",
+    link: led_state
+}
+
+gpio button {
+    pin: "12",
+    fn: toggle_blink,
+    emit: LOW
+}
+
+func toggle_blink {=code
+    if (led_state == LOW) {
+        led_state = HIGH;
+    } else {
+        led_state = LOW;
+    }
+code=}

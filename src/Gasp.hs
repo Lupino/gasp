@@ -21,6 +21,7 @@ import           Gasp.Command
 import           Gasp.Every
 import           Gasp.Flag
 import           Gasp.Function
+import           Gasp.Gpio
 import           Gasp.Init
 import           Gasp.Loop
 import           Gasp.Metric
@@ -46,6 +47,7 @@ data GaspElement
     | GaspElementAttr !Attr
     | GaspElementMetric !Metric
     | GaspElementEvery !Every
+    | GaspElementGpio !Gpio
     deriving (Show, Eq)
 
 fromGaspElems :: [GaspElement] -> Gasp
@@ -114,6 +116,14 @@ getInits gasp = [initv | (GaspElementInit initv) <- gaspElements gasp]
 getAttrs:: Gasp -> [Attr]
 getAttrs gasp = [attr | (GaspElementAttr attr) <- gaspElements gasp]
 
+getAttrVar :: [Attr] -> String -> String
+getAttrVar _ "" = ""
+getAttrVar [] n = n
+getAttrVar (x:xs) n
+  | attrName x == n = attrVar x
+  | otherwise = getAttrVar xs n
+
+
 -- * Metrics
 
 getMetrics:: Gasp -> [Metric]
@@ -123,6 +133,21 @@ getMetrics gasp = [metric | (GaspElementMetric metric) <- gaspElements gasp]
 
 getEverys:: Gasp -> [Every]
 getEverys gasp = [every | (GaspElementEvery every) <- gaspElements gasp]
+
+-- * Gpios
+
+getGpios :: Gasp -> [Gpio]
+getGpios gasp = [replaceLink(gpio) | (GaspElementGpio gpio) <- gaspElements gasp]
+  where attrs = getAttrs gasp
+        replaceLink :: Gpio -> Gpio
+        replaceLink gpio = gpio {gpioLink = var}
+          where var = getAttrVar attrs $ gpioLink gpio
+
+hasInput :: [Gpio] -> Bool
+hasInput [] = False
+hasInput (x:xs)
+  | null (gpioFunc x) = hasInput xs
+  | otherwise = True
 
 -- * Flags
 
@@ -218,8 +243,12 @@ instance ToJSON Gasp where
         , "use_eeprom"  .= (not (null metrics) || not (null attrs))
         , "max_cmd_len" .= (getMaxCommandLength gasp + 1)
         , "actions"     .= getEverys gasp
+        , "gpios"       .= gpios
+        , "has_gpio"    .= not (null gpios)
+        , "has_input"   .= hasInput gpios
         ]
         where gasp = prepareGasp (getFlags gasp0) gasp0
               attrs = getAttrs gasp
               metrics = getMetrics gasp
               telems  = getTelemetries gasp
+              gpios = getGpios gasp
