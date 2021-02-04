@@ -294,10 +294,24 @@ void loop() {
     last_gpio_{= name =}_state = gpio_reading;
     {=/ has_fn =}
     {=# has_link =}
-    if ({= link =} != gpio_{= name =}_state) {
-        gpio_{= name =}_state = {= link =};
-        digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
+    {=# reverse =}
+    if ({= link =} == gpio_{= name =}_state) {
+        if ({= link =} == {= open =}) {
+            close_{= name =}();
+        } else {
+            open_{= name =}();
+        }
     }
+    {=/ reverse =}
+    {=^ reverse =}
+    if ({= link =} != gpio_{= name =}_state) {
+        if ({= link =} == {= open =}) {
+            open_{= name =}();
+        } else {
+            close_{= name =}();
+        }
+    }
+    {=/ reverse =}
     {=/ has_link =}
 
     {=/ gpios =}
@@ -471,6 +485,35 @@ int get_{= var =}(char *retval) {
 }
 
 {=/ metrics =}
+{=# gpios =}
+{=^ has_fn =}
+void open_{= name =}() {
+    gpio_{= name =}_state = {= open =};
+    digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
+}
+void close_{= name =}() {
+    gpio_{= name =}_state = {= close =};
+    digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
+}
+void toggle_{= name =}() {
+    {=# has_link =}
+    if ({= link =} == {= open =}) {
+        {= link =} == {= close =};
+    } else {
+        {= link =} == {= open =};
+    }
+    {=/ has_link =}
+    {=^ has_link =}
+    if gpio_{= name =}_state == {= open =}) {
+        close_{= name =}();
+    } else {
+        open_{= name =}();
+    }
+    {=/ has_link =}
+}
+{=/ has_fn =}
+
+{=/ gpios =}
 {=# functions =}
 
 {=# flag =}

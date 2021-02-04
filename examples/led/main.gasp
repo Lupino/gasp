@@ -21,10 +21,8 @@ attr led_state {
 }
 
 func toggle_led {=code
-    if (led_state == LOW) {
-        return open_led(retval);
-    }
-    return close_led(retval);
+    toggle_blinker();
+    get_led_state(retval);
 code=}
 
 
@@ -110,19 +108,13 @@ md=}
 
 gpio blinker {
     pin: "LED_BUILTIN",
-    link: led_state
+    link: led_state,
+    state: LOW
 }
 
 gpio button {
     pin: "12",
-    fn: toggle_blink,
+    fn: toggle_blinker,
+    state: HIGH,
     emit: LOW
 }
-
-func toggle_blink {=code
-    if (led_state == LOW) {
-        led_state = HIGH;
-    } else {
-        led_state = LOW;
-    }
-code=}

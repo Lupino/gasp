@@ -5,12 +5,15 @@ module Gasp.Gpio
 import           Data.Aeson (ToJSON (..), object, (.=))
 
 data Gpio = Gpio
-    { gpioName  :: !String -- Identifier
-    , gpioPin   :: !String
-    , gpioLink  :: !String
-    , gpioFunc  :: !String
-    , gpioEmit  :: !String
-    , gpioState :: !String
+    { gpioName    :: !String -- Identifier
+    , gpioPin     :: !String
+    , gpioLink    :: !String
+    , gpioFunc    :: !String
+    , gpioEmit    :: !String
+    , gpioState   :: !String
+    , gpioOpen    :: !String
+    , gpioClose   :: !String
+    , gpioReverse :: !Bool
     } deriving (Show, Eq)
 
 instance ToJSON Gpio where
@@ -21,6 +24,9 @@ instance ToJSON Gpio where
         , "link"     .= gpioLink gpio
         , "emit"     .= gpioEmit gpio
         , "state"    .= gpioState gpio
+        , "open"     .= gpioOpen gpio
+        , "close"    .= gpioClose gpio
+        , "reverse"  .= gpioReverse gpio
         , "has_link" .= not (null $ gpioLink gpio)
         , "has_fn"   .= not (null $ gpioFunc gpio)
         ]
