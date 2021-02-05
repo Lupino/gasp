@@ -468,7 +468,6 @@ int set_{= var =}(const char *json, jsmntok_t *tokens, int num_tokens, char *ret
 {=/ gen_set =}
 int get_{= var =}(char *retval) {
     sprintf(retval, FC(F("{\"{= name =}\": %d}")), ({= type =}){= var =} / {= scale =});
-    last_{= var =} = {= var =};
     return RET_SUCC;
 }
 
@@ -491,7 +490,6 @@ int set_{= var =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens,
 int get_{= var =}_threshold(char *retval) {
     dtostrf({= var =}_threshold, {= threshold_width =}, {= prec =}, requestValue);
     sprintf(retval, FC(F("{\"{= name =}_threshold\": %s}")), ltrim(requestValue));
-    last_{= var =}_threshold = {= var =}_threshold;
     return RET_SUCC;
 }
 
@@ -511,9 +509,7 @@ int get_{= var =}(char *retval) {
         return invalid_{= var =}_error(retval);
     }
     dtostrf({= var =}, {= width =}, {= prec =}, requestValue);
-    last_{= var =} = {= var =};
     sprintf(retval, FC(F("{\"{= name =}\": %s}")), ltrim(requestValue));
-    last_{= var =} = {= var =};
     return RET_SUCC;
 }
 
@@ -705,6 +701,7 @@ bool processTelemetries() {
     if (get_{= var =}(tempSendData) > RET_ERR) {
         merge_json(wantSendData, tempSendData, &total_length);
         wantSend = true;
+        last_{= var =} = {= var =};
     }
 
     {=/ metrics =}
@@ -747,6 +744,7 @@ bool reportAttribute(bool force) {
         if (get_{= var =}(tempSendData) > RET_ERR) {
             merge_json(wantSendData, tempSendData, &total_length);
             wantSend = true;
+            last_{= var =} = {= var =};
         }
     }
 
@@ -761,6 +759,7 @@ bool reportAttribute(bool force) {
         if (get_{= var =}_threshold(tempSendData) > RET_ERR) {
             merge_json(wantSendData, tempSendData, &total_length);
             wantSend = true;
+            last_{= var =}_threshold = {= var =}_threshold;
         }
     }
 
