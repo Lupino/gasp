@@ -19,7 +19,7 @@ import           Test.Tasty.Hspec
 spec_AppGenerator :: Spec
 spec_AppGenerator = do
     let testApp = (App "TestApp" "TestKey" "TestToken")
-    let testGasp = fromGaspElems [GaspElementApp testApp]
+    let testGasp = fromGaspExprs [ExprApp testApp]
         dataDir = SP.fromPathAbsDir $ systemPathRoot P.</> [P.reldir|a/b|]
 
     describe "generateApp" $ do

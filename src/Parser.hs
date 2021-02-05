@@ -19,52 +19,52 @@ import           Parser.Telemetry   (telemetry)
 import           Text.Parsec        (ParseError, eof, many1, (<|>))
 import           Text.Parsec.String (Parser)
 
-gaspElement :: Parser Gasp.GaspElement
-gaspElement
-    =   gaspElementApp
-    <|> gaspElementCmd
-    <|> gaspElementTelemetry
-    <|> gaspElementFunction
-    <|> gaspElementLoop
-    <|> gaspElementSetup
-    <|> gaspElementInit
-    <|> gaspElementAttr
-    <|> gaspElementMetric
-    <|> gaspElementEvery
-    <|> gaspElementGpio
+expr :: Parser Gasp.Expr
+expr
+    =   exprApp
+    <|> exprCmd
+    <|> exprTelemetry
+    <|> exprFunction
+    <|> exprLoop
+    <|> exprSetup
+    <|> exprInit
+    <|> exprAttr
+    <|> exprMetric
+    <|> exprEvery
+    <|> exprGpio
 
-gaspElementApp :: Parser Gasp.GaspElement
-gaspElementApp = Gasp.GaspElementApp <$> app
+exprApp :: Parser Gasp.Expr
+exprApp = Gasp.ExprApp <$> app
 
-gaspElementCmd :: Parser Gasp.GaspElement
-gaspElementCmd = Gasp.GaspElementCmd <$> command
+exprCmd :: Parser Gasp.Expr
+exprCmd = Gasp.ExprCmd <$> command
 
-gaspElementTelemetry :: Parser Gasp.GaspElement
-gaspElementTelemetry = Gasp.GaspElementTelemetry <$> telemetry
+exprTelemetry :: Parser Gasp.Expr
+exprTelemetry = Gasp.ExprTelemetry <$> telemetry
 
-gaspElementFunction :: Parser Gasp.GaspElement
-gaspElementFunction = Gasp.GaspElementFunction <$> function
+exprFunction :: Parser Gasp.Expr
+exprFunction = Gasp.ExprFunction <$> function
 
-gaspElementLoop :: Parser Gasp.GaspElement
-gaspElementLoop = Gasp.GaspElementLoop <$> loop
+exprLoop :: Parser Gasp.Expr
+exprLoop = Gasp.ExprLoop <$> loop
 
-gaspElementSetup :: Parser Gasp.GaspElement
-gaspElementSetup = Gasp.GaspElementSetup <$> setup
+exprSetup :: Parser Gasp.Expr
+exprSetup = Gasp.ExprSetup <$> setup
 
-gaspElementInit :: Parser Gasp.GaspElement
-gaspElementInit = Gasp.GaspElementInit <$> initP
+exprInit :: Parser Gasp.Expr
+exprInit = Gasp.ExprInit <$> initP
 
-gaspElementAttr :: Parser Gasp.GaspElement
-gaspElementAttr = Gasp.GaspElementAttr <$> attr
+exprAttr :: Parser Gasp.Expr
+exprAttr = Gasp.ExprAttr <$> attr
 
-gaspElementMetric :: Parser Gasp.GaspElement
-gaspElementMetric = Gasp.GaspElementMetric <$> metric
+exprMetric :: Parser Gasp.Expr
+exprMetric = Gasp.ExprMetric <$> metric
 
-gaspElementEvery :: Parser Gasp.GaspElement
-gaspElementEvery = Gasp.GaspElementEvery <$> every
+exprEvery :: Parser Gasp.Expr
+exprEvery = Gasp.ExprEvery <$> every
 
-gaspElementGpio :: Parser Gasp.GaspElement
-gaspElementGpio = Gasp.GaspElementGpio <$> gpio
+exprGpio :: Parser Gasp.Expr
+exprGpio = Gasp.ExprGpio <$> gpio
 
 
 -- | Top level parser, produces Gasp.
@@ -75,7 +75,7 @@ gaspParser = do
     -- so they do it themselves.
     whiteSpace
 
-    gaspElems <- many1 gaspElement
+    exprs <- many1 expr
 
     eof
 
@@ -83,7 +83,7 @@ gaspParser = do
     -- e.g. check there is only 1 title - if not, throw a meaningful error.
     -- Also, check there is at least one Page defined.
 
-    return $ Gasp.fromGaspElems gaspElems
+    return $ Gasp.fromGaspExprs exprs
 
 -- | Top level parser executor.
 parseGasp :: String -> Either ParseError Gasp.Gasp

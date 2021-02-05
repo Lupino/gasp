@@ -8,9 +8,9 @@ import           CompileOptions      (CompileOptions)
 import qualified CompileOptions
 import           Control.Monad       (unless)
 import qualified ExternalCode
-import           Gasp                (Attr (..), Gasp, GaspElement (..),
-                                      Metric (..), getGaspElems,
-                                      setExternalCodeFiles, setGaspElems)
+import           Gasp                (Attr (..), Expr (..), Gasp, Metric (..),
+                                      getGaspExprs, setExternalCodeFiles,
+                                      setGaspExprs)
 import           Generator           (writeAppCode)
 import           Generator.Common    (ProjectRootDir)
 import           Generator.Templates (DataDir)
@@ -42,9 +42,9 @@ compile gaspFile outDir dataDir options = do
 
 
 preprocessGasp :: Gasp -> IO Gasp
-preprocessGasp gasp = setGaspElems gasp <$> mapM mapFunc (getGaspElems gasp)
-  where mapFunc :: GaspElement -> IO GaspElement
-        mapFunc (GaspElementAttr x)   = do
+preprocessGasp gasp = setGaspExprs gasp <$> mapM mapFunc (getGaspExprs gasp)
+  where mapFunc :: Expr -> IO Expr
+        mapFunc (ExprAttr x)   = do
           unless (attrScale x > 0) $ gaspError $ concat
             [ "[error] attr %s: " `printf` attrName x
             , "except scale > 0, but got "
@@ -63,9 +63,9 @@ preprocessGasp gasp = setGaspElems gasp <$> mapM mapFunc (getGaspElems gasp)
             , "%f], " `printf` attrMax x
             , "use %f" `printf` defv
             ]
-          return $ GaspElementAttr x {attrDef = defv}
+          return $ ExprAttr x {attrDef = defv}
           where (valid, defv) = getCenterValue (attrMin x, attrMax x) (attrDef x)
-        mapFunc (GaspElementMetric x) = do
+        mapFunc (ExprMetric x) = do
           unless (metricPrec x > 0) $ gaspError $ concat
             [ "[error] metric %s: " `printf` metricName x
             , "except prec > 0, but got "
@@ -100,7 +100,7 @@ preprocessGasp gasp = setGaspElems gasp <$> mapM mapFunc (getGaspElems gasp)
             , "%f], " `printf` metricMaxThreshold x
             , "use %f" `printf` defv
             ]
-          return $ GaspElementMetric x {metricThreshold = defv}
+          return $ ExprMetric x {metricThreshold = defv}
           where (valid, defv) = getCenterValue (metricMinThreshold x, metricMaxThreshold x) (metricThreshold x)
         mapFunc v             = return v
 

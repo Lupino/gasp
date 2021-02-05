@@ -15,8 +15,8 @@ app = App
     }
 
 gasp :: Gasp
-gasp = fromGaspElems
-    [ GaspElementApp app
+gasp = fromGaspExprs
+    [ ExprApp app
     ]
 
 systemPathRoot :: P.Path P.Abs P.Dir

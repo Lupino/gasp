@@ -13,21 +13,21 @@ spec_parseGaspCommon :: Spec
 spec_parseGaspCommon = do
 
     describe "Parsing gasp element name and properties" $ do
-        let parseGaspElementNameAndClosureContent elemKeyword p input =
+        let parseExprNameAndClosureContent elemKeyword p input =
                 runGaspParser (gaspElementNameAndClosureContent elemKeyword p) input
 
         it "When given valid gasp element declaration along with whitespace parser,\
             \ returns an expected result" $ do
-            parseGaspElementNameAndClosureContent "app" whiteSpace "app someApp { }"
+            parseExprNameAndClosureContent "app" whiteSpace "app someApp { }"
                 `shouldBe` Right ("someApp", ())
 
         it "When given valid gasp element declaration along with char parser, returns\
             \ an expected result" $ do
-            parseGaspElementNameAndClosureContent "app" (char 'a') "app someApp {a}"
+            parseExprNameAndClosureContent "app" (char 'a') "app someApp {a}"
                 `shouldBe` Right ("someApp", 'a')
 
         it "When given gasp element declaration with invalid name, returns Left" $ do
-            isLeft (parseGaspElementNameAndClosureContent "app" whiteSpace "app 1someApp { }")
+            isLeft (parseExprNameAndClosureContent "app" whiteSpace "app 1someApp { }")
                 `shouldBe` True
 
     describe "Parsing gasp closure" $ do

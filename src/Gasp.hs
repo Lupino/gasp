@@ -1,9 +1,9 @@
 module Gasp
     ( Gasp
-    , GaspElement (..)
-    , fromGaspElems
-    , setGaspElems
-    , getGaspElems
+    , Expr (..)
+    , fromGaspExprs
+    , setGaspExprs
+    , getGaspExprs
 
     , module Gasp.Attr
     , module Gasp.Metric
@@ -31,35 +31,35 @@ import           Gasp.Telemetry
 -- * Gasp
 
 data Gasp = Gasp
-    { gaspElements      :: [GaspElement]
+    { gaspExprs         :: [Expr]
     , externalCodeFiles :: [ExternalCode.File]
     } deriving (Show, Eq)
 
-data GaspElement
-    = GaspElementApp !App
-    | GaspElementCmd !Command
-    | GaspElementTelemetry !Telemetry
-    | GaspElementFunction !Function
-    | GaspElementInit !Init
-    | GaspElementSetup !Setup
-    | GaspElementLoop !Loop
-    | GaspElementAttr !Attr
-    | GaspElementMetric !Metric
-    | GaspElementEvery !Every
-    | GaspElementGpio !Gpio
+data Expr
+    = ExprApp !App
+    | ExprCmd !Command
+    | ExprTelemetry !Telemetry
+    | ExprFunction !Function
+    | ExprInit !Init
+    | ExprSetup !Setup
+    | ExprLoop !Loop
+    | ExprAttr !Attr
+    | ExprMetric !Metric
+    | ExprEvery !Every
+    | ExprGpio !Gpio
     deriving (Show, Eq)
 
-fromGaspElems :: [GaspElement] -> Gasp
-fromGaspElems elems = Gasp
-    { gaspElements = elems
+fromGaspExprs :: [Expr] -> Gasp
+fromGaspExprs exprs = Gasp
+    { gaspExprs = exprs
     , externalCodeFiles = []
     }
 
-setGaspElems :: Gasp -> [GaspElement] -> Gasp
-setGaspElems gasp elems = gasp {gaspElements = elems}
+setGaspExprs :: Gasp -> [Expr] -> Gasp
+setGaspExprs gasp exprs = gasp {gaspExprs = exprs}
 
-getGaspElems :: Gasp -> [GaspElement]
-getGaspElems = gaspElements
+getGaspExprs :: Gasp -> [Expr]
+getGaspExprs = gaspExprs
 
 -- * External code files
 
@@ -76,42 +76,42 @@ getApp gasp =
   case apps of
     [app] -> app
     []    -> emptyApp
-    _     -> error "Gasp has to contain exactly one GaspElementApp element!"
+    _     -> error "Gasp has to contain exactly one ExprApp element!"
 
   where apps = getApps gasp
 
 getApps :: Gasp -> [App]
-getApps gasp = [app | (GaspElementApp app) <- gaspElements gasp]
+getApps gasp = [app | (ExprApp app) <- gaspExprs gasp]
 
 -- * Commands
 
 getCmds :: Gasp -> [Command]
-getCmds gasp = [cmd | (GaspElementCmd cmd) <- gaspElements gasp]
+getCmds gasp = [cmd | (ExprCmd cmd) <- gaspExprs gasp]
 
 -- * Functions
 
 getFunctions:: Gasp -> [Function]
-getFunctions gasp = [func | (GaspElementFunction func) <- gaspElements gasp]
+getFunctions gasp = [func | (ExprFunction func) <- gaspExprs gasp]
 
 -- * Telemetries
 
 getTelemetries:: Gasp -> [Telemetry]
-getTelemetries gasp = [t | (GaspElementTelemetry t) <- gaspElements gasp]
+getTelemetries gasp = [t | (ExprTelemetry t) <- gaspExprs gasp]
 
 -- * Loops
 
 getLoops:: Gasp -> [Loop]
-getLoops gasp = [loop | (GaspElementLoop loop) <- gaspElements gasp]
+getLoops gasp = [loop | (ExprLoop loop) <- gaspExprs gasp]
 
 -- * Setups
 
 getSetups:: Gasp -> [Setup]
-getSetups gasp = [setup | (GaspElementSetup setup) <- gaspElements gasp]
+getSetups gasp = [setup | (ExprSetup setup) <- gaspExprs gasp]
 
 -- * Inits
 
 getInits:: Gasp -> [Init]
-getInits gasp = [initv | (GaspElementInit initv) <- gaspElements gasp]
+getInits gasp = [initv | (ExprInit initv) <- gaspExprs gasp]
 
 initDebug :: [Init] -> Bool
 initDebug [] = False
@@ -122,7 +122,7 @@ initDebug (x:xs)
 -- * Attrs
 
 getAttrs:: Gasp -> [Attr]
-getAttrs gasp = [attr | (GaspElementAttr attr) <- gaspElements gasp]
+getAttrs gasp = [attr | (ExprAttr attr) <- gaspExprs gasp]
 
 getAttrVar :: [Attr] -> String -> String
 getAttrVar _ "" = ""
@@ -135,17 +135,17 @@ getAttrVar (x:xs) n
 -- * Metrics
 
 getMetrics:: Gasp -> [Metric]
-getMetrics gasp = [metric | (GaspElementMetric metric) <- gaspElements gasp]
+getMetrics gasp = [metric | (ExprMetric metric) <- gaspExprs gasp]
 
 -- * Everys
 
 getEverys:: Gasp -> [Every]
-getEverys gasp = [every | (GaspElementEvery every) <- gaspElements gasp]
+getEverys gasp = [every | (ExprEvery every) <- gaspExprs gasp]
 
 -- * Gpios
 
 getGpios :: Gasp -> [Gpio]
-getGpios gasp = [replaceLink(gpio) | (GaspElementGpio gpio) <- gaspElements gasp]
+getGpios gasp = [replaceLink(gpio) | (ExprGpio gpio) <- gaspExprs gasp]
   where attrs = getAttrs gasp
         replaceLink :: Gpio -> Gpio
         replaceLink gpio = gpio {gpioLink = var}
@@ -160,8 +160,8 @@ hasInput (x:xs)
 -- * Flags
 
 getFlags:: Gasp -> [Flag]
-getFlags gasp = map (`guessFlag` elems) (collectFlags [] elems)
-  where elems = gaspElements gasp
+getFlags gasp = map (`guessFlag` exprs) (collectFlags [] exprs)
+  where exprs = gaspExprs gasp
 
 
 getFlag :: [Flag] -> Flag -> Flag
@@ -189,30 +189,30 @@ setTelemetryFlag flags telem = telem
   }
 
 
-getCommandLength :: GaspElement -> Int
-getCommandLength (GaspElementCmd cmd)   = length $ cmdFunc cmd
-getCommandLength (GaspElementAttr attr) = length (attrName attr) + 4
-getCommandLength (GaspElementMetric m)  = length (metricName m) + 17
-getCommandLength _                      = 0
+getCommandLength :: Expr -> Int
+getCommandLength (ExprCmd cmd)   = length $ cmdFunc cmd
+getCommandLength (ExprAttr attr) = length (attrName attr) + 4
+getCommandLength (ExprMetric m)  = length (metricName m) + 17
+getCommandLength _               = 0
 
 getMaxCommandLength :: Gasp -> Int
-getMaxCommandLength = maximum . map getCommandLength . gaspElements
+getMaxCommandLength = maximum . map getCommandLength . gaspExprs
 
 
 prepareGasp :: [Flag] -> Gasp -> Gasp
-prepareGasp flags = fromGaspElems . go 1 . gaspElements
-  where go :: Int -> [GaspElement] -> [GaspElement]
+prepareGasp flags = fromGaspExprs . go 1 . gaspExprs
+  where go :: Int -> [Expr] -> [Expr]
         go _ []        = []
-        go addr (GaspElementAttr x:xs) = GaspElementAttr x {attrAddr = addr} : go (addr + 4) xs
-        go addr (GaspElementMetric x:xs) = GaspElementMetric x {metricAddr = addr} : go (addr + 4) xs
-        go addr (GaspElementTelemetry x:xs) = GaspElementTelemetry (setTelemetryFlag flags x) : go addr xs
-        go addr (GaspElementCmd x:xs) = GaspElementCmd (setCommandFlag flags x) : go addr xs
-        go addr (GaspElementFunction x:xs) = GaspElementFunction (setFunctionFlag flags x) : go addr xs
+        go addr (ExprAttr x:xs) = ExprAttr x {attrAddr = addr} : go (addr + 4) xs
+        go addr (ExprMetric x:xs) = ExprMetric x {metricAddr = addr} : go (addr + 4) xs
+        go addr (ExprTelemetry x:xs) = ExprTelemetry (setTelemetryFlag flags x) : go addr xs
+        go addr (ExprCmd x:xs) = ExprCmd (setCommandFlag flags x) : go addr xs
+        go addr (ExprFunction x:xs) = ExprFunction (setFunctionFlag flags x) : go addr xs
         go addr (x:xs) = x : go addr xs
 
-guessFlag :: Flag -> [GaspElement] -> Flag
+guessFlag :: Flag -> [Expr] -> Flag
 guessFlag flag [] = flag
-guessFlag flag (GaspElementFunction x:xs)
+guessFlag flag (ExprFunction x:xs)
   | funcFlag x == flag = flag
     { flagRetval = hasRetval x
     , flagJson = hasJson x
@@ -220,15 +220,15 @@ guessFlag flag (GaspElementFunction x:xs)
   | otherwise = guessFlag flag xs
 guessFlag flag (_:xs) = guessFlag flag xs
 
-collectFlags :: [Flag] -> [GaspElement] -> [Flag]
+collectFlags :: [Flag] -> [Expr] -> [Flag]
 collectFlags flags [] = flags
-collectFlags flags (GaspElementTelemetry x:xs)
+collectFlags flags (ExprTelemetry x:xs)
   | telemFlag x `elem` flags = collectFlags flags xs
   | otherwise = collectFlags (telemFlag x : flags) xs
-collectFlags flags (GaspElementCmd x:xs)
+collectFlags flags (ExprCmd x:xs)
   | cmdFlag x `elem` flags = collectFlags flags xs
   | otherwise = collectFlags (cmdFlag x : flags) xs
-collectFlags flags (GaspElementFunction x:xs)
+collectFlags flags (ExprFunction x:xs)
   | funcFlag x `elem` flags = collectFlags flags xs
   | otherwise = collectFlags (funcFlag x : flags) xs
 collectFlags flags (_:xs) = collectFlags flags xs
