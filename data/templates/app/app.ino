@@ -20,7 +20,6 @@ unsigned long get_current_time_ms();
 {=& code =}
 
 {=/ inits =}
-
 {=# use_remote =}
 unsigned long auth_timer_ms = get_current_time_ms();
 
@@ -44,14 +43,6 @@ unsigned long pong_timer_ms = get_current_time_ms();
 unsigned long ping_timer_ms = get_current_time_ms();
 bool ponged = true;
 int ping_failed = 0;
-{=# has_metric =}
-
-#ifndef METRIC_DELAY_MS
-#define METRIC_DELAY_MS 1800000
-#endif
-
-unsigned long metric_timer_ms = get_current_time_ms();
-{=/ has_metric =}
 
 #ifndef MAX_GL_PAYLOAD_LENGTH
 #define MAX_GL_PAYLOAD_LENGTH 127
@@ -77,17 +68,24 @@ uint8_t  sendedPayload[MAX_GL_PAYLOAD_LENGTH + 1];
 jsmn_parser requestJsmnParser;
 jsmntok_t requestJsmnTokens[MAX_NUM_TOKENS]; /* We expect no more than 128 tokens */
 char requestValue[MAX_REQUEST_VALUE_LENGTH];
-{=# use_eeprom =}
-
-bool requireReportAttribute = false;
-{=/ use_eeprom =}
-
 givelink_t * m = givelink_new(MAX_GL_PAYLOAD_LENGTH);
-
 char wantSendData[WANT_SEND_DATA_LENGTH];
 char tempSendData[WANT_SEND_DATA_LENGTH];
 char * wantSendDataTpl = (char *)malloc(WANT_SEND_DATA_LENGTH);
 
+{=/ use_remote =}
+{=# has_metric =}
+#ifndef METRIC_DELAY_MS
+#define METRIC_DELAY_MS 1800000
+#endif
+
+unsigned long metric_timer_ms = get_current_time_ms();
+
+{=/ has_metric =}
+{=# use_eeprom =}
+bool requireReportAttribute = false;
+
+{=/ use_eeprom =}
 {=# attrs =}
 {= type =} {= var =} = {= default =};
 {= type =} last_{= var =} = {= default =};
@@ -100,7 +98,6 @@ char * wantSendDataTpl = (char *)malloc(WANT_SEND_DATA_LENGTH);
 {= type =} last_{= var =}_threshold = {= threshold =};
 
 {=/ metrics =}
-{=/ use_remote =}
 {=# actions =}
 unsigned long {= fn =}_timer_ms = get_current_time_ms();
 {=/ actions =}
@@ -122,7 +119,6 @@ int last_gpio_{= name =}_state = {= state =};
 
 {=/ gpios =}
 {=/ has_gpio =}
-
 void setup() {
     {=# use_remote =}
     // wdt init
@@ -338,6 +334,14 @@ unsigned long get_current_time_ms() {
 }
 
 {=# use_remote =}
+void reset() {
+    wdt_disable();
+    wdt_enable(WDTO_15MS);
+    for (;;) {
+
+    }
+}
+
 void send_packet() {
     #ifdef DEBUG
     DEBUG_SERIAL.print(F("Send Id: "));
@@ -435,6 +439,15 @@ bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char 
     return false;
 }
 
+void merge_json(char *dst, char *src, int *total_length) {
+    src[0] = ' ';
+    while (*src != '\0') {
+        dst[*total_length]=*src++;
+        *total_length += 1;
+    }
+    dst[*total_length-1] = ',';
+}
+
 {=/ use_remote =}
 {=# attrs =}
 {=# gen_set =}
@@ -455,6 +468,7 @@ int set_{= var =}(const char *json, jsmntok_t *tokens, int num_tokens, char *ret
 {=/ gen_set =}
 int get_{= var =}(char *retval) {
     sprintf(retval, FC(F("{\"{= name =}\": %d}")), ({= type =}){= var =} / {= scale =});
+    last_{= var =} = {= var =};
     return RET_SUCC;
 }
 
@@ -477,6 +491,7 @@ int set_{= var =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens,
 int get_{= var =}_threshold(char *retval) {
     dtostrf({= var =}_threshold, {= threshold_width =}, {= prec =}, requestValue);
     sprintf(retval, FC(F("{\"{= name =}_threshold\": %s}")), ltrim(requestValue));
+    last_{= var =}_threshold = {= var =}_threshold;
     return RET_SUCC;
 }
 
@@ -498,6 +513,7 @@ int get_{= var =}(char *retval) {
     dtostrf({= var =}, {= width =}, {= prec =}, requestValue);
     last_{= var =} = {= var =};
     sprintf(retval, FC(F("{\"{= name =}\": %s}")), ltrim(requestValue));
+    last_{= var =} = {= var =};
     return RET_SUCC;
 }
 
@@ -508,10 +524,12 @@ void open_{= name =}() {
     gpio_{= name =}_state = {= open =};
     digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
 }
+
 void close_{= name =}() {
     gpio_{= name =}_state = {= close =};
     digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
 }
+
 void toggle_{= name =}() {
     {=# has_link =}
     if ({= link =} == {= open =}) {
@@ -528,11 +546,10 @@ void toggle_{= name =}() {
     }
     {=/ has_link =}
 }
-{=/ has_fn =}
 
+{=/ has_fn =}
 {=/ gpios =}
 {=# functions =}
-
 {=# flag =}
 {=# retval =}
 {=# json =}
@@ -556,8 +573,8 @@ int {= name =}() {
     return RET_SUCC;
     {=/ return =}
 }
-{=/ functions =}
 
+{=/ functions =}
 {=# use_remote =}
 int processRequest(const char *json, int length, char *retval) {
     /* Prepare parser */
@@ -657,44 +674,37 @@ int processRequest(const char *json, int length, char *retval) {
     return RET_ERR;
 }
 
+{=/ use_remote =}
 {=# has_metric =}
 bool processTelemetries() {
     bool ret = false;
+    bool wantSend = false;
+    int total_length = 0;
+    wantSendData[0] = '{';
+    total_length += 1;
+
     {=# telemetries =}
-    wantSendData[0] = '\0';
+    tempSendData[0] = '\0';
     {=# flag =}
     {=# retval =}
     {=# json =}
-    if ({= fn =}(NULL, NULL, 0, wantSendData) > RET_ERR) {
+    if ({= fn =}(NULL, NULL, 0, tempSendData) > RET_ERR) {
     {=/ json =}
     {=^ json =}
-    if ({= fn =}(wantSendData) > RET_ERR) {
+    if ({= fn =}(tempSendData) > RET_ERR) {
     {=/ json =}
-      send_packet_1(TELEMETRY, wantSendData);
-      ret = true;
+        merge_json(wantSendData, tempSendData, &total_length);
+        wantSend = true;
     }
     {=/ retval =}
     {=/ flag =}
 
     {=/ telemetries =}
-    bool wantSend = false;
-    size_t total_length = 0;
-    size_t length = 0;
-    size_t i = 0;
-    wantSendData[0] = '{';
-    total_length += 1;
     {=# metrics =}
-    if (!isnan({= var =}) && {= var =} >= {= min =} && {= var =} <= {= max =}) {
+    tempSendData[0] = '\0';
+    if (get_{= var =}(tempSendData) > RET_ERR) {
+        merge_json(wantSendData, tempSendData, &total_length);
         wantSend = true;
-        requestValue[0] = '\0';
-        dtostrf({= var =}, {= width =}, {= prec =}, requestValue);
-        sprintf(tempSendData, FC(F("\"{= name =}\": %s,")), ltrim(requestValue));
-        length = strlen(tempSendData);
-        for (i=0; i<length; i++) {
-            wantSendData[total_length + i] = tempSendData[i];
-        }
-        total_length += length;
-        last_{= var =} = {= var =};
     }
 
     {=/ metrics =}
@@ -721,9 +731,7 @@ bool checkValue() {
 {=/ has_metric =}
 {=# use_eeprom =}
 bool reportAttribute(bool force) {
-    size_t total_length = 0;
-    size_t length = 0;
-    size_t i = 0;
+    int total_length = 0;
     bool report = true;
     bool wantSend = false;
     wantSendData[0] = '{';
@@ -735,14 +743,11 @@ bool reportAttribute(bool force) {
         report = true;
     }
     if (report) {
-        sprintf(tempSendData, FC(F("\"{= name =}\": %d,")), ({= type =}){= var =} / {= scale =});
-        length = strlen(tempSendData);
-        for (i=0; i<length; i++) {
-            wantSendData[total_length + i] = tempSendData[i];
+        tempSendData[0] = '\0';
+        if (get_{= var =}(tempSendData) > RET_ERR) {
+            merge_json(wantSendData, tempSendData, &total_length);
+            wantSend = true;
         }
-        total_length += length;
-        last_{= var =} = {= var =};
-        wantSend = true;
     }
 
     {=/ attrs =}
@@ -752,16 +757,11 @@ bool reportAttribute(bool force) {
         report = true;
     }
     if (report) {
-        requestValue[0] = '\0';
-        dtostrf({= var =}_threshold, {= threshold_width =}, {= prec =}, requestValue);
-        sprintf(tempSendData, FC(F("\"{= name =}_threshold\": %s,")), ltrim(requestValue));
-        length = strlen(tempSendData);
-        for (i=0; i<length; i++) {
-            wantSendData[total_length + i] = tempSendData[i];
+        tempSendData[0] = '\0';
+        if (get_{= var =}_threshold(tempSendData) > RET_ERR) {
+            merge_json(wantSendData, tempSendData, &total_length);
+            wantSend = true;
         }
-        total_length += length;
-        last_{= var =}_threshold = {= var =}_threshold;
-        wantSend = true;
     }
 
     {=/ metrics =}
@@ -774,12 +774,3 @@ bool reportAttribute(bool force) {
     return RET_SUCC;
 }
 {=/ use_eeprom =}
-
-void reset() {
-    wdt_disable();
-    wdt_enable(WDTO_15MS);
-    for (;;) {
-
-    }
-}
-{=/ use_remote =}
