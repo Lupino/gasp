@@ -13,7 +13,6 @@ module Gasp
     ) where
 
 import           Data.Aeson     (ToJSON (..), object, (.=))
-
 import qualified ExternalCode
 import           Gasp.App
 import           Gasp.Attr
@@ -73,10 +72,13 @@ setExternalCodeFiles wasp files = wasp { externalCodeFiles = files }
 -- * App
 
 getApp :: Gasp -> App
-getApp gasp = let apps = getApps gasp in
-    if length apps /= 1
-    then error "Gasp has to contain exactly one GaspElementApp element!"
-    else head apps
+getApp gasp =
+  case apps of
+    [app] -> app
+    []    -> emptyApp
+    _     -> error "Gasp has to contain exactly one GaspElementApp element!"
+
+  where apps = getApps gasp
 
 getApps :: Gasp -> [App]
 getApps gasp = [app | (GaspElementApp app) <- gaspElements gasp]

@@ -1,5 +1,6 @@
 module Gasp.App
     ( App(..)
+    , emptyApp
     ) where
 
 import           Data.Aeson (ToJSON (..), object, (.=))
@@ -17,3 +18,10 @@ instance ToJSON App where
         , "key" .= appKey app
         , "token" .= appToken app
         ]
+
+emptyApp :: App
+emptyApp = App
+  { appName  = "empty"
+  , appKey   = "empty"
+  , appToken = "empty"
+  }
