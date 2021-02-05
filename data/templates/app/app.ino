@@ -179,9 +179,11 @@ void setup() {
 
     {=/ setups =}
     {=# use_remote =}
-    #ifdef DEBUG
+    {=# has_debug =}
+    #ifdef DEBUG_SERIAL
     DEBUG_SERIAL.println(F("Setup"));
     #endif
+    {=/ has_debug =}
     {=/ use_remote =}
 }
 
@@ -197,7 +199,8 @@ void loop() {
         uint8_t outByte = GL_SERIAL.read();
         if (givelink_recv(readedPayload, &readedLen, outByte)) {
             if (givelink_from_binary(m, readedPayload, readedLen)) {
-                #ifdef DEBUG
+                {=# has_debug =}
+                #ifdef DEBUG_SERIAL
                 DEBUG_SERIAL.print(F("Recv Id: "));
                 DEBUG_SERIAL.print(m -> id);
                 DEBUG_SERIAL.print(F(" Type: "));
@@ -211,6 +214,7 @@ void loop() {
                 DEBUG_SERIAL.println();
                 #endif
 
+                {=/ has_debug =}
                 if (m -> type == REQUEST) {
                     wantSendData[0] = '\0';
                     int ret = processRequest((const char *)m -> data, m -> length - TYPE_LENGTH, wantSendData);
@@ -230,9 +234,11 @@ void loop() {
             readedLen = 0;
         }
         if (readedLen > MAX_GL_PAYLOAD_LENGTH) {
-            #ifdef DEBUG
+            {=# has_debug =}
+            #ifdef DEBUG_SERIAL
             DEBUG_SERIAL.println(F("Error: payload to large"));
             #endif
+            {=/ has_debug =}
             readedLen = 0;
         }
     }
@@ -343,7 +349,8 @@ void reset() {
 }
 
 void send_packet() {
-    #ifdef DEBUG
+    {=# has_debug =}
+    #ifdef DEBUG_SERIAL
     DEBUG_SERIAL.print(F("Send Id: "));
     DEBUG_SERIAL.print(m -> id);
     DEBUG_SERIAL.print(F(" Type: "));
@@ -356,6 +363,7 @@ void send_packet() {
     }
     DEBUG_SERIAL.println();
     #endif
+    {=/ has_debug =}
     givelink_to_binary(m, sendedPayload);
     uint16_t length = givelink_get_length(m);
     for (uint16_t i = 0; i < length; i ++) {

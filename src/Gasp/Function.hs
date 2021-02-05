@@ -2,12 +2,13 @@ module Gasp.Function
     ( Function (..)
     , hasJson
     , hasRetval
+    , hasToken
     ) where
 
 import           Data.Aeson (ToJSON (..), object, (.=))
 import           Data.Text  (Text)
-import qualified Data.Text  as T (breakOnEnd, dropEnd, length, lines, strip,
-                                  take, takeEnd, words)
+import qualified Data.Text  as T (breakOnEnd, dropEnd, length, lines, null,
+                                  strip, take, takeEnd, takeWhileEnd, words)
 import           Gasp.Flag  (Flag)
 
 data Function = Function
@@ -40,7 +41,7 @@ lastReturn = go . T.lines
 
 hasToken :: Text -> Text -> Bool
 hasToken tok txt
-  | endC `elem` validEndC && startC `elem` validStartC = True
+  | isNotComment && isToken = True
   | tokLen > prevLen = False
   | otherwise = hasToken tok $ T.dropEnd tokLen prev
   where (prev, next) = T.breakOnEnd tok txt
@@ -48,8 +49,12 @@ hasToken tok txt
         prevLen = T.length prev
         endC = T.take 1 next
         startC = T.take 1 $ T.takeEnd (tokLen + 1) prev
-        validEndC = [" ", ",", ")"]
+        validEndC = [" ", ",", ")", "="]
         validStartC = [" ", ",", "("]
+        isToken = endC `elem` validEndC && startC `elem` validStartC
+        prevLine = T.takeWhileEnd (/='\n') prev
+        (comment, _) = T.breakOnEnd "//" prevLine
+        isNotComment = T.null comment
 
 hasRetval :: Function -> Bool
 hasRetval = hasToken "retval" . funcCode

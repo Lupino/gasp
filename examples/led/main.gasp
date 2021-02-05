@@ -5,7 +5,7 @@ app led {
 
 init {=code
 #define GL_SERIAL Serial
-#define DEBUG_SERIAL Serial
+// #define DEBUG_SERIAL Serial
 code=}
 
 setup {=code

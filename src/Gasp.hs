@@ -113,6 +113,12 @@ getSetups gasp = [setup | (GaspElementSetup setup) <- gaspElements gasp]
 getInits:: Gasp -> [Init]
 getInits gasp = [initv | (GaspElementInit initv) <- gaspElements gasp]
 
+initDebug :: [Init] -> Bool
+initDebug [] = False
+initDebug (x:xs)
+  | hasToken "DEBUG_SERIAL" (initCode x) = True
+  | otherwise = initDebug xs
+
 -- * Attrs
 
 getAttrs:: Gasp -> [Attr]
@@ -237,7 +243,7 @@ instance ToJSON Gasp where
         , "functions"   .= funcs
         , "loops"       .= getLoops gasp
         , "setups"      .= getSetups gasp
-        , "inits"       .= getInits gasp
+        , "inits"       .= inits
         , "attrs"       .= attrs
         , "has_attr"    .= hasAttr
         , "metrics"     .= metrics
@@ -250,6 +256,7 @@ instance ToJSON Gasp where
         , "has_func"    .= not (null funcs)
         , "has_input"   .= hasInput gpios
         , "use_remote"  .= (useEeprom || hasCmd)
+        , "has_debug"   .= initDebug inits
         ]
         where gasp = prepareGasp (getFlags gasp0) gasp0
               attrs = getAttrs gasp
@@ -258,6 +265,7 @@ instance ToJSON Gasp where
               gpios = getGpios gasp
               cmds = getCmds gasp
               funcs = getFunctions gasp
+              inits = getInits gasp
               hasMetric = not (null metrics)
               hasTelems = not (null telems)
               hasAttr = not (null attrs)
