@@ -6,5 +6,5 @@ gpio led {
 gpio btn {
     pin: "12",
     emit: LOW,
-    fn: toggle_led
+    fn: toggle_gpio_led
 }

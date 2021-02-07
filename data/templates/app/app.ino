@@ -87,15 +87,15 @@ bool requireReportAttribute = false;
 
 {=/ use_eeprom =}
 {=# attrs =}
-{= type =} {= var =} = {= default =};
-{= type =} last_{= var =} = {= default =};
+{= type =} attr_{= name =} = {= default =};
+{= type =} last_attr_{= name =} = {= default =};
 
 {=/ attrs =}
 {=# metrics =}
-{= type =} {= var =} = 0;
-{= type =} last_{= var =} = 0;
-{= type =} {= var =}_threshold = {= threshold =};
-{= type =} last_{= var =}_threshold = {= threshold =};
+{= type =} metric_{= name =} = 0;
+{= type =} last_metric_{= name =} = 0;
+{= type =} metric_{= name =}_threshold = {= threshold =};
+{= type =} last_metric_{= name =}_threshold = {= threshold =};
 
 {=/ metrics =}
 {=# actions =}
@@ -137,23 +137,23 @@ void setup() {
 
     {=# attrs =}
     if (first_run_flag == 1) {
-        EEPROM.get({= addr =}, {= var =});
-        if ({= var =} > {= scaled_max =} || {= var =} < {= scaled_min =}) {
-            {= var =} = {= default =};
+        EEPROM.get({= addr =}, attr_{= name =});
+        if (attr_{= name =} > {= scaled_max =} || attr_{= name =} < {= scaled_min =}) {
+            attr_{= name =} = {= default =};
         }
     } else {
-        EEPROM.put({= addr =}, {= var =});
+        EEPROM.put({= addr =}, attr_{= name =});
     }
 
     {=/ attrs =}
     {=# metrics =}
     if (first_run_flag == 1) {
-        EEPROM.get({= addr =}, {= var =}_threshold);
-        if ({= var =}_threshold > {= max_threshold =} || {= var =}_threshold < {= min_threshold =}) {
-            {= var =}_threshold = {= threshold =};
+        EEPROM.get({= addr =}, metric_{= name =}_threshold);
+        if (metric_{= name =}_threshold > {= max_threshold =} || metric_{= name =}_threshold < {= min_threshold =}) {
+            metric_{= name =}_threshold = {= threshold =};
         }
     } else {
-        EEPROM.put({= addr =}, {= var =}_threshold);
+        EEPROM.put({= addr =}, metric_{= name =}_threshold);
     }
 
     {=/ metrics =}
@@ -312,20 +312,20 @@ void loop() {
     {=/ has_fn =}
     {=# has_link =}
     {=# reverse =}
-    if ({= link =} == gpio_{= name =}_state) {
-        if ({= link =} == {= open =}) {
-            close_{= name =}();
+    if (attr_{= link =} == gpio_{= name =}_state) {
+        if (attr_{= link =} == {= open =}) {
+            close_gpio_{= name =}();
         } else {
-            open_{= name =}();
+            open_gpio_{= name =}();
         }
     }
     {=/ reverse =}
     {=^ reverse =}
-    if ({= link =} != gpio_{= name =}_state) {
-        if ({= link =} == {= open =}) {
-            open_{= name =}();
+    if (attr_{= link =} != gpio_{= name =}_state) {
+        if (attr_{= link =} == {= open =}) {
+            open_gpio_{= name =}();
         } else {
-            close_{= name =}();
+            close_gpio_{= name =}();
         }
     }
     {=/ reverse =}
@@ -459,64 +459,64 @@ void merge_json(char *dst, char *src, int *total_length) {
 {=/ use_remote =}
 {=# attrs =}
 {=# gen_set =}
-int set_{= var =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
+int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
         {= type =} tmp = atoi(requestValue);
         if (tmp > {= max =} || tmp < {= min =}) {
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min =}, {= max =}]\"}")));
           return RET_ERR;
         }
-        {= var =} = tmp * {= scale =};
+        attr_{= name =} = tmp * {= scale =};
         EEPROM.put({= addr =}, tmp);
     }
-    get_{= var =}(retval);
+    get_attr_{= name =}(retval);
     return RET_SUCC;
 }
 
 {=/ gen_set =}
-int get_{= var =}(char *retval) {
-    sprintf(retval, FC(F("{\"{= name =}\": %d}")), ({= type =}){= var =} / {= scale =});
+int get_attr_{= name =}(char *retval) {
+    sprintf(retval, FC(F("{\"{= name =}\": %d}")), ({= type =})attr_{= name =} / {= scale =});
     return RET_SUCC;
 }
 
 {=/ attrs =}
 {=# metrics =}
-int set_{= var =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
+int set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
         {= type =} tmp = atof(requestValue);
         if (tmp < {= min_threshold =} || tmp > {= max_threshold =}) {
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min_threshold =}, {= max_threshold =}]\"}")));
           return RET_ERR;
         }
-        {= var =}_threshold = tmp;
-        EEPROM.put({= addr =}, {= var =}_threshold);
+        metric_{= name =}_threshold = tmp;
+        EEPROM.put({= addr =}, metric_{= name =}_threshold);
     }
-    get_{= var =}_threshold(retval);
+    get_metric_{= name =}_threshold(retval);
     return RET_SUCC;
 }
 
-int get_{= var =}_threshold(char *retval) {
-    dtostrf({= var =}_threshold, {= threshold_width =}, {= prec =}, requestValue);
+int get_metric_{= name =}_threshold(char *retval) {
+    dtostrf(metric_{= name =}_threshold, {= threshold_width =}, {= prec =}, requestValue);
     sprintf(retval, FC(F("{\"{= name =}_threshold\": %s}")), ltrim(requestValue));
     return RET_SUCC;
 }
 
-int invalid_{= var =}_error(char *retval) {
+int invalid_metric_{= name =}_error(char *retval) {
     sprintf(retval, FC(F("{\"err\": \"{= name =} is invalid\"}")));
     return RET_ERR;
 }
 
-int get_{= var =}(char *retval) {
-    if (isnan({= var =})) {
-        return invalid_{= var =}_error(retval);
+int get_metric_{= name =}(char *retval) {
+    if (isnan(metric_{= name =})) {
+        return invalid_metric_{= name =}_error(retval);
     }
-    if ({= var =} < {= min =}) {
-        return invalid_{= var =}_error(retval);
+    if (metric_{= name =} < {= min =}) {
+        return invalid_metric_{= name =}_error(retval);
     }
-    if ({= var =} > {= max =}) {
-        return invalid_{= var =}_error(retval);
+    if (metric_{= name =} > {= max =}) {
+        return invalid_metric_{= name =}_error(retval);
     }
-    dtostrf({= var =}, {= width =}, {= prec =}, requestValue);
+    dtostrf(metric_{= name =}, {= width =}, {= prec =}, requestValue);
     sprintf(retval, FC(F("{\"{= name =}\": %s}")), ltrim(requestValue));
     return RET_SUCC;
 }
@@ -524,29 +524,29 @@ int get_{= var =}(char *retval) {
 {=/ metrics =}
 {=# gpios =}
 {=^ has_fn =}
-void open_{= name =}() {
+void open_gpio_{= name =}() {
     gpio_{= name =}_state = {= open =};
     digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
 }
 
-void close_{= name =}() {
+void close_gpio_{= name =}() {
     gpio_{= name =}_state = {= close =};
     digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
 }
 
-void toggle_{= name =}() {
+void toggle_gpio_{= name =}() {
     {=# has_link =}
-    if ({= link =} == {= open =}) {
-        {= link =} = {= close =};
+    if (attr_{= link =} == {= open =}) {
+        attr_{= link =} = {= close =};
     } else {
-        {= link =} = {= open =};
+        attr_{= link =} = {= open =};
     }
     {=/ has_link =}
     {=^ has_link =}
     if (gpio_{= name =}_state == {= open =}) {
-        close_{= name =}();
+        close_gpio_{= name =}();
     } else {
-        open_{= name =}();
+        open_gpio_{= name =}();
     }
     {=/ has_link =}
 }
@@ -626,7 +626,7 @@ int processRequest(const char *json, int length, char *retval) {
         {=# attrs =}
         {=# gen_set =}
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_{= name =}")))) {
-            int r = set_{= var =}(json, requestJsmnTokens, num_tokens, retval);
+            int r = set_attr_{= name =}(json, requestJsmnTokens, num_tokens, retval);
             if (r > RET_ERR) {
                 return r;
             } else {
@@ -636,7 +636,7 @@ int processRequest(const char *json, int length, char *retval) {
         }
         {=/ gen_set =}
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}")))) {
-            int r = get_{= var =}(retval);
+            int r = get_attr_{= name =}(retval);
             if (r > RET_ERR) {
                 return r;
             } else {
@@ -647,7 +647,7 @@ int processRequest(const char *json, int length, char *retval) {
         {=/ attrs =}
         {=# metrics =}
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_{= name =}_threshold")))) {
-            int r = set_{= var =}_threshold(json, requestJsmnTokens, num_tokens, retval);
+            int r = set_metric_{= name =}_threshold(json, requestJsmnTokens, num_tokens, retval);
             if (r > RET_ERR) {
                 return r;
             } else {
@@ -656,7 +656,7 @@ int processRequest(const char *json, int length, char *retval) {
             }
         }
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}_threshold")))) {
-            int r = get_{= var =}_threshold(retval);
+            int r = get_metric_{= name =}_threshold(retval);
             if (r > RET_ERR) {
                 return r;
             } else {
@@ -665,7 +665,7 @@ int processRequest(const char *json, int length, char *retval) {
             }
         }
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}")))) {
-            int r = get_{= var =}(retval);
+            int r = get_metric_{= name =}(retval);
             if (r > RET_ERR) {
                 return r;
             } else {
@@ -706,10 +706,10 @@ bool processTelemetries() {
     {=/ telemetries =}
     {=# metrics =}
     tempSendData[0] = '\0';
-    if (get_{= var =}(tempSendData) > RET_ERR) {
+    if (get_metric_{= name =}(tempSendData) > RET_ERR) {
         merge_json(wantSendData, tempSendData, &total_length);
         wantSend = true;
-        last_{= var =} = {= var =};
+        last_metric_{= name =} = metric_{= name =};
     }
 
     {=/ metrics =}
@@ -725,7 +725,7 @@ bool processTelemetries() {
 
 bool checkValue() {
     {=# metrics =}
-    if (!isnan({= var =}) && {= var =} >= {= min =} && {= var =} <= {= max =} && abs(last_{= var =} - {= var =}) > {= var =}_threshold) {
+    if (!isnan(metric_{= name =}) && metric_{= name =} >= {= min =} && metric_{= name =} <= {= max =} && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) {
         return true;
     }
 
@@ -743,31 +743,31 @@ bool reportAttribute(bool force) {
     total_length += 1;
 
     {=# attrs =}
-    report = last_{= var =} != {= var =};
+    report = last_attr_{= name =} != attr_{= name =};
     if (force) {
         report = true;
     }
     if (report) {
         tempSendData[0] = '\0';
-        if (get_{= var =}(tempSendData) > RET_ERR) {
+        if (get_attr_{= name =}(tempSendData) > RET_ERR) {
             merge_json(wantSendData, tempSendData, &total_length);
             wantSend = true;
-            last_{= var =} = {= var =};
+            last_attr_{= name =} = attr_{= name =};
         }
     }
 
     {=/ attrs =}
     {=# metrics =}
-    report = last_{= var =}_threshold != {= var =}_threshold;
+    report = last_metric_{= name =}_threshold != metric_{= name =}_threshold;
     if (force) {
         report = true;
     }
     if (report) {
         tempSendData[0] = '\0';
-        if (get_{= var =}_threshold(tempSendData) > RET_ERR) {
+        if (get_metric_{= name =}_threshold(tempSendData) > RET_ERR) {
             merge_json(wantSendData, tempSendData, &total_length);
             wantSend = true;
-            last_{= var =}_threshold = {= var =}_threshold;
+            last_metric_{= name =}_threshold = metric_{= name =}_threshold;
         }
     }
 

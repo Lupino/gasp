@@ -6,7 +6,7 @@ app l76x {
 init {=code
 #define GL_SERIAL Serial
 #define DEBUG_SERIAL Serial
-#define METRIC_DELAY_MS metric_delay_ms
+#define METRIC_DELAY_MS attr_delay
 code=}
 
 setup {=code
@@ -15,7 +15,6 @@ setup {=code
 code=}
 
 attr delay {
-  var: metric_delay_ms,
   type: "unsigned long",
   default: 1800,
   min: 60,
@@ -72,7 +71,6 @@ loop {=code
 code=}
 
 metric lat {
-  var: gps_lat,
   type: "float",
   max: 180,
   min: -180,
@@ -83,7 +81,6 @@ metric lat {
 }
 
 metric lon {
-  var: gps_lon,
   type: "float",
   max: 180,
   min: -180,
@@ -99,8 +96,8 @@ func read_l76x {=code
     }
 
     coord = L76X_Baidu_Coordinates();
-    gps_lon = coord.Lon;
-    gps_lat = coord.Lat;
+    metric_lon = coord.Lon;
+    metric_lat = coord.Lat;
 code=}
 
 every read_l76x 6000

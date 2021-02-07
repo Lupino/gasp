@@ -5,7 +5,7 @@ app led {
 
 init {=code
 #define GL_SERIAL Serial
-// #define DEBUG_SERIAL Serial
+#define DEBUG_SERIAL Serial
 code=}
 
 setup {=code
@@ -21,20 +21,20 @@ attr led_state {
 }
 
 func toggle_led {=code
-    toggle_blinker();
-    get_led_state(retval);
+    toggle_gpio_blinker();
+    get_attr_led_state(retval);
 code=}
 
 
 func open_led {=code
-    led_state = HIGH;
-    get_led_state(retval);
+    attr_led_state = HIGH;
+    get_attr_led_state(retval);
 code=}
 
 
 func close_led {=code
-    led_state = LOW;
-    get_led_state(retval);
+    attr_led_state = LOW;
+    get_attr_led_state(retval);
 code=}
 
 command toggle {
@@ -114,7 +114,7 @@ gpio blinker {
 
 gpio button {
     pin: "12",
-    fn: toggle_blinker,
+    fn: toggle_gpio_blinker,
     state: HIGH,
     emit: LOW
 }

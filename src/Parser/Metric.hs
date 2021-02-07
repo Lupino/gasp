@@ -11,8 +11,7 @@ import           Parser.Common
 
 -- | A type that describes supported app properties.
 data MetricProperty
-    = Var          !String
-    | Type         !String
+    = Type         !String
     | Max          !Double
     | Min          !Double
     | MinThreshold !Double
@@ -28,7 +27,6 @@ cusL = do
   _ <- colon
   case key of
     "prec"          -> Prec <$> integer
-    "var"           -> Var <$> identifier
     "type"          -> Type <$> stringLiteral
     "threshold"     -> Threshold <$> float
     "min_threshold" -> MinThreshold <$> float
@@ -40,9 +38,6 @@ cusL = do
 -- | Parses supported app properties, expects format "key1: value1, key2: value2, ..."
 metricProperties :: Parser [MetricProperty]
 metricProperties = commaSep1 cusL
-
-getMetricVar :: String -> [MetricProperty] -> String
-getMetricVar def ps = fromMaybe def . listToMaybe $ [t | Var t <- ps]
 
 getMetricType :: String -> [MetricProperty] -> String
 getMetricType def ps = fromMaybe def . listToMaybe $ [t | Type t <- ps]
@@ -77,7 +72,6 @@ metric = do
 
     return Metric.Metric
         { Metric.metricName         = metricName
-        , Metric.metricVar          = getMetricVar metricName metricProps
         , Metric.metricType         = getMetricType "float" metricProps
         , Metric.metricMax          = maxv
         , Metric.metricMin          = minv

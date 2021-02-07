@@ -7,7 +7,6 @@ import           Data.Aeson (ToJSON (..), object, (.=))
 data Attr = Attr
     { attrName   :: !String -- Identifier
     , attrAddr   :: !Int
-    , attrVar    :: !String
     , attrMax    :: !Double
     , attrMin    :: !Double
     , attrType   :: !String
@@ -20,7 +19,6 @@ instance ToJSON Attr where
     toJSON attr = object
         [ "name"       .= attrName   attr
         , "addr"       .= attrAddr   attr
-        , "var"        .= attrVar    attr
         , "max"        .= attrMax    attr
         , "min"        .= attrMin    attr
         , "scaled_max" .= (attrMax   attr * attrScale attr)

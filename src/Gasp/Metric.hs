@@ -7,7 +7,6 @@ import           Data.Aeson (ToJSON (..), object, (.=))
 data Metric = Metric
     { metricName         :: !String -- Identifier
     , metricAddr         :: !Int
-    , metricVar          :: !String
     , metricType         :: !String
     , metricMax          :: !Double
     , metricMin          :: !Double
@@ -23,7 +22,6 @@ calcWitdh v = length $ show (floor v :: Int)
 instance ToJSON Metric where
     toJSON metric = object
         [ "name"            .= metricName metric
-        , "var"             .= metricVar  metric
         , "type"            .= metricType metric
         , "max"             .= metricMax metric
         , "min"             .= metricMin metric

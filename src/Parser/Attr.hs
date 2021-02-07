@@ -11,8 +11,7 @@ import           Parser.Common
 
 -- | A type that describes supported app properties.
 data AttrProperty
-    = Var    !String
-    | Type   !String
+    = Type   !String
     | Max    !Double
     | Min    !Double
     | Def    !Double
@@ -26,7 +25,6 @@ cusL = do
   key <- identifier
   _ <- colon
   case key of
-    "var"     -> Var <$> identifier
     "type"    -> Type <$> stringLiteral
     "min"     -> Min <$> float
     "max"     -> Max <$> float
@@ -38,9 +36,6 @@ cusL = do
 -- | Parses supported app properties, expects format "key1: value1, key2: value2, ..."
 attrProperties :: Parser [AttrProperty]
 attrProperties = commaSep1 cusL
-
-getAttrVar :: String -> [AttrProperty] -> String
-getAttrVar def ps = fromMaybe def . listToMaybe $ [t | Var t <- ps]
 
 getAttrType :: String -> [AttrProperty] -> String
 getAttrType def ps = fromMaybe def . listToMaybe $ [t | Type t <- ps]
@@ -68,7 +63,6 @@ attr = do
     return Attr.Attr
         { Attr.attrName   = attrName
         , Attr.attrAddr   = 0
-        , Attr.attrVar    = getAttrVar    attrName attrProps
         , Attr.attrType   = getAttrType   "int" attrProps
         , Attr.attrMax    = getAttrMax    100 attrProps
         , Attr.attrMin    = getAttrMin    0 attrProps

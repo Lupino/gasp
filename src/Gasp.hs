@@ -124,14 +124,6 @@ initDebug (x:xs)
 getAttrs:: Gasp -> [Attr]
 getAttrs gasp = [attr | (ExprAttr attr) <- gaspExprs gasp]
 
-getAttrVar :: [Attr] -> String -> String
-getAttrVar _ "" = ""
-getAttrVar [] n = n
-getAttrVar (x:xs) n
-  | attrName x == n = attrVar x
-  | otherwise = getAttrVar xs n
-
-
 -- * Metrics
 
 getMetrics:: Gasp -> [Metric]
@@ -145,11 +137,7 @@ getEverys gasp = [every | (ExprEvery every) <- gaspExprs gasp]
 -- * Gpios
 
 getGpios :: Gasp -> [Gpio]
-getGpios gasp = [replaceLink(gpio) | (ExprGpio gpio) <- gaspExprs gasp]
-  where attrs = getAttrs gasp
-        replaceLink :: Gpio -> Gpio
-        replaceLink gpio = gpio {gpioLink = var}
-          where var = getAttrVar attrs $ gpioLink gpio
+getGpios gasp = [gpio | (ExprGpio gpio) <- gaspExprs gasp]
 
 hasInput :: [Gpio] -> Bool
 hasInput [] = False

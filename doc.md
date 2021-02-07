@@ -82,7 +82,6 @@ telemetry funcName
 
 ```
 attr attrName {
-    var: attrName,
     type: "int",
     min: 0,
     max: 100,
@@ -96,7 +95,6 @@ attr attrName {
 
 ```
 metric metricName {
-    var: metricName,
     type: "float"
     min: 0,
     max: 100,
@@ -168,7 +166,6 @@ metric metricName {
         {
             "name": "attrName",
             "addr": 1,
-            "var": "attrName",
             "max": 100,
             "min": 0,
             "scaled_max": 100,
@@ -183,7 +180,6 @@ metric metricName {
         {
             "name": "metricName",
             "addr": 5,
-            "var": "metricName",
             "max": 100,
             "min": 0,
             "max_threshold": 50,
@@ -206,7 +202,7 @@ metric metricName {
             "name": "gpioName",
             "pin": "LED_BUILTIN",
             "fn": "funcName",
-            "link": "attrVar",
+            "link": "attrName",
             "emit": "HIGH",
             "state": "LOW",
             "open": "HIGH",

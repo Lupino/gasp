@@ -21,7 +21,7 @@ app DhtApp {
 init {=code
 #define GL_SERIAL Serial
 #define DEBUG_SERIAL Serial
-#define SEND_DELAY_MS send_delay_ms
+#define SEND_DELAY_MS attr_delay
 code=}
 
 setup {=code
@@ -49,12 +49,11 @@ code=}
 func read_temp {=code
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-    humidity = dht.readHumidity();
-    temperature = dht.readTemperature();
+    metric_humidity = dht.readHumidity();
+    metric_temperature = dht.readTemperature();
 code=}
 
 attr delay {
-  var: send_delay_ms,
   type: "unsigned long",
   default: 300,
   min: 60,
@@ -63,7 +62,6 @@ attr delay {
 }
 
 metric temperature {
-    var: temperature,
     type: "float",
     max_threshold: 100,
     min_threshold: 1,
@@ -74,7 +72,6 @@ metric temperature {
 }
 
 metric humidity {
-    var: humidity,
     type: "float",
     max_threshold: 100,
     min_threshold: 1,

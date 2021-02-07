@@ -3,4 +3,4 @@ gpio blink {
     state: LOW
 }
 
-every toggle_blink 1000
+every toggle_gpio_blink 1000
