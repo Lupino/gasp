@@ -9,6 +9,7 @@ import           Command.Common         (findGaspDataDir,
                                          gaspSaysC)
 import qualified Common
 import           CompileOptions         (CompileOptions (..))
+import           Control.Monad          (unless)
 import           Control.Monad.Except   (throwError)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.List              (find, isSuffixOf)
@@ -19,25 +20,26 @@ import qualified StrongPath             as SP
 import qualified Util.IO
 
 
-compile :: Command ()
-compile = do
+compile :: Bool -> Command ()
+compile _showSyntaxTree = do
     gaspProjectDir <- findGaspProjectRootDirFromCwd
     gaspDataDir <- findGaspDataDir gaspProjectDir
     let outDir = gaspProjectDir </> Common.buildGaspDirInGaspProjectDir
 
-    gaspSaysC "Compiling gasp code..."
-    compilationResult <- liftIO $ compileIO gaspProjectDir outDir gaspDataDir
+    unless _showSyntaxTree $ gaspSaysC "Compiling gasp code..."
+    compilationResult <- liftIO $ compileIO gaspProjectDir outDir gaspDataDir _showSyntaxTree
     case compilationResult of
         Left compileError -> throwError $ CommandError $ "Compilation failed: " ++ compileError
-        Right () -> gaspSaysC "Code has been successfully compiled, project has been generated.\n"
+        Right () -> unless _showSyntaxTree $ gaspSaysC "Code has been successfully compiled, project has been generated.\n"
 
 -- | Compiles Gasp source code in gaspProjectDir directory and generates a project
 --   in given outDir directory.
 compileIO :: Path Abs (Dir Common.GaspProjectDir)
         -> Path Abs (Dir Lib.ProjectRootDir)
         -> Path Abs (Dir Lib.DataDir)
+        -> Bool
         -> IO (Either String ())
-compileIO gaspProjectDir outDir gaspDataDir = do
+compileIO gaspProjectDir outDir gaspDataDir _showSyntaxTree = do
     maybeGaspFile <- findGaspFile gaspProjectDir
     case maybeGaspFile of
         Nothing -> return $ Left "No *.gasp file present in the root of Gasp project."
@@ -54,4 +56,5 @@ compileIO gaspProjectDir outDir gaspDataDir = do
 
     options = CompileOptions
         { externalCodeDirPath = gaspProjectDir </> Common.extCodeDirInGaspProjectDir
+        , showSyntaxTree = _showSyntaxTree
         }

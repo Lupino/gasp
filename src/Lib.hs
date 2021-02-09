@@ -4,20 +4,22 @@ module Lib
     , DataDir
     ) where
 
-import           CompileOptions      (CompileOptions)
+import           CompileOptions        (CompileOptions)
 import qualified CompileOptions
-import           Control.Monad       (unless)
+import           Control.Monad         (unless)
+import qualified Data.ByteString.Char8 as BC (putStrLn)
+import           Data.Yaml             (encode)
 import qualified ExternalCode
-import           Gasp                (Attr (..), Expr (..), Gasp, Metric (..),
-                                      getGaspExprs, setExternalCodeFiles,
-                                      setGaspExprs)
-import           Generator           (writeAppCode)
-import           Generator.Common    (ProjectRootDir)
-import           Generator.Templates (DataDir)
-import           Parser              (parseGasp)
-import           StrongPath          (Abs, Dir, File, Path, toFilePath)
-import           Text.Printf         (printf)
-import qualified Util.Terminal       as Term
+import           Gasp                  (Attr (..), Expr (..), Gasp, Metric (..),
+                                        getGaspExprs, setExternalCodeFiles,
+                                        setGaspExprs)
+import           Generator             (writeAppCode)
+import           Generator.Common      (ProjectRootDir)
+import           Generator.Templates   (DataDir)
+import           Parser                (parseGasp)
+import           StrongPath            (Abs, Dir, File, Path, toFilePath)
+import           Text.Printf           (printf)
+import qualified Util.Terminal         as Term
 
 
 type CompileError = String
@@ -35,11 +37,10 @@ compile gaspFile outDir dataDir options = do
         Left err    -> return $ Left (show err)
         Right gasp ->
           enrichGaspASTBasedOnCompileOptions gasp options
-            >>= preprocessGasp
-            >>=  generateCode
+            >>= preprocessGasp >>= generateCode (CompileOptions.showSyntaxTree options)
   where
-    generateCode gasp = writeAppCode gasp outDir dataDir >> return (Right ())
-
+    generateCode False gasp = writeAppCode gasp outDir dataDir >> return (Right ())
+    generateCode True gasp  = BC.putStrLn (encode gasp) >> return (Right ())
 
 preprocessGasp :: Gasp -> IO Gasp
 preprocessGasp gasp = setGaspExprs gasp <$> mapM mapFunc (getGaspExprs gasp)

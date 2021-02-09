@@ -27,7 +27,7 @@ compileAndWatch = do
     gaspDataDir <- findGaspDataDir gaspProjectDir
     let outDir = gaspProjectDir </> Common.buildGaspDirInGaspProjectDir
 
-    compile
+    compile False
     liftIO $ watch gaspProjectDir outDir gaspDataDir
 
 
@@ -70,7 +70,7 @@ watch gaspProjectDir outDir gaspDataDir = FSN.withManager $ \mgr -> do
       recompile :: IO ()
       recompile = do
           gaspSays "Recompiling on file change..."
-          compilationResult <- compileIO gaspProjectDir outDir gaspDataDir
+          compilationResult <- compileIO gaspProjectDir outDir gaspDataDir False
           case compilationResult of
               Left err -> gaspSays $ "Recompilation on file change failed: " ++ err
               Right () -> gaspSays "Recompilation on file change succeeded."

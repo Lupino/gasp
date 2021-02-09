@@ -11,4 +11,5 @@ import           StrongPath   (Abs, Dir, Path)
 --   Maybe it is, even more than this!
 data CompileOptions = CompileOptions
     { externalCodeDirPath :: !(Path Abs (Dir SourceExternalCodeDir))
+    , showSyntaxTree      :: !Bool
     }

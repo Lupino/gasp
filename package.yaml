@@ -60,6 +60,7 @@ library:
     - bytestring
     - regex-tdfa
     - utf8-string
+    - yaml
 
 executables:
   gasp:

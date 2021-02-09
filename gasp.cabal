@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1df2d52ecbafd82fcaf2910a6a772ec975d48608137bf15f16c0eab8932e8a17
+-- hash: fb87d4ffeb09f9291499282298cb80fc66820b987131afd136e3b77de3423a2c
 
 name:           gasp
 version:        0.1.0.0
@@ -103,6 +103,7 @@ library
     , time
     , unordered-containers
     , utf8-string
+    , yaml
   default-language: Haskell2010
 
 executable gasp

@@ -17,7 +17,8 @@ main = do
     case args of
         ["new", projectName] -> runCommand $ createNewProject projectName
         ["clean"]            -> runCommand clean
-        ["compile"]          -> runCommand compile
+        ["compile"]          -> runCommand $ compile False
+        ["syntax"]           -> runCommand $ compile True
         ["watch"]            -> runCommand compileAndWatch
         ["version"]          -> printVersion
         _                    -> printUsage
@@ -29,6 +30,7 @@ printUsage = putStrLn $ unlines
     , ""
     , "Commands:"
     , "  new <project-name>"
+    , "  syntax"
     , "  compile"
     , "  watch"
     , "  clean"

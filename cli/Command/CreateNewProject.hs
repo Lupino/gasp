@@ -73,7 +73,6 @@ createNewProject projectName = do
           , ""
           , "func read_%s {=code" `printf` projectName
           , "    metric_temperature = 25.8;"
-          , "    return RET_SUCC;"
           , "code=}"
           , ""
           , "every read_%s 6000" `printf` projectName
