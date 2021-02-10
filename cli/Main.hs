@@ -39,6 +39,9 @@ printUsage = putStrLn $ unlines
     , "Examples:"
     , "  gasp new MyApp"
     , ""
+    , "Custom Template:"
+    , "  export GASP_TEMPLATE_PATH=you/custom/template/path"
+    , ""
     ]
 
 printVersion :: IO ()
