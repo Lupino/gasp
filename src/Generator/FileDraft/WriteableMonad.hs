@@ -3,13 +3,13 @@ module Generator.FileDraft.WriteableMonad
        ) where
 
 
-import           Data.Aeson          as Aeson
-import           Data.Text           (Text)
+import           Data.Aeson         as Aeson
+import           Data.Text          (Text)
 import qualified Data.Text.IO
 import qualified System.Directory
 
-import qualified Generator.Templates as Templates
-import           StrongPath          (Abs, Dir, File, Path, Rel)
+import qualified Generator.Template as Template
+import           StrongPath         (Abs, Dir, File, Path, Rel)
 
 
 -- TODO: Should we use DI via data instead of typeclasses?
@@ -36,8 +36,8 @@ class (Monad m) => WriteableMonad m where
     writeFileFromText :: FilePath -> Text -> m ()
 
     compileAndRenderTemplate
-        :: Path Abs (Dir Templates.TemplatesDir)
-        -> Path (Rel Templates.TemplatesDir) File  -- ^ Template file path.
+        :: Path Abs (Dir Template.TemplateDir)
+        -> Path (Rel Template.TemplateDir) File  -- ^ Template file path.
         -> Aeson.Value  -- ^ JSON to be provided as template data.
         -> m Text
 
@@ -45,4 +45,4 @@ instance WriteableMonad IO where
     createDirectoryIfMissing = System.Directory.createDirectoryIfMissing
     copyFile = System.Directory.copyFile
     writeFileFromText = Data.Text.IO.writeFile
-    compileAndRenderTemplate = Templates.compileAndRenderTemplate
+    compileAndRenderTemplate = Template.compileAndRenderTemplate

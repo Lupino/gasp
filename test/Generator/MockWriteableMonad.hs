@@ -12,7 +12,7 @@ import           Control.Monad.State
 import qualified Data.Aeson                         as Aeson
 import           Data.Text                          (Text, pack)
 import           Generator.FileDraft.WriteableMonad
-import           Generator.Templates                (TemplatesDir)
+import           Generator.Template                 (TemplateDir)
 import           StrongPath                         (File, Path, Rel)
 
 
@@ -57,11 +57,11 @@ data MockWriteableMonadLogs = MockWriteableMonadLogs
     { writeFileFromText_calls :: [(FilePath, Text)]
     , createDirectoryIfMissing_calls :: [(Bool, FilePath)]
     , copyFile_calls :: [(FilePath, FilePath)]
-    , compileAndRenderTemplate_calls :: [(Path (Rel TemplatesDir) File, Aeson.Value)]
+    , compileAndRenderTemplate_calls :: [(Path (Rel TemplateDir) File, Aeson.Value)]
     }
 
 data MockWriteableMonadConfig = MockWriteableMonadConfig
-    { compileAndRenderTemplate_impl :: Path (Rel TemplatesDir) File -> Aeson.Value -> Text
+    { compileAndRenderTemplate_impl :: Path (Rel TemplateDir) File -> Aeson.Value -> Text
     }
 
 writeFileFromText_addCall :: FilePath -> Text -> MockWriteableMonadLogs -> MockWriteableMonadLogs
@@ -77,7 +77,7 @@ createDirectoryIfMissing_addCall createParents path logs =
     logs { createDirectoryIfMissing_calls =
            (createParents, path):(createDirectoryIfMissing_calls logs) }
 
-compileAndRenderTemplate_addCall :: Path (Rel TemplatesDir) File
+compileAndRenderTemplate_addCall :: Path (Rel TemplateDir) File
                                  -> Aeson.Value
                                  -> MockWriteableMonadLogs
                                  -> MockWriteableMonadLogs

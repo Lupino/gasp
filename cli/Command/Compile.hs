@@ -6,7 +6,7 @@ module Command.Compile
 
 import           Command                (Command, CommandError (..))
 import           Command.Common         (findGaspProjectRootDirFromCwd,
-                                         findGaspTemplatesDir, gaspSaysC)
+                                         findGaspTemplateDir, gaspSaysC)
 import qualified Common
 import           CompileOptions         (CompileOptions (..))
 import           Control.Monad          (unless)
@@ -50,10 +50,10 @@ compileIO gaspProjectDir options = do
 compileOptions :: Bool -> Command (Path Abs (Dir Common.GaspProjectDir), CompileOptions)
 compileOptions syntaxTree = do
   gaspProjectDir <- findGaspProjectRootDirFromCwd
-  gaspTemplatesDir <- findGaspTemplatesDir gaspProjectDir
+  gaspTemplateDir <- findGaspTemplateDir gaspProjectDir
   return (gaspProjectDir , CompileOptions
     { externalCodeDirPath = gaspProjectDir </> Common.extCodeDirInGaspProjectDir
     , showSyntaxTree = syntaxTree
     , projectRootDir = gaspProjectDir </> Common.buildGaspDirInGaspProjectDir
-    , templatesDir   = gaspTemplatesDir
+    , templateDir    = gaspTemplateDir
     })

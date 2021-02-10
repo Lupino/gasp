@@ -1,7 +1,7 @@
 module Lib
     ( compile
     , ProjectRootDir
-    , TemplatesDir
+    , TemplateDir
     ) where
 
 import           CompileOptions        (CompileOptions)
@@ -15,7 +15,7 @@ import           Gasp                  (Attr (..), Expr (..), Gasp, Metric (..),
                                         setGaspExprs)
 import           Generator             (writeAppCode)
 import           Generator.Common      (ProjectRootDir)
-import           Generator.Templates   (TemplatesDir)
+import           Generator.Template    (TemplateDir)
 import           Parser                (parseGasp)
 import           StrongPath            (Abs, File, Path, toFilePath)
 import           Text.Printf           (printf)
@@ -40,7 +40,7 @@ compile gaspFile options = do
     generateCode False gasp = writeAppCode gasp outDir tempDir >> return (Right ())
     generateCode True gasp  = BC.putStrLn (encode gasp) >> return (Right ())
     outDir = CompileOptions.projectRootDir options
-    tempDir = CompileOptions.templatesDir options
+    tempDir = CompileOptions.templateDir options
 
 preprocessGasp :: Gasp -> IO Gasp
 preprocessGasp gasp = setGaspExprs gasp <$> mapM mapFunc (getGaspExprs gasp)

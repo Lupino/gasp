@@ -1,7 +1,7 @@
 module Command.Common
     ( findGaspProjectRootDirFromCwd
     , findGaspProjectRoot
-    , findGaspTemplatesDir
+    , findGaspTemplateDir
     , gaspSaysC
     ) where
 
@@ -13,7 +13,7 @@ import           Control.Monad          (unless, when)
 import           Control.Monad.Except   (throwError)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Maybe             (fromJust)
-import           Lib                    (TemplatesDir)
+import           Lib                    (TemplateDir)
 import qualified Paths_gasp
 import           StrongPath             (Abs, Dir, Path)
 import qualified StrongPath             as SP
@@ -45,19 +45,19 @@ findGaspProjectRootDirFromCwd = do
     findGaspProjectRoot (fromJust $ SP.parseAbsDir absCurrentDir)
 
 
-findGaspTemplatesDir :: Path Abs (Dir GaspProjectDir) -> Command (Path Abs (Dir TemplatesDir))
-findGaspTemplatesDir outDir = do
+findGaspTemplateDir :: Path Abs (Dir GaspProjectDir) -> Command (Path Abs (Dir TemplateDir))
+findGaspTemplateDir outDir = do
   menvPath <- liftIO $ lookupEnv "GASP_TEMPLATE_PATH"
   case menvPath of
     Just envPath -> return $ fromJust $ SP.parseAbsDir envPath
     Nothing -> do
       doesTempDirExist <- liftIO $ doesPathExist tempDir
       if doesTempDirExist then return $ fromJust $ SP.parseAbsDir tempDir
-                          else liftIO $ (FP.</> "templates") <$> Paths_gasp.getDataDir >>= SP.parseAbsDir
+                          else liftIO $ (FP.</> "template") <$> Paths_gasp.getDataDir >>= SP.parseAbsDir
 
 
   where dataDir = SP.toFilePath outDir
-        tempDir = dataDir FP.</> "templates"
+        tempDir = dataDir FP.</> "template"
 
 gaspSaysC :: String -> Command ()
 gaspSaysC = liftIO . gaspSays

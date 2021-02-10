@@ -10,7 +10,7 @@ import           Generator.Common                      (ProjectRootDir)
 import qualified Generator.FileDraft.CopyFileDraft     as CopyFD
 import qualified Generator.FileDraft.TemplateFileDraft as TmplFD
 import           Generator.FileDraft.Writeable
-import           Generator.Templates                   (TemplatesDir)
+import           Generator.Template                    (TemplateDir)
 import           StrongPath                            (Abs, Dir, File, Path,
                                                         Rel)
 
@@ -29,8 +29,8 @@ instance Writeable FileDraft where
 
 
 createTemplateFileDraft :: Path (Rel ProjectRootDir) File
-                        -> Path Abs (Dir TemplatesDir)
-                        -> Path (Rel TemplatesDir) File
+                        -> Path Abs (Dir TemplateDir)
+                        -> Path (Rel TemplateDir) File
                         -> Maybe Aeson.Value
                         -> FileDraft
 createTemplateFileDraft dstPath tmplPath tmplSrcPath tmplData =

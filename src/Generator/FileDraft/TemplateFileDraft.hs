@@ -7,7 +7,7 @@ import qualified Data.Aeson                         as Aeson
 import           Generator.Common                   (ProjectRootDir)
 import           Generator.FileDraft.Writeable
 import           Generator.FileDraft.WriteableMonad
-import           Generator.Templates                (TemplatesDir,
+import           Generator.Template                 (TemplateDir,
                                                      getTemplateFileAbsPath)
 import           StrongPath                         (Abs, Dir, File, Path, Rel,
                                                      (</>))
@@ -16,8 +16,8 @@ import qualified StrongPath                         as SP
 -- | File draft based on template file that gets combined with data.
 data TemplateFileDraft = TemplateFileDraft
     { _dstPath          :: !(Path (Rel ProjectRootDir) File) -- ^ Path where file will be generated.
-    , _tmplPath         :: !(Path Abs (Dir TemplatesDir))
-    , _srcPathInTmplDir :: !(Path (Rel TemplatesDir) File) -- ^ Path of template source file.
+    , _tmplPath         :: !(Path Abs (Dir TemplateDir))
+    , _srcPathInTmplDir :: !(Path (Rel TemplateDir) File) -- ^ Path of template source file.
     , _tmplData         :: Maybe Aeson.Value -- ^ Data to be fed to the template while rendering it.
 
     }

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4ba513ef6673773c2106c05a5d2cf50a275ea9fbcdcdf6c2f3a4f64a557b0269
+-- hash: 37f8dd0672e5d3ed2f32d5d94691338bb74c8f63700fc16c79c55a761952146e
 
 name:           gasp
 version:        0.1.0.0
@@ -21,8 +21,8 @@ extra-source-files:
     README.md
     ChangeLog.md
 data-files:
-    templates/app/app.ino
-    templates/app/doc.md
+    template/app/app.ino
+    template/app/doc.md
 data-dir:       data/
 
 source-repository head
@@ -56,7 +56,7 @@ library
       Generator.FileDraft.TemplateFileDraft
       Generator.FileDraft.Writeable
       Generator.FileDraft.WriteableMonad
-      Generator.Templates
+      Generator.Template
       Lexer
       Lib
       Parser

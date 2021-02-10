@@ -6,10 +6,10 @@ import           Gasp                   (Gasp)
 import           Generator.AppGenerator (generateApp)
 import           Generator.Common       (ProjectRootDir)
 import           Generator.FileDraft    (FileDraft, write)
-import           Generator.Templates    (TemplatesDir)
+import           Generator.Template     (TemplateDir)
 import           StrongPath             (Abs, Dir, Path)
 
-writeAppCode :: Gasp -> Path Abs (Dir ProjectRootDir) -> Path Abs (Dir TemplatesDir) -> IO ()
+writeAppCode :: Gasp -> Path Abs (Dir ProjectRootDir) -> Path Abs (Dir TemplateDir) -> IO ()
 writeAppCode gasp dstDir tmplDir = do
   files <- generateApp tmplDir gasp
   writeFileDrafts dstDir files
