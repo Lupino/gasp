@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: fb87d4ffeb09f9291499282298cb80fc66820b987131afd136e3b77de3423a2c
+-- hash: 4ba513ef6673773c2106c05a5d2cf50a275ea9fbcdcdf6c2f3a4f64a557b0269
 
 name:           gasp
 version:        0.1.0.0
@@ -51,7 +51,6 @@ library
       Generator.AppGenerator.Common
       Generator.Common
       Generator.ExternalCodeGenerator
-      Generator.ExternalCodeGenerator.Common
       Generator.FileDraft
       Generator.FileDraft.CopyFileDraft
       Generator.FileDraft.TemplateFileDraft
@@ -145,7 +144,6 @@ test-suite gasp-test
   main-is: TastyDiscoverDriver.hs
   other-modules:
       Fixtures
-      Generator.AppGeneratorTest
       Generator.FileDraft.CopyFileDraftTest
       Generator.FileDraft.TemplateFileDraftTest
       Generator.MockWriteableMonad

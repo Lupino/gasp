@@ -1,7 +1,7 @@
 module Lib
     ( compile
     , ProjectRootDir
-    , DataDir
+    , TemplatesDir
     ) where
 
 import           CompileOptions        (CompileOptions)
@@ -15,9 +15,9 @@ import           Gasp                  (Attr (..), Expr (..), Gasp, Metric (..),
                                         setGaspExprs)
 import           Generator             (writeAppCode)
 import           Generator.Common      (ProjectRootDir)
-import           Generator.Templates   (DataDir)
+import           Generator.Templates   (TemplatesDir)
 import           Parser                (parseGasp)
-import           StrongPath            (Abs, Dir, File, Path, toFilePath)
+import           StrongPath            (Abs, File, Path, toFilePath)
 import           Text.Printf           (printf)
 import qualified Util.Terminal         as Term
 
@@ -26,11 +26,9 @@ type CompileError = String
 
 compile
   :: Path Abs File
-  -> Path Abs (Dir ProjectRootDir)
-  -> Path Abs (Dir DataDir)
   -> CompileOptions
   -> IO (Either CompileError ())
-compile gaspFile outDir dataDir options = do
+compile gaspFile options = do
     gaspStr <- readFile (toFilePath gaspFile)
 
     case parseGasp gaspStr of
@@ -39,8 +37,10 @@ compile gaspFile outDir dataDir options = do
           enrichGaspASTBasedOnCompileOptions gasp options
             >>= preprocessGasp >>= generateCode (CompileOptions.showSyntaxTree options)
   where
-    generateCode False gasp = writeAppCode gasp outDir dataDir >> return (Right ())
+    generateCode False gasp = writeAppCode gasp outDir tempDir >> return (Right ())
     generateCode True gasp  = BC.putStrLn (encode gasp) >> return (Right ())
+    outDir = CompileOptions.projectRootDir options
+    tempDir = CompileOptions.templatesDir options
 
 preprocessGasp :: Gasp -> IO Gasp
 preprocessGasp gasp = setGaspExprs gasp <$> mapM mapFunc (getGaspExprs gasp)

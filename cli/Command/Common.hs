@@ -1,7 +1,7 @@
 module Command.Common
     ( findGaspProjectRootDirFromCwd
     , findGaspProjectRoot
-    , findGaspDataDir
+    , findGaspTemplatesDir
     , gaspSaysC
     ) where
 
@@ -18,7 +18,7 @@ import           Command                (Command, CommandError (..))
 import           Common                 (GaspProjectDir,
                                          buildGaspRootFileInGaspProjectDir,
                                          gaspSays)
-import           Lib                    (DataDir)
+import           Lib                    (TemplatesDir)
 import           StrongPath             (Abs, Dir, Path)
 import qualified StrongPath             as SP
 
@@ -45,11 +45,11 @@ findGaspProjectRootDirFromCwd = do
     findGaspProjectRoot (fromJust $ SP.parseAbsDir absCurrentDir)
 
 
-findGaspDataDir :: Path Abs (Dir GaspProjectDir) -> Command (Path Abs (Dir DataDir))
-findGaspDataDir outDir = do
+findGaspTemplatesDir :: Path Abs (Dir GaspProjectDir) -> Command (Path Abs (Dir TemplatesDir))
+findGaspTemplatesDir outDir = do
     doesTempDirExist <- liftIO $ doesPathExist tempDir
-    if doesTempDirExist then return $ fromJust $ SP.parseAbsDir dataDir
-                        else liftIO $ Paths_gasp.getDataDir >>= SP.parseAbsDir
+    if doesTempDirExist then return $ fromJust $ SP.parseAbsDir tempDir
+                        else liftIO $ (FP.</> "templates") <$> Paths_gasp.getDataDir >>= SP.parseAbsDir
 
 
   where dataDir = SP.toFilePath outDir

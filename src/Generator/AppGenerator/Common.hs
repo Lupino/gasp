@@ -1,60 +1,36 @@
 module Generator.AppGenerator.Common
     ( makeSimpleTemplateFD
-    , asTmplFile
-    , appRootDirInProjectRootDir
-    , extCodeDirInProjectRootDir
+    , readTemplateFiles
     ) where
 
-import qualified Data.Aeson                             as Aeson
-import qualified Path                                   as P
-
-import           Gasp                                   (Gasp)
-import           Generator.Common                       (ProjectRootDir)
-import           Generator.ExternalCodeGenerator.Common (GeneratedExternalCodeDir)
-import           Generator.FileDraft                    (FileDraft,
-                                                         createTemplateFileDraft)
-import           Generator.Templates                    (DataDir, TemplatesDir)
-import           StrongPath                             (Abs, Dir, File, Path,
-                                                         Rel, (</>))
-import qualified StrongPath                             as SP
-
-
-data AppRootDir
-data AppTemplatesDir
-
-
-asTmplFile :: P.Path P.Rel P.File -> Path (Rel AppTemplatesDir) File
-asTmplFile = SP.fromPathRelFile
-
--- * Paths
-
--- | Path where app root dir is generated.
-appRootDirInProjectRootDir :: Path (Rel ProjectRootDir) (Dir AppRootDir)
-appRootDirInProjectRootDir = SP.fromPathRelDir [P.reldir|app|]
+import qualified Data.Aeson          as Aeson
+import           Data.Functor        ((<&>))
+import           Gasp                (Gasp)
+import           Generator.Common    (ProjectRootDir)
+import           Generator.FileDraft (FileDraft, createTemplateFileDraft)
+import           Generator.Templates (TemplatesDir)
+import           StrongPath          (Abs, Dir, File, Path, Rel)
+import qualified StrongPath          as SP
+import qualified Util.IO
 
 -- * Templates
 
 makeSimpleTemplateFD
-  :: Path (Rel AppTemplatesDir) File
-  -> Path Abs (Dir DataDir)
+  :: Path (Rel TemplatesDir) File
+  -> Path Abs (Dir TemplatesDir)
   -> Gasp -> FileDraft
-makeSimpleTemplateFD srcPath dataPath gasp = makeTemplateFD srcPath dataPath dstPath (Just $ Aeson.toJSON gasp)
-    where dstPath = SP.castRel srcPath :: Path (Rel AppRootDir) File
+makeSimpleTemplateFD srcPath tmplPath gasp = makeTemplateFD srcPath tmplPath dstPath (Just $ Aeson.toJSON gasp)
+    where dstPath = SP.castRel srcPath :: Path (Rel ProjectRootDir) File
 
-makeTemplateFD :: Path (Rel AppTemplatesDir) File
-               -> Path Abs (Dir DataDir)
-               -> Path (Rel AppRootDir) File
+makeTemplateFD :: Path (Rel TemplatesDir) File
+               -> Path Abs (Dir TemplatesDir)
+               -> Path (Rel ProjectRootDir) File
                -> Maybe Aeson.Value
                -> FileDraft
-makeTemplateFD relSrcPath dataPath relDstPath =
-    createTemplateFileDraft
-        (appRootDirInProjectRootDir </> relDstPath)
-        dataPath
-        (appTemplatesDirInTemplatesDir </> relSrcPath)
+makeTemplateFD relSrcPath tmplPath relDstPath =
+    createTemplateFileDraft relDstPath tmplPath relSrcPath
 
--- | Path where app app templates reside.
-appTemplatesDirInTemplatesDir :: Path (Rel TemplatesDir) (Dir AppTemplatesDir)
-appTemplatesDirInTemplatesDir = SP.fromPathRelDir [P.reldir|app|]
-
-extCodeDirInProjectRootDir :: Path (Rel ProjectRootDir) (Dir GeneratedExternalCodeDir)
-extCodeDirInProjectRootDir = SP.fromPathRelDir [P.reldir|app|]
+-- | Returns all files contained in the specified external code dir, recursively.
+readTemplateFiles :: Path Abs (Dir TemplatesDir) -> IO [Path (Rel TemplatesDir) File]
+readTemplateFiles templatesDir =
+  Util.IO.listDirectoryDeep (SP.toPathAbsDir templatesDir) <&> map SP.fromPathRelFile

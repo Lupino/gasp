@@ -4,31 +4,26 @@ module Command.Watch
     ) where
 
 import           Command                 (Command)
+import           CompileOptions          (CompileOptions (..))
 import           Control.Concurrent.Chan (Chan, newChan, readChan)
 import           Data.List               (isSuffixOf)
 import           Data.Time.Clock         (UTCTime, getCurrentTime)
 import qualified System.FSNotify         as FSN
 import qualified System.FilePath         as FP
 
-import           Command.Common          (findGaspDataDir,
-                                          findGaspProjectRootDirFromCwd)
-import           Command.Compile         (compile, compileIO)
+import           Command.Compile         (compile, compileIO, compileOptions)
 import           Common                  (gaspSays)
 import qualified Common
 import           Control.Monad.IO.Class  (liftIO)
-import qualified Lib
-import           StrongPath              (Abs, Dir, Path, (</>))
+import           StrongPath              (Abs, Dir, Path)
 import qualified StrongPath              as SP
 
 
 compileAndWatch :: Command ()
 compileAndWatch = do
-    gaspProjectDir <- findGaspProjectRootDirFromCwd
-    gaspDataDir <- findGaspDataDir gaspProjectDir
-    let outDir = gaspProjectDir </> Common.buildGaspDirInGaspProjectDir
-
-    compile False
-    liftIO $ watch gaspProjectDir outDir gaspDataDir
+  (gaspProjectDir, options) <- compileOptions False
+  compile False
+  liftIO $ watch gaspProjectDir options
 
 
 -- TODO: Another possible problem: on re-generation, gasp re-generates a lot of files, even those that should not
@@ -46,10 +41,9 @@ compileAndWatch = do
 --   compiles Gasp source files in gaspProjectDir and regenerates files in outDir.
 watch
   :: Path Abs (Dir Common.GaspProjectDir)
-  -> Path Abs (Dir Lib.ProjectRootDir)
-  -> Path Abs (Dir Lib.DataDir)
+  -> CompileOptions
   -> IO ()
-watch gaspProjectDir outDir gaspDataDir = FSN.withManager $ \mgr -> do
+watch gaspProjectDir options = FSN.withManager $ \mgr -> do
     currentTime <- getCurrentTime
     chan <- newChan
     _ <- FSN.watchDirChan mgr (SP.toFilePath gaspProjectDir) eventFilter chan
@@ -70,7 +64,7 @@ watch gaspProjectDir outDir gaspDataDir = FSN.withManager $ \mgr -> do
       recompile :: IO ()
       recompile = do
           gaspSays "Recompiling on file change..."
-          compilationResult <- compileIO gaspProjectDir outDir gaspDataDir False
+          compilationResult <- compileIO gaspProjectDir options
           case compilationResult of
               Left err -> gaspSays $ "Recompilation on file change failed: " ++ err
               Right () -> gaspSays "Recompilation on file change succeeded."

@@ -1,13 +1,11 @@
 module Generator.Templates
-       ( getTemplatesDirAbsPath
-       , getTemplateFileAbsPath
+       ( getTemplateFileAbsPath
        , compileAndRenderTemplate
-       , DataDir, TemplatesDir
+       , TemplatesDir
        ) where
 
 import qualified Data.Aeson           as Aeson
 import           Data.Text            (Text)
-import qualified Path                 as P
 import qualified Text.Mustache        as Mustache
 import           Text.Mustache.Render (SubstitutionError (..))
 import           Text.Printf          (printf)
@@ -18,42 +16,28 @@ import qualified StrongPath           as SP
 -- TODO: Write tests for this file! But first we need to decouple logic from IO
 --   so that we can mock it.
 
-data DataDir
 data TemplatesDir
-
--- | Returns absolute path of templates root directory.
-getTemplatesDirAbsPath :: Path Abs (Dir DataDir) -> Path Abs (Dir TemplatesDir)
-getTemplatesDirAbsPath dataDir = dataDir </> templatesDirPathInDataDir
 
 -- | Takes template file path relative to templates root directory and returns
 --   its absolute path.
-getTemplateFileAbsPath :: Path Abs (Dir DataDir) -> Path (Rel TemplatesDir) File -> Path Abs File
-getTemplateFileAbsPath dataDir tmplFilePathInTemplatesDir =
-  absPathOfTemplateFileInDataDir tmplFilePathInDataDir
-  where
-    tmplFilePathInDataDir :: Path (Rel DataDir) File
-    tmplFilePathInDataDir = templatesDirPathInDataDir </> tmplFilePathInTemplatesDir
-
-    absPathOfTemplateFileInDataDir :: Path (Rel DataDir) File -> Path Abs File
-    absPathOfTemplateFileInDataDir filePath = dataDir </> filePath
-
-templatesDirPathInDataDir :: Path (Rel DataDir) (Dir TemplatesDir)
-templatesDirPathInDataDir = SP.fromPathRelDir [P.reldir|templates|]
+getTemplateFileAbsPath :: Path Abs (Dir TemplatesDir) -> Path (Rel TemplatesDir) File -> Path Abs File
+getTemplateFileAbsPath tmplDir tmplFilePathInTemplatesDir =
+  tmplDir </> tmplFilePathInTemplatesDir
 
 compileAndRenderTemplate
-    :: Path Abs (Dir DataDir)
+    :: Path Abs (Dir TemplatesDir)
     -> Path (Rel TemplatesDir) File  -- ^ Path to the template file.
     -> Aeson.Value  -- ^ JSON to be provided as template data.
     -> IO Text
-compileAndRenderTemplate dataDir relTmplPath tmplData = do
-    mustacheTemplate <- compileMustacheTemplate dataDir relTmplPath
+compileAndRenderTemplate tmplDir relTmplPath tmplData = do
+    mustacheTemplate <- compileMustacheTemplate tmplDir relTmplPath
     renderMustacheTemplate mustacheTemplate tmplData
 
 compileMustacheTemplate
-    :: Path Abs (Dir DataDir)
+    :: Path Abs (Dir TemplatesDir)
     -> Path (Rel TemplatesDir) File  -- ^ Path to the template file.
     -> IO Mustache.Template
-compileMustacheTemplate dataDir relTmplPath = do
+compileMustacheTemplate tmplDir relTmplPath = do
     eitherTemplate <- Mustache.automaticCompile [SP.toFilePath templatesDirAbsPath]
                                                 (SP.toFilePath absTmplPath)
     return $ either raiseCompileError id eitherTemplate
@@ -61,8 +45,8 @@ compileMustacheTemplate dataDir relTmplPath = do
     raiseCompileError err = error $  -- TODO: Handle these errors better?
         printf "Compilation of template %s failed. %s" (show relTmplPath) (show err)
 
-    templatesDirAbsPath = getTemplatesDirAbsPath dataDir
-    absTmplPath = getTemplateFileAbsPath dataDir relTmplPath
+    templatesDirAbsPath = tmplDir
+    absTmplPath = getTemplateFileAbsPath tmplDir relTmplPath
 
 areAllErrorsSectionDataNotFound :: [SubstitutionError] -> Bool
 areAllErrorsSectionDataNotFound = all isSectionDataNotFoundError

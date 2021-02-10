@@ -1,12 +1,12 @@
 module Command.Compile
     ( compileIO
     , compile
+    , compileOptions
     ) where
 
 import           Command                (Command, CommandError (..))
-import           Command.Common         (findGaspDataDir,
-                                         findGaspProjectRootDirFromCwd,
-                                         gaspSaysC)
+import           Command.Common         (findGaspProjectRootDirFromCwd,
+                                         findGaspTemplatesDir, gaspSaysC)
 import qualified Common
 import           CompileOptions         (CompileOptions (..))
 import           Control.Monad          (unless)
@@ -21,29 +21,22 @@ import qualified Util.IO
 
 
 compile :: Bool -> Command ()
-compile _showSyntaxTree = do
-    gaspProjectDir <- findGaspProjectRootDirFromCwd
-    gaspDataDir <- findGaspDataDir gaspProjectDir
-    let outDir = gaspProjectDir </> Common.buildGaspDirInGaspProjectDir
-
-    unless _showSyntaxTree $ gaspSaysC "Compiling gasp code..."
-    compilationResult <- liftIO $ compileIO gaspProjectDir outDir gaspDataDir _showSyntaxTree
-    case compilationResult of
-        Left compileError -> throwError $ CommandError $ "Compilation failed: " ++ compileError
-        Right () -> unless _showSyntaxTree $ gaspSaysC "Code has been successfully compiled, project has been generated.\n"
+compile syntaxTree = do
+  (gaspProjectDir, options) <- compileOptions syntaxTree
+  unless syntaxTree $ gaspSaysC "Compiling gasp code..."
+  compilationResult <- liftIO $ compileIO gaspProjectDir options
+  case compilationResult of
+      Left compileError -> throwError $ CommandError $ "Compilation failed: " ++ compileError
+      Right () -> unless syntaxTree $ gaspSaysC "Code has been successfully compiled, project has been generated.\n"
 
 -- | Compiles Gasp source code in gaspProjectDir directory and generates a project
 --   in given outDir directory.
-compileIO :: Path Abs (Dir Common.GaspProjectDir)
-        -> Path Abs (Dir Lib.ProjectRootDir)
-        -> Path Abs (Dir Lib.DataDir)
-        -> Bool
-        -> IO (Either String ())
-compileIO gaspProjectDir outDir gaspDataDir _showSyntaxTree = do
+compileIO :: Path Abs (Dir Common.GaspProjectDir) -> CompileOptions -> IO (Either String ())
+compileIO gaspProjectDir options = do
     maybeGaspFile <- findGaspFile gaspProjectDir
     case maybeGaspFile of
         Nothing -> return $ Left "No *.gasp file present in the root of Gasp project."
-        Just gaspFile -> Lib.compile gaspFile outDir gaspDataDir options
+        Just gaspFile -> Lib.compile gaspFile options
   where
     findGaspFile :: Path Abs (Dir d) -> IO (Maybe (Path Abs SP.File))
     findGaspFile dir = do
@@ -54,7 +47,13 @@ compileIO gaspProjectDir outDir gaspDataDir _showSyntaxTree = do
     isGaspFile path = ".gasp" `isSuffixOf` P.toFilePath path
                       && (length (P.toFilePath path) > length (".gasp" :: String))
 
-    options = CompileOptions
-        { externalCodeDirPath = gaspProjectDir </> Common.extCodeDirInGaspProjectDir
-        , showSyntaxTree = _showSyntaxTree
-        }
+compileOptions :: Bool -> Command (Path Abs (Dir Common.GaspProjectDir), CompileOptions)
+compileOptions syntaxTree = do
+  gaspProjectDir <- findGaspProjectRootDirFromCwd
+  gaspTemplatesDir <- findGaspTemplatesDir gaspProjectDir
+  return (gaspProjectDir , CompileOptions
+    { externalCodeDirPath = gaspProjectDir </> Common.extCodeDirInGaspProjectDir
+    , showSyntaxTree = syntaxTree
+    , projectRootDir = gaspProjectDir </> Common.buildGaspDirInGaspProjectDir
+    , templatesDir   = gaspTemplatesDir
+    })

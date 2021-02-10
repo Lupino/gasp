@@ -36,7 +36,7 @@ class (Monad m) => WriteableMonad m where
     writeFileFromText :: FilePath -> Text -> m ()
 
     compileAndRenderTemplate
-        :: Path Abs (Dir Templates.DataDir)
+        :: Path Abs (Dir Templates.TemplatesDir)
         -> Path (Rel Templates.TemplatesDir) File  -- ^ Template file path.
         -> Aeson.Value  -- ^ JSON to be provided as template data.
         -> m Text
