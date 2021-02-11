@@ -82,6 +82,21 @@ metric humidity {
 }
 
 every read_temp 6000
+
+attr relay_state {
+  type: "int",
+  max: 1,
+  min: 0
+}
+
+gpio relay {
+    pin: "13",
+    link: relay_state,
+    state: LOW,
+    reverse: true
+}
+
+rule metric_temperature > 30 do open_gpio_relay else close_gpio_relay
 ```
 
 Source files (`.wasp`, `.ino`, `.c`, `.h`, ...) are compiled (transpiled) by `gaspc` (Gasp compiler) into the iot technology stack of your choice (e.g. Arduino + sensor + ...).
