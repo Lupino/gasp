@@ -10,6 +10,7 @@ module Lexer
   , reservedNameMetric
   , reservedNameEvery
   , reservedNameGpio
+  , reservedNameRule
   , braces
   , symbol
   , bool
@@ -65,6 +66,9 @@ reservedNameEvery = "every"
 reservedNameGpio :: String
 reservedNameGpio = "gpio"
 
+reservedNameRule :: String
+reservedNameRule = "rule"
+
 -- * Data types.
 
 reservedNameBooleanTrue :: String
@@ -87,6 +91,7 @@ reservedNames =
     , reservedNameMetric
     , reservedNameEvery
     , reservedNameGpio
+    , reservedNameRule
     -- * Data types
     , reservedNameBooleanTrue
     , reservedNameBooleanFalse

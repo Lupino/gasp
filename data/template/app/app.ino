@@ -194,6 +194,15 @@ void loop() {
     {=# loops =}
     {=& code =}
     {=/ loops =}
+    {=# rules =}
+    if ({=& condition =}) {
+        {= action =}();
+    {=# has_else =}
+    } else {
+        {= else_action =}();
+    {=/ has_else =}
+    }
+    {=/ rules =}
     {=# use_remote =}
     while (GL_SERIAL.available() > 0) {
         uint8_t outByte = GL_SERIAL.read();

@@ -11,6 +11,8 @@ module Parser.Common
   , gaspElementNameAndClosure
   , gaspBlockClosure
   , gaspClosure
+
+  , strip
   ) where
 
 import qualified Data.Text          as T

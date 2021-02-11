@@ -14,6 +14,7 @@ import           Parser.Gpio        (gpio)
 import           Parser.Init        (initP)
 import           Parser.Loop        (loop)
 import           Parser.Metric      (metric)
+import           Parser.Rule        (rule)
 import           Parser.Setup       (setup)
 import           Parser.Telemetry   (telemetry)
 import           Text.Parsec        (ParseError, eof, many1, (<|>))
@@ -32,6 +33,7 @@ expr
     <|> exprMetric
     <|> exprEvery
     <|> exprGpio
+    <|> exprRule
 
 exprApp :: Parser Gasp.Expr
 exprApp = Gasp.ExprApp <$> app
@@ -65,6 +67,9 @@ exprEvery = Gasp.ExprEvery <$> every
 
 exprGpio :: Parser Gasp.Expr
 exprGpio = Gasp.ExprGpio <$> gpio
+
+exprRule :: Parser Gasp.Expr
+exprRule = Gasp.ExprRule <$> rule
 
 
 -- | Top level parser, produces Gasp.

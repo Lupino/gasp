@@ -24,6 +24,7 @@ import           Gasp.Gpio
 import           Gasp.Init
 import           Gasp.Loop
 import           Gasp.Metric
+import           Gasp.Rule
 import           Gasp.Setup
 import           Gasp.Telemetry
 
@@ -47,6 +48,7 @@ data Expr
     | ExprMetric !Metric
     | ExprEvery !Every
     | ExprGpio !Gpio
+    | ExprRule !Rule
     deriving (Show, Eq)
 
 fromGaspExprs :: [Expr] -> Gasp
@@ -133,6 +135,11 @@ getMetrics gasp = [metric | (ExprMetric metric) <- gaspExprs gasp]
 
 getEverys:: Gasp -> [Every]
 getEverys gasp = [every | (ExprEvery every) <- gaspExprs gasp]
+
+-- * Rules
+
+getRules:: Gasp -> [Rule]
+getRules gasp = [rule | (ExprRule rule) <- gaspExprs gasp]
 
 -- * Gpios
 
@@ -240,6 +247,7 @@ instance ToJSON Gasp where
         , "max_cmd_len" .= (getMaxCommandLength gasp + 1)
         , "actions"     .= getEverys gasp
         , "gpios"       .= gpios
+        , "rules"       .= getRules gasp
         , "has_gpio"    .= not (null gpios)
         , "has_func"    .= not (null funcs)
         , "has_input"   .= hasInput gpios
