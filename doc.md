@@ -105,6 +105,12 @@ metric metricName {
 }
 ```
 
+## rule
+
+```
+rule condition do action [else elseAction]
+```
+
 # Template Special
 
 ```
@@ -212,6 +218,14 @@ metric metricName {
             "has_fn": false
         }
     ],
+    "rules": [
+        {
+            "condition": "condition",
+            "action": "action",
+            "else_action": "",
+            "has_else": false
+        }
+    ],
     "has_attr": true,
     "has_metric": true,
     "use_eeprom": true,
@@ -219,7 +233,7 @@ metric metricName {
     "has_gpio": true,
     "has_func": true,
     "has_input": true,
-    "use_remote": true,
+    "has_app": true,
     "has_debug": true
 }
 ```
