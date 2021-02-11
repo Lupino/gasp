@@ -329,18 +329,18 @@ void loop() {
     {=# reverse =}
     if (attr_{= link =} == gpio_{= name =}_state) {
         if (attr_{= link =} == {= open =}) {
-            close_gpio_{= name =}();
+            close_gpio_{= name =}_raw();
         } else {
-            open_gpio_{= name =}();
+            open_gpio_{= name =}_raw();
         }
     }
     {=/ reverse =}
     {=^ reverse =}
     if (attr_{= link =} != gpio_{= name =}_state) {
         if (attr_{= link =} == {= open =}) {
-            open_gpio_{= name =}();
+            open_gpio_{= name =}_raw();
         } else {
-            close_gpio_{= name =}();
+            close_gpio_{= name =}_raw();
         }
     }
     {=/ reverse =}
@@ -539,6 +539,36 @@ int get_metric_{= name =}(char *retval) {
 {=/ has_app =}
 {=# gpios =}
 {=^ has_fn =}
+{=# has_link =}
+void open_gpio_{= name =}_raw() {
+    gpio_{= name =}_state = {= open =};
+    digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
+}
+
+void close_gpio_{= name =}_raw() {
+    gpio_{= name =}_state = {= close =};
+    digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
+}
+
+void open_gpio_{= name =}() {
+    {=# reverse =}
+    attr_{= link =} = {= close =};
+    {=/ reverse =}
+    {=^ reverse =}
+    attr_{= link =} = {= open =};
+    {=/ reverse =}
+}
+
+void close_gpio_{= name =}() {
+    {=# reverse =}
+    attr_{= link =} = {= open =};
+    {=/ reverse =}
+    {=^ reverse =}
+    attr_{= link =} = {= close =};
+    {=/ reverse =}
+}
+{=/ has_link =}
+{=^ has_link =}
 void open_gpio_{= name =}() {
     gpio_{= name =}_state = {= open =};
     digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
@@ -548,6 +578,7 @@ void close_gpio_{= name =}() {
     gpio_{= name =}_state = {= close =};
     digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
 }
+{=/ has_link =}
 
 void toggle_gpio_{= name =}() {
     {=# has_link =}
