@@ -13,6 +13,7 @@ module Gasp
     ) where
 
 import           Data.Aeson     (ToJSON (..), object, (.=))
+import           Data.Maybe     (isJust)
 import qualified ExternalCode
 import           Gasp.App
 import           Gasp.Attr
@@ -73,11 +74,11 @@ setExternalCodeFiles wasp files = wasp { externalCodeFiles = files }
 
 -- * App
 
-getApp :: Gasp -> App
+getApp :: Gasp -> Maybe App
 getApp gasp =
   case apps of
-    [app] -> app
-    []    -> emptyApp
+    [app] -> Just app
+    []    -> Nothing
     _     -> error "Gasp has to contain exactly one ExprApp element!"
 
   where apps = getApps gasp
@@ -232,7 +233,8 @@ collectFlags flags (_:xs) = collectFlags flags xs
 
 instance ToJSON Gasp where
     toJSON gasp0 = object
-        [ "app"         .= getApp gasp
+        [ "app"         .= app
+        , "has_app"     .= isJust app
         , "commands"    .= cmds
         , "telemetries" .= telems
         , "functions"   .= funcs
@@ -251,7 +253,6 @@ instance ToJSON Gasp where
         , "has_gpio"    .= not (null gpios)
         , "has_func"    .= not (null funcs)
         , "has_input"   .= hasInput gpios
-        , "use_remote"  .= (useEeprom || hasCmd)
         , "has_debug"   .= initDebug inits
         ]
         where gasp = prepareGasp (getFlags gasp0) gasp0
@@ -266,4 +267,4 @@ instance ToJSON Gasp where
               hasTelems = not (null telems)
               hasAttr = not (null attrs)
               useEeprom = hasMetric || hasAttr
-              hasCmd = not (null cmds)
+              app = getApp gasp

@@ -1,10 +1,10 @@
 {{={= =}=}}
-{=# use_remote =}
+{=# has_app =}
 #include <avr/wdt.h>
 #include <givelink.h>
 #include <jsmn.h>
 
-{=/ use_remote =}
+{=/ has_app =}
 {=# use_eeprom =}
 #include <EEPROM.h>
 
@@ -20,7 +20,7 @@ unsigned long get_current_time_ms();
 {=& code =}
 
 {=/ inits =}
-{=# use_remote =}
+{=# has_app =}
 unsigned long auth_timer_ms = get_current_time_ms();
 
 #ifndef AUTH_DELAY_MS
@@ -73,7 +73,6 @@ char wantSendData[WANT_SEND_DATA_LENGTH];
 char tempSendData[WANT_SEND_DATA_LENGTH];
 char * wantSendDataTpl = (char *)malloc(WANT_SEND_DATA_LENGTH);
 
-{=/ use_remote =}
 {=# has_metric =}
 #ifndef METRIC_DELAY_MS
 #define METRIC_DELAY_MS 1800000
@@ -86,16 +85,21 @@ unsigned long metric_timer_ms = get_current_time_ms();
 bool requireReportAttribute = false;
 
 {=/ use_eeprom =}
+{=/ has_app =}
 {=# attrs =}
 {= type =} attr_{= name =} = {= default =};
+{=# has_app =}
 {= type =} last_attr_{= name =} = {= default =};
+{=/ has_app =}
 
 {=/ attrs =}
 {=# metrics =}
 {= type =} metric_{= name =} = 0;
+{=# has_app =}
 {= type =} last_metric_{= name =} = 0;
 {= type =} metric_{= name =}_threshold = {= threshold =};
 {= type =} last_metric_{= name =}_threshold = {= threshold =};
+{=/ has_app =}
 
 {=/ metrics =}
 {=# actions =}
@@ -120,7 +124,7 @@ int last_gpio_{= name =}_state = {= state =};
 {=/ gpios =}
 {=/ has_gpio =}
 void setup() {
-    {=# use_remote =}
+    {=# has_app =}
     // wdt init
     MCUSR = 0;
     wdt_disable();
@@ -130,7 +134,7 @@ void setup() {
     givelink_init("{= key =}", "{= token =}");
     {=/ app =}
 
-    {=/ use_remote =}
+    {=/ has_app =}
     {=# use_eeprom =}
     byte first_run_flag = 0;
     EEPROM.get(0, first_run_flag);
@@ -146,6 +150,7 @@ void setup() {
     }
 
     {=/ attrs =}
+    {=# has_app =}
     {=# metrics =}
     if (first_run_flag == 1) {
         EEPROM.get({= addr =}, metric_{= name =}_threshold);
@@ -157,6 +162,7 @@ void setup() {
     }
 
     {=/ metrics =}
+    {=/ has_app =}
     if (first_run_flag != 0) {
       first_run_flag = 1;
       EEPROM.put(0, first_run_flag);
@@ -178,19 +184,19 @@ void setup() {
     {=& code =}
 
     {=/ setups =}
-    {=# use_remote =}
+    {=# has_app =}
     {=# has_debug =}
     #ifdef DEBUG_SERIAL
     DEBUG_SERIAL.println(F("Setup"));
     #endif
     {=/ has_debug =}
-    {=/ use_remote =}
+    {=/ has_app =}
 }
 
 void loop() {
-    {=# use_remote =}
+    {=# has_app =}
     wdt_reset();
-    {=/ use_remote =}
+    {=/ has_app =}
     {=# loops =}
     {=& code =}
     {=/ loops =}
@@ -203,7 +209,7 @@ void loop() {
     {=/ has_else =}
     }
     {=/ rules =}
-    {=# use_remote =}
+    {=# has_app =}
     while (GL_SERIAL.available() > 0) {
         uint8_t outByte = GL_SERIAL.read();
         if (givelink_recv(readedPayload, &readedLen, outByte)) {
@@ -295,7 +301,7 @@ void loop() {
         }
     }
 
-    {=/ use_remote =}
+    {=/ has_app =}
     {=# actions =}
     if ({= fn =}_timer_ms + {= delay_ms =} < get_current_time_ms()) {
         {= fn =}();
@@ -348,7 +354,7 @@ unsigned long get_current_time_ms() {
     return millis();
 }
 
-{=# use_remote =}
+{=# has_app =}
 void reset() {
     wdt_disable();
     wdt_enable(WDTO_15MS);
@@ -465,7 +471,6 @@ void merge_json(char *dst, char *src, int *total_length) {
     dst[*total_length-1] = ',';
 }
 
-{=/ use_remote =}
 {=# attrs =}
 {=# gen_set =}
 int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
@@ -531,6 +536,7 @@ int get_metric_{= name =}(char *retval) {
 }
 
 {=/ metrics =}
+{=/ has_app =}
 {=# gpios =}
 {=^ has_fn =}
 void open_gpio_{= name =}() {
@@ -588,7 +594,7 @@ int {= name =}() {
 }
 
 {=/ functions =}
-{=# use_remote =}
+{=# has_app =}
 int processRequest(const char *json, int length, char *retval) {
     /* Prepare parser */
     jsmn_init(&requestJsmnParser);
@@ -687,7 +693,6 @@ int processRequest(const char *json, int length, char *retval) {
     return RET_ERR;
 }
 
-{=/ use_remote =}
 {=# has_metric =}
 bool processTelemetries() {
     bool ret = false;
@@ -790,3 +795,4 @@ bool reportAttribute(bool force) {
     return RET_SUCC;
 }
 {=/ use_eeprom =}
+{=/ has_app =}
