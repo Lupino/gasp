@@ -2,7 +2,6 @@ module Parser.Rule
   ( rule
   ) where
 
-import qualified Data.Text          as T (pack)
 import           Gasp.Rule
 import           Lexer
 import           Parser.Common
@@ -23,7 +22,7 @@ rule = do
     elseAction <- option "" elseActionP
 
     return Rule
-      { ruleCondition = T.pack condition
+      { ruleCondition = condition
       , ruleAction = action
       , ruleElseAction = elseAction
       }

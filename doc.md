@@ -223,7 +223,8 @@ rule condition do action [else elseAction]
             "condition": "condition",
             "action": "action",
             "else_action": "",
-            "has_else": false
+            "has_else": false,
+            "depends": []
         }
     ],
     "has_attr": true,

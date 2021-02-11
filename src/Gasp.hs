@@ -249,11 +249,12 @@ instance ToJSON Gasp where
         , "max_cmd_len" .= (getMaxCommandLength gasp + 1)
         , "actions"     .= getEverys gasp
         , "gpios"       .= gpios
-        , "rules"       .= getRules gasp
+        , "rules"       .= rules
         , "has_gpio"    .= not (null gpios)
         , "has_func"    .= not (null funcs)
         , "has_input"   .= hasInput gpios
         , "has_debug"   .= initDebug inits
+        , "has_rule"    .= not (null rules)
         ]
         where gasp = prepareGasp (getFlags gasp0) gasp0
               attrs = getAttrs gasp
@@ -268,3 +269,4 @@ instance ToJSON Gasp where
               hasAttr = not (null attrs)
               useEeprom = hasMetric || hasAttr
               app = getApp gasp
+              rules = getRules gasp

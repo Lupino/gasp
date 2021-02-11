@@ -106,6 +106,9 @@ bool requireReportAttribute = false;
 unsigned long {= fn =}_timer_ms = get_current_time_ms();
 {=/ actions =}
 
+{=# has_rule =}
+bool rule_depends_checked = false;
+{=/ has_rule =}
 {=# has_input =}
 #ifndef DEBOUNCE_DELAY_MS
 #define DEBOUNCE_DELAY_MS 50
@@ -201,12 +204,20 @@ void loop() {
     {=& code =}
     {=/ loops =}
     {=# rules =}
-    if ({=& condition =}) {
-        {= action =}();
-    {=# has_else =}
-    } else {
-        {= else_action =}();
-    {=/ has_else =}
+    rule_depends_checked = true;
+    {=# depends =}
+    if (!check_metric_{= name =}()) {
+        rule_depends_checked = false;
+    }
+    {=/ depends =}
+    if (rule_depends_checked) {
+        if ({=& condition =}) {
+            {= action =}();
+        {=# has_else =}
+        } else {
+            {= else_action =}();
+        {=/ has_else =}
+        }
     }
     {=/ rules =}
     {=# has_app =}
@@ -515,19 +526,26 @@ int get_metric_{= name =}_threshold(char *retval) {
     return RET_SUCC;
 }
 
+bool check_metric_{= name =}() {
+    if (isnan(metric_{= name =})) {
+        return false;
+    }
+    if (metric_{= name =} < {= min =}) {
+        return false;
+    }
+    if (metric_{= name =} > {= max =}) {
+        return false;
+    }
+    return true;
+}
+
 int invalid_metric_{= name =}_error(char *retval) {
     sprintf(retval, FC(F("{\"err\": \"{= name =} is invalid\"}")));
     return RET_ERR;
 }
 
 int get_metric_{= name =}(char *retval) {
-    if (isnan(metric_{= name =})) {
-        return invalid_metric_{= name =}_error(retval);
-    }
-    if (metric_{= name =} < {= min =}) {
-        return invalid_metric_{= name =}_error(retval);
-    }
-    if (metric_{= name =} > {= max =}) {
+    if (!check_metric_{= name =}()) {
         return invalid_metric_{= name =}_error(retval);
     }
     dtostrf(metric_{= name =}, {= width =}, {= prec =}, requestValue);
