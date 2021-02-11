@@ -12,7 +12,7 @@ import qualified Parser.Common      as P
 setup :: Parser Setup
 setup = do
     L.reserved L.reservedNameSetup
-    code <- P.gaspNamedClosure "code"
+    code <- P.gaspBlockClosure
 
     return Setup
       { setupCode = Text.pack code

@@ -12,7 +12,7 @@ import qualified Parser.Common      as P
 initP :: Parser Init
 initP = do
     L.reserved L.reservedNameInit
-    code <- P.gaspNamedClosure "code"
+    code <- P.gaspBlockClosure
 
     return Init
       { initCode = Text.pack code

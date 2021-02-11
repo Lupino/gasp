@@ -30,7 +30,7 @@ cmdPropertyErrS :: Parser CommandProperty
 cmdPropertyErrS = ErrS <$> gaspPropertyStringLiteral "error"
 
 cmdPropertyDocS :: Parser CommandProperty
-cmdPropertyDocS = DocS <$> gaspProperty "doc" (gaspNamedClosure "md")
+cmdPropertyDocS = DocS <$> gaspProperty "doc" gaspBlockClosure
 
 -- TODO(matija): unsafe, what if empty list?
 getCmdFunc :: [CommandProperty] -> String

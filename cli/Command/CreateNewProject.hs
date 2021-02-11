@@ -44,16 +44,16 @@ createNewProject projectName = do
           , "  token: \"%s\"" `printf` projectName
           , "}"
           , ""
-          , "init {=code"
+          , "init do"
           , "#define GL_SERIAL Serial"
           , "#define DEBUG_SERIAL Serial"
           , "#define METRIC_DELAY_MS attr_delay"
-          , "code=}"
+          , "done"
           , ""
-          , "setup {=code"
+          , "setup do"
           , "    GL_SERIAL.begin(115200);"
           , "    while (!GL_SERIAL) {;}"
-          , "code=}"
+          , "done"
           , ""
           , "attr delay {"
           , "  type: \"unsigned long\","
@@ -71,9 +71,9 @@ createNewProject projectName = do
           , "  prec: 2"
           , "}"
           , ""
-          , "func read_%s {=code" `printf` projectName
+          , "func read_%s do" `printf` projectName
           , "    metric_temperature = 25.8;"
-          , "code=}"
+          , "done"
           , ""
           , "every read_%s 6000" `printf` projectName
           ]

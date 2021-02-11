@@ -12,7 +12,7 @@ import qualified Parser.Common      as P
 loop :: Parser Loop
 loop = do
     L.reserved L.reservedNameLoop
-    code <- P.gaspNamedClosure "code"
+    code <- P.gaspBlockClosure
 
     return Loop
       { loopCode = Text.pack code

@@ -9,7 +9,7 @@ module Parser.Common
   , gaspPropertyBool
   , gaspProperty
   , gaspElementNameAndClosure
-  , gaspNamedClosure
+  , gaspBlockClosure
   , gaspClosure
   ) where
 
@@ -80,15 +80,15 @@ gaspPropertyBool key = gaspProperty key L.bool
 gaspClosure :: Parser a -> Parser a
 gaspClosure = L.braces
 
--- TODO(martin): write tests and comments.
--- | Parses named gasp closure, which is {=name...name=}. Returns content within the closure.
-gaspNamedClosure :: String -> Parser String
-gaspNamedClosure name = do
+-- | Parses named gasp closure, which is do...done. Returns content within the closure.
+gaspBlockClosure :: Parser String
+gaspBlockClosure = do
     _ <- closureStart
     strip <$> manyTill anyChar (try closureEnd)
   where
-      closureStart = L.symbol ("{=" ++ name)
-      closureEnd = L.symbol (name ++ "=}")
+      closureStart = L.symbol "do"
+      closureEnd = L.symbol "done"
+
 
 -- | Removes leading and trailing spaces from a string.
 strip :: String -> String

@@ -11,25 +11,25 @@ app appName {
 ## init
 
 ```
-init {=code
+init do
 // you init code
-code=}
+done
 ```
 
 ## setup
 
 ```
-setup {=code
+setup do
 // you setup code
-code=}
+done
 ```
 
 ## loop
 
 ```
-loop {=code
+loop do
 // you loop code
-code=}
+done
 ```
 
 ## gpio
@@ -50,8 +50,8 @@ gpio gpioName {
 ## func
 
 ```
-func funcName {=code
-code=}
+func funcName do
+done
 ```
 
 ## every
@@ -66,9 +66,9 @@ every funcName delay_ms
 command commandName {
     fn: funcName,
     error: "error info",
-    doc: {=md
+    doc: do
 markdown doc
-md=}
+done
 }
 ```
 

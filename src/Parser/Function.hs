@@ -12,8 +12,7 @@ import qualified Parser.Common      as P
 
 function :: Parser Function
 function = do
-    (name, code) <- P.gaspElementNameAndClosure L.reservedNameFunction
-                                                          (P.gaspNamedClosure "code")
+    (name, code) <- P.gaspElementNameAndClosure L.reservedNameFunction P.gaspBlockClosure
 
     return Function
         { funcName = name
