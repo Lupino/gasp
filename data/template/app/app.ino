@@ -483,7 +483,6 @@ void merge_json(char *dst, char *src, int *total_length) {
 }
 
 {=# attrs =}
-{=# gen_set =}
 int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
         {= type =} tmp = atoi(requestValue);
@@ -498,7 +497,6 @@ int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, cha
     return RET_SUCC;
 }
 
-{=/ gen_set =}
 int get_attr_{= name =}(char *retval) {
     sprintf(retval, FC(F("{\"{= name =}\": %d}")), ({= type =})attr_{= name =} / {= scale =});
     return RET_SUCC;
