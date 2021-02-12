@@ -76,7 +76,8 @@ attr attrName {
     default: 0,
     scale: 1,
     gen_set: true,
-    prec: 2
+    prec: 2,
+    keep: true
 }
 ```
 
@@ -161,6 +162,7 @@ rule condition do action [else elseAction]
             "scale": 1,
             "type": "int",
             "gen_set": true,
+            "keep": true,
             "default": 0,
             "is_float": false,
             "prec": 2,

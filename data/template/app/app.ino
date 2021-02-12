@@ -142,6 +142,7 @@ void setup() {
     EEPROM.get(0, first_run_flag);
 
     {=# attrs =}
+    {=# keep =}
     if (first_run_flag == 1) {
         EEPROM.get({= addr =}, attr_{= name =});
         if (attr_{= name =} > {= scaled_max =} || attr_{= name =} < {= scaled_min =}) {
@@ -151,6 +152,7 @@ void setup() {
         EEPROM.put({= addr =}, attr_{= name =});
     }
 
+    {=/ keep =}
     {=/ attrs =}
     {=# has_app =}
     {=# metrics =}
@@ -476,6 +478,13 @@ void merge_json(char *dst, char *src, int *total_length) {
 }
 
 {=# attrs =}
+void set_attr_{= name =}_raw({= type =} unscaled_value) {
+    attr_{= name =} = unscaled_value * {= scale =};
+    {=# keep =}
+    EEPROM.put({= addr =}, unscaled_value);
+    {=/ keep =}
+}
+
 int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
         {=# is_float =}
@@ -488,8 +497,7 @@ int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, cha
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min =}, {= max =}]\"}")));
           return RET_ERR;
         }
-        attr_{= name =} = tmp * {= scale =};
-        EEPROM.put({= addr =}, tmp);
+        set_attr_{= name =}_raw(tmp);
     }
     get_attr_{= name =}(retval);
     return RET_SUCC;
@@ -572,19 +580,19 @@ void close_gpio_{= name =}_raw() {
 
 void open_gpio_{= name =}() {
     {=# reverse =}
-    attr_{= link =} = {= close =};
+    set_attr_{= link =}_raw({= close =});
     {=/ reverse =}
     {=^ reverse =}
-    attr_{= link =} = {= open =};
+    set_attr_{= link =}_raw({= open =});
     {=/ reverse =}
 }
 
 void close_gpio_{= name =}() {
     {=# reverse =}
-    attr_{= link =} = {= open =};
+    set_attr_{= link =}_raw({= open =});
     {=/ reverse =}
     {=^ reverse =}
-    attr_{= link =} = {= close =};
+    set_attr_{= link =}_raw({= close =});
     {=/ reverse =}
 }
 {=/ has_link =}
@@ -603,9 +611,9 @@ void close_gpio_{= name =}() {
 void toggle_gpio_{= name =}() {
     {=# has_link =}
     if (attr_{= link =} == {= open =}) {
-        attr_{= link =} = {= close =};
+        set_attr_{= link =}_raw({= close =});
     } else {
-        attr_{= link =} = {= open =};
+        set_attr_{= link =}_raw({= open =});
     }
     {=/ has_link =}
     {=^ has_link =}

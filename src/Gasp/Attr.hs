@@ -14,6 +14,7 @@ data Attr = Attr
     , attrGenSet :: !Bool
     , attrScale  :: !Double
     , attrPrec   :: !Int
+    , attrKeep   :: !Bool
     } deriving (Show, Eq)
 
 instance ToJSON Attr where
@@ -31,6 +32,7 @@ instance ToJSON Attr where
         , "default"    .= (attrDef   attr * attrScale attr)
         , "width"      .= calcWitdh (attrMax attr)
         , "prec"       .= attrPrec   attr
+        , "keep"       .= attrKeep   attr
         ]
 
 calcWitdh :: Double -> Int

@@ -60,7 +60,8 @@ attr relay_state {
   default: 0,
   min: 0,
   max: 1,
-  gen_set: false
+  gen_set: false,
+  keep: false
 }
 
 func try_set_attr_relay_state do

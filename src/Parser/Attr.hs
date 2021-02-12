@@ -16,6 +16,7 @@ data AttrProperty
     | Min    !Double
     | Def    !Double
     | GenSet !Bool
+    | Keep   !Bool
     | Scale  !Double
     | Prec   !Integer
     deriving (Show, Eq)
@@ -32,6 +33,7 @@ cusL = do
     "default" -> Def <$> float
     "scale"   -> Scale <$> float
     "gen_set" -> GenSet <$> bool
+    "keep"    -> Keep <$> bool
     "prec"    -> Prec <$> integer
     _         -> fail $ "no such " ++ key
 
@@ -57,6 +59,9 @@ getAttrScale def ps = fromMaybe def . listToMaybe $ [t | Scale t <- ps]
 getAttrGenSet :: [AttrProperty] -> Bool
 getAttrGenSet ps = fromMaybe True . listToMaybe $ [t | GenSet t <- ps]
 
+getAttrKeep :: [AttrProperty] -> Bool
+getAttrKeep ps = fromMaybe True . listToMaybe $ [t | Keep t <- ps]
+
 getAttrPrec :: Integer -> [AttrProperty] -> Integer
 getAttrPrec def ps = fromMaybe def . listToMaybe $ [t | Prec t <- ps]
 
@@ -73,6 +78,7 @@ attr = do
         , Attr.attrMin    = getAttrMin    0 attrProps
         , Attr.attrDef    = getAttrDef    0 attrProps
         , Attr.attrGenSet = getAttrGenSet attrProps
+        , Attr.attrKeep   = getAttrKeep   attrProps
         , Attr.attrScale  = getAttrScale  1 attrProps
         , Attr.attrPrec   = fromIntegral $ getAttrPrec 2 attrProps
         }

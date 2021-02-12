@@ -209,6 +209,7 @@ void merge_json(char *dst, char *src, int *total_length);
 {=/ use_remote =}
 {=# attrs =}
 {=# gen_set =}
+void set_attr_{= name =}_raw({= type =} unscaled_value);
 int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
 {=/ gen_set =}
 int get_attr_{= name =}(char *retval);
@@ -223,9 +224,7 @@ int get_metric_{= name =}(char *retval);
 {=# gpios =}
 {=^ has_fn =}
 void open_gpio_{= name =}();
-
 void close_gpio_{= name =}();
-
 void toggle_gpio_{= name =}();
 
 {=/ has_fn =}
