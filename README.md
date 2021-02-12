@@ -109,12 +109,28 @@ attr low_temperature {
 rule metric_temperature < attr_high_temperature && metric_temperature > attr_low_temperature && attr_relay_mode == 1 do open_gpio_relay else close_gpio_relay
 
 init do
+#include <avr/wdt.h>
 bool want_reboot = false;
 done
 
+setup do
+    MCUSR = 0;
+    wdt_disable();
+    wdt_enable(WDTO_8S);
+done
+
 loop do
+    wdt_reset();
     if (want_reboot) {
         reset();
+    }
+done
+
+func reset do
+    wdt_disable();
+    wdt_enable(WDTO_15MS);
+    for (;;) {
+
     }
 done
 

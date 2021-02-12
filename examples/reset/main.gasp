@@ -33,12 +33,31 @@ done
 every toggle_blink 1000
 
 init do
+#include <avr/wdt.h>
 bool want_reboot = false;
+#define PING_FAILED_CB reset
+done
+
+setup do
+    // wdt init
+    MCUSR = 0;
+    wdt_disable();
+    wdt_enable(WDTO_8S);
+    // end wdt init
 done
 
 loop do
+    wdt_reset();
     if (want_reboot) {
         reset();
+    }
+done
+
+func reset do
+    wdt_disable();
+    wdt_enable(WDTO_15MS);
+    for (;;) {
+
     }
 done
 

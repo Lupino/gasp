@@ -1,6 +1,5 @@
 {{={= =}=}}
 {=# has_app =}
-#include <avr/wdt.h>
 #include <givelink.h>
 #include <jsmn.h>
 
@@ -33,6 +32,10 @@ unsigned long auth_timer_ms = get_current_time_ms();
 
 #ifndef PING_DELAY_MS
 #define PING_DELAY_MS 300000
+#endif
+
+#ifndef PING_FAILED_CB
+#define PING_FAILED_CB noop
 #endif
 
 #ifndef MAX_PING_FAILED
@@ -129,11 +132,6 @@ int last_gpio_{= name =}_state = {= state =};
 {=/ has_gpio =}
 void setup() {
     {=# has_app =}
-    // wdt init
-    MCUSR = 0;
-    wdt_disable();
-    wdt_enable(WDTO_8S);
-    // end wdt init
     {=# app =}
     givelink_init("{= key =}", "{= token =}");
     {=/ app =}
@@ -198,9 +196,6 @@ void setup() {
 }
 
 void loop() {
-    {=# has_app =}
-    wdt_reset();
-    {=/ has_app =}
     {=# loops =}
     {=& code =}
     {=/ loops =}
@@ -302,7 +297,7 @@ void loop() {
                 pong_timer_ms = get_current_time_ms();
 
                 if (ping_failed > MAX_PING_FAILED) {
-                    reset();
+                    PING_FAILED_CB();
                 }
             }
         }
@@ -370,13 +365,7 @@ unsigned long get_current_time_ms() {
 }
 
 {=# has_app =}
-void reset() {
-    wdt_disable();
-    wdt_enable(WDTO_15MS);
-    for (;;) {
-
-    }
-}
+void noop() {}
 
 void send_packet() {
     {=# has_debug =}
