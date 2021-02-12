@@ -2,81 +2,59 @@ module Parser.Gpio
     ( gpio
     ) where
 
-import           Data.Maybe         (fromMaybe, listToMaybe)
 import           Gasp.Gpio
 import           Lexer
-import           Parser.Common
+import           Text.Parsec        (option, (<|>))
 import           Text.Parsec.String (Parser)
 
--- | A type that describes supported app properties.
-data GpioProperty
-    = Pin     !String
-    | Link    !String
-    | Func    !String
-    | Emit    !String
-    | State   !String
-    | Open    !String
-    | Close   !String
-    | Reverse !Bool
-    deriving (Show, Eq)
+bindParser :: Gpio -> Parser Gpio
+bindParser g = do
+  _ <- symbol "->"
+  sym <- symbol "click" <|> symbol "link"
+  n <- identifier
 
--- | Parses gasp property along with the key, "key: value".
-propParser :: Parser GpioProperty
-propParser = do
-  key <- identifier
-  _ <- colon
-  case key of
-    "pin"     -> Pin <$> stringLiteral
-    "link"    -> Link <$> identifier
-    "fn"      -> Func <$> identifier
-    "emit"    -> Emit <$> identifier
-    "state"   -> State <$> identifier
-    "open"    -> Open <$> identifier
-    "close"   -> Close <$> identifier
-    "reverse" -> Reverse <$> bool
-    _         -> fail $ "no such " ++ key
+  case sym of
+    "link" -> do
+      v <- option False bool
+      return g
+        { gpioLink = n
+        , gpioReverse = v
+        }
+    "click" -> do
+      v <- option (gpioEmit g) identifier
+      return g
+        { gpioFunc = n
+        , gpioEmit = v
+        }
 
--- | Parses supported app properties, expects format "key1: value1, key2: value2, ..."
-gpioProperties :: Parser [GpioProperty]
-gpioProperties = commaSep1 propParser
+    _ -> fail $ "no such symbol " ++ sym
 
-getGpioPin :: String -> [GpioProperty] -> String
-getGpioPin def ps = fromMaybe def . listToMaybe $ [t | Pin t <- ps]
-
-getGpioLink :: String -> [GpioProperty] -> String
-getGpioLink def ps = fromMaybe def . listToMaybe $ [t | Link t <- ps]
-
-getGpioFunc :: String -> [GpioProperty] -> String
-getGpioFunc def ps = fromMaybe def . listToMaybe $ [t | Func t <- ps]
-
-getGpioEmit :: String -> [GpioProperty] -> String
-getGpioEmit def ps = fromMaybe def . listToMaybe $ [t | Emit t <- ps]
-
-getGpioState :: String -> [GpioProperty] -> String
-getGpioState def ps = fromMaybe def . listToMaybe $ [t | State t <- ps]
-
-getGpioOpen :: String -> [GpioProperty] -> String
-getGpioOpen def ps = fromMaybe def . listToMaybe $ [t | Open t <- ps]
-
-getGpioClose :: String -> [GpioProperty] -> String
-getGpioClose def ps = fromMaybe def . listToMaybe $ [t | Close t <- ps]
-
-getGpioReverse :: Bool -> [GpioProperty] -> Bool
-getGpioReverse def ps = fromMaybe def . listToMaybe $ [t | Reverse t <- ps]
+--                       default    open                        reverse
+-- gpio gpioName pinName [LOW|HIGH] [LOW|HIGH] -> link attrName [false|true]
+--                       default                      emit
+-- gpio gpioName pinName [LOW|HIGH] -> click funcName [LOW|HIGH]
 
 -- | Top level parser, parses Gpio.
 gpio :: Parser Gpio
 gpio = do
-    (name, gpioProps) <- gaspElementNameAndClosureContent reservedNameGpio gpioProperties
+  reserved reservedNameGpio
+  name <- identifier
+  pin <- stringLiteral <|> (show <$> integer) <|> identifier
+  state <- option "LOW" identifier
+  let revertState = if state == "LOW" then "HIGH" else "LOW"
+  open <- option revertState identifier
+  let close = if open == "LOW" then "HIGH" else "LOW"
 
-    return Gpio
+  let g = Gpio
         { gpioName    = name
-        , gpioPin     = getGpioPin     "LED_BUILTIN" gpioProps
-        , gpioLink    = getGpioLink    ""            gpioProps
-        , gpioFunc    = getGpioFunc    ""            gpioProps
-        , gpioEmit    = getGpioEmit    "HIGH"        gpioProps
-        , gpioState   = getGpioState   "LOW"         gpioProps
-        , gpioOpen    = getGpioOpen    "HIGH"        gpioProps
-        , gpioClose   = getGpioClose   "LOW"         gpioProps
-        , gpioReverse = getGpioReverse False         gpioProps
+        , gpioPin     = pin
+        , gpioLink    = ""
+        , gpioReverse = False
+        , gpioFunc    = ""
+        , gpioEmit    = revertState
+        , gpioState   = state
+        , gpioOpen    = open
+        , gpioClose   = close
         }
+
+  option g $ bindParser g

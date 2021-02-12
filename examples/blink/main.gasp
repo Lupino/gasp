@@ -1,6 +1,2 @@
-gpio blink {
-    pin: "LED_BUILTIN",
-    state: LOW
-}
-
+gpio blink LED_BUILTIN
 every toggle_gpio_blink 1000

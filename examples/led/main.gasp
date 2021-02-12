@@ -106,15 +106,6 @@ command close {
 done
 }
 
-gpio blinker {
-    pin: "LED_BUILTIN",
-    link: led_state,
-    state: LOW
-}
+gpio blinker LED_BUILTIN -> link led_state
 
-gpio button {
-    pin: "12",
-    fn: toggle_gpio_blinker,
-    state: HIGH,
-    emit: LOW
-}
+gpio button 12 HIGH -> click toggle_gpio_blinker

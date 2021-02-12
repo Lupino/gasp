@@ -1,10 +1,2 @@
-gpio led {
-    pin: "LED_BUILTIN",
-    state: LOW
-}
-
-gpio btn {
-    pin: "12",
-    emit: LOW,
-    fn: toggle_gpio_led
-}
+gpio led LED_BUILTIN
+gpio btn 12 HIGH -> click toggle_gpio_led

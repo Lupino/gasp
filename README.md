@@ -89,12 +89,7 @@ attr relay_state {
   min: 0
 }
 
-gpio relay {
-    pin: "13",
-    link: relay_state,
-    state: LOW,
-    reverse: true
-}
+gpio relay 13 LOW -> link relay_state true
 
 rule metric_temperature > 30 do open_gpio_relay else close_gpio_relay
 ```
