@@ -12,8 +12,8 @@ module Gasp
     , getExternalCodeFiles
     ) where
 
-import           Data.Aeson     (ToJSON (..), object, (.=))
-import           Data.Maybe     (isJust)
+import           Data.Aeson    (ToJSON (..), object, (.=))
+import           Data.Maybe    (isJust)
 import qualified ExternalCode
 import           Gasp.App
 import           Gasp.Attr
@@ -27,7 +27,6 @@ import           Gasp.Loop
 import           Gasp.Metric
 import           Gasp.Rule
 import           Gasp.Setup
-import           Gasp.Telemetry
 
 
 -- * Gasp
@@ -40,7 +39,6 @@ data Gasp = Gasp
 data Expr
     = ExprApp !App
     | ExprCmd !Command
-    | ExprTelemetry !Telemetry
     | ExprFunction !Function
     | ExprInit !Init
     | ExprSetup !Setup
@@ -95,11 +93,6 @@ getCmds gasp = [cmd | (ExprCmd cmd) <- gaspExprs gasp]
 
 getFunctions:: Gasp -> [Function]
 getFunctions gasp = [func | (ExprFunction func) <- gaspExprs gasp]
-
--- * Telemetries
-
-getTelemetries:: Gasp -> [Telemetry]
-getTelemetries gasp = [t | (ExprTelemetry t) <- gaspExprs gasp]
 
 -- * Loops
 
@@ -179,12 +172,6 @@ setCommandFlag flags cmd = cmd
   }
 
 
-setTelemetryFlag :: [Flag] -> Telemetry -> Telemetry
-setTelemetryFlag flags telem = telem
-  { telemFlag = getFlag flags (telemFlag telem)
-  }
-
-
 getCommandLength :: Expr -> Int
 getCommandLength (ExprCmd cmd)   = length $ cmdFunc cmd
 getCommandLength (ExprAttr attr) = length (attrName attr) + 4
@@ -201,7 +188,6 @@ prepareGasp flags = fromGaspExprs . go 1 . gaspExprs
         go _ []        = []
         go addr (ExprAttr x:xs) = ExprAttr x {attrAddr = addr} : go (addr + 4) xs
         go addr (ExprMetric x:xs) = ExprMetric x {metricAddr = addr} : go (addr + 4) xs
-        go addr (ExprTelemetry x:xs) = ExprTelemetry (setTelemetryFlag flags x) : go addr xs
         go addr (ExprCmd x:xs) = ExprCmd (setCommandFlag flags x) : go addr xs
         go addr (ExprFunction x:xs) = ExprFunction (setFunctionFlag flags x) : go addr xs
         go addr (x:xs) = x : go addr xs
@@ -218,9 +204,6 @@ guessFlag flag (_:xs) = guessFlag flag xs
 
 collectFlags :: [Flag] -> [Expr] -> [Flag]
 collectFlags flags [] = flags
-collectFlags flags (ExprTelemetry x:xs)
-  | telemFlag x `elem` flags = collectFlags flags xs
-  | otherwise = collectFlags (telemFlag x : flags) xs
 collectFlags flags (ExprCmd x:xs)
   | cmdFlag x `elem` flags = collectFlags flags xs
   | otherwise = collectFlags (cmdFlag x : flags) xs
@@ -236,7 +219,6 @@ instance ToJSON Gasp where
         [ "app"         .= app
         , "has_app"     .= isJust app
         , "commands"    .= cmds
-        , "telemetries" .= telems
         , "functions"   .= funcs
         , "loops"       .= getLoops gasp
         , "setups"      .= getSetups gasp
@@ -244,7 +226,7 @@ instance ToJSON Gasp where
         , "attrs"       .= attrs
         , "has_attr"    .= hasAttr
         , "metrics"     .= metrics
-        , "has_metric"  .= (hasMetric || hasTelems)
+        , "has_metric"  .= hasMetric
         , "use_eeprom"  .= useEeprom
         , "max_cmd_len" .= (getMaxCommandLength gasp + 1)
         , "actions"     .= getEverys gasp
@@ -259,13 +241,11 @@ instance ToJSON Gasp where
         where gasp = prepareGasp (getFlags gasp0) gasp0
               attrs = getAttrs gasp
               metrics = getMetrics gasp
-              telems  = getTelemetries gasp
               gpios = getGpios gasp
               cmds = getCmds gasp
               funcs = getFunctions gasp
               inits = getInits gasp
               hasMetric = not (null metrics)
-              hasTelems = not (null telems)
               hasAttr = not (null attrs)
               useEeprom = hasMetric || hasAttr
               app = getApp gasp

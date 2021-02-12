@@ -83,6 +83,7 @@ unsigned long metric_timer_ms = get_current_time_ms();
 {=/ has_metric =}
 {=# use_eeprom =}
 bool requireReportAttribute = false;
+bool requireReportMetric = true;
 
 {=/ use_eeprom =}
 {=/ has_app =}
@@ -277,9 +278,12 @@ void loop() {
         }
         {=/ use_eeprom =}
         {=# has_metric =}
-        if (metric_timer_ms + METRIC_DELAY_MS < get_current_time_ms() || checkValue()) {
+        if (metric_timer_ms + METRIC_DELAY_MS < get_current_time_ms()) {
+            requireReportMetric = true;
+        }
+        if (reportMetric(requireReportMetric)) {
             metric_timer_ms = get_current_time_ms();
-            processTelemetries();
+            requireReportMetric = false;
         }
         {=/ has_metric =}
 
@@ -757,36 +761,20 @@ int processRequest(const char *json, int length, char *retval) {
 }
 
 {=# has_metric =}
-bool processTelemetries() {
-    bool ret = false;
+bool reportMetric(bool force) {
     bool wantSend = false;
     int total_length = 0;
     wantSendData[0] = '{';
     total_length += 1;
 
-    {=# telemetries =}
-    tempSendData[0] = '\0';
-    {=# flag =}
-    {=# retval =}
-    {=# json =}
-    if ({= fn =}(NULL, NULL, 0, tempSendData) > RET_ERR) {
-    {=/ json =}
-    {=^ json =}
-    if ({= fn =}(tempSendData) > RET_ERR) {
-    {=/ json =}
-        merge_json(wantSendData, tempSendData, &total_length);
-        wantSend = true;
-    }
-    {=/ retval =}
-    {=/ flag =}
-
-    {=/ telemetries =}
     {=# metrics =}
-    tempSendData[0] = '\0';
-    if (get_metric_{= name =}(tempSendData) > RET_ERR) {
-        merge_json(wantSendData, tempSendData, &total_length);
-        wantSend = true;
-        last_metric_{= name =} = metric_{= name =};
+    if ((!isnan(metric_{= name =}) && metric_{= name =} >= {= min =} && metric_{= name =} <= {= max =} && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || force) {
+        tempSendData[0] = '\0';
+        if (get_metric_{= name =}(tempSendData) > RET_ERR) {
+            merge_json(wantSendData, tempSendData, &total_length);
+            wantSend = true;
+            last_metric_{= name =} = metric_{= name =};
+        }
     }
 
     {=/ metrics =}
@@ -795,18 +783,8 @@ bool processTelemetries() {
         wantSendData[total_length] = '\0';
 
         send_packet_1(TELEMETRY, wantSendData);
-        ret = true;
-    }
-    return ret;
-}
-
-bool checkValue() {
-    {=# metrics =}
-    if (!isnan(metric_{= name =}) && metric_{= name =} >= {= min =} && metric_{= name =} <= {= max =} && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) {
         return true;
     }
-
-    {=/ metrics =}
     return false;
 }
 
@@ -814,17 +792,12 @@ bool checkValue() {
 {=# use_eeprom =}
 bool reportAttribute(bool force) {
     int total_length = 0;
-    bool report = true;
     bool wantSend = false;
     wantSendData[0] = '{';
     total_length += 1;
 
     {=# attrs =}
-    report = last_attr_{= name =} != attr_{= name =};
-    if (force) {
-        report = true;
-    }
-    if (report) {
+    if (last_attr_{= name =} != attr_{= name =} || force) {
         tempSendData[0] = '\0';
         if (get_attr_{= name =}(tempSendData) > RET_ERR) {
             merge_json(wantSendData, tempSendData, &total_length);
@@ -835,11 +808,7 @@ bool reportAttribute(bool force) {
 
     {=/ attrs =}
     {=# metrics =}
-    report = last_metric_{= name =}_threshold != metric_{= name =}_threshold;
-    if (force) {
-        report = true;
-    }
-    if (report) {
+    if (last_metric_{= name =}_threshold != metric_{= name =}_threshold || force) {
         tempSendData[0] = '\0';
         if (get_metric_{= name =}_threshold(tempSendData) > RET_ERR) {
             merge_json(wantSendData, tempSendData, &total_length);
@@ -854,8 +823,9 @@ bool reportAttribute(bool force) {
         wantSendData[total_length] = '\0';
 
         send_packet_1(ATTRIBUTE, wantSendData);
+        return true;
     }
-    return RET_SUCC;
+    return false;
 }
 {=/ use_eeprom =}
 {=/ has_app =}

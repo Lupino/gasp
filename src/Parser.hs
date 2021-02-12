@@ -16,7 +16,6 @@ import           Parser.Loop        (loop)
 import           Parser.Metric      (metric)
 import           Parser.Rule        (rule)
 import           Parser.Setup       (setup)
-import           Parser.Telemetry   (telemetry)
 import           Text.Parsec        (ParseError, eof, many1, (<|>))
 import           Text.Parsec.String (Parser)
 
@@ -24,7 +23,6 @@ expr :: Parser Gasp.Expr
 expr
     =   exprApp
     <|> exprCmd
-    <|> exprTelemetry
     <|> exprFunction
     <|> exprLoop
     <|> exprSetup
@@ -40,9 +38,6 @@ exprApp = Gasp.ExprApp <$> app
 
 exprCmd :: Parser Gasp.Expr
 exprCmd = Gasp.ExprCmd <$> command
-
-exprTelemetry :: Parser Gasp.Expr
-exprTelemetry = Gasp.ExprTelemetry <$> telemetry
 
 exprFunction :: Parser Gasp.Expr
 exprFunction = Gasp.ExprFunction <$> function

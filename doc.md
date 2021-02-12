@@ -66,12 +66,6 @@ done
 }
 ```
 
-## telemetry
-
-```
-telemetry funcName
-```
-
 ## attr
 
 ```
@@ -125,15 +119,6 @@ rule condition do action [else elseAction]
             },
             "doc": "markdown doc\n",
             "has_doc": true
-        }
-    ],
-    "telemetries": [
-        {
-            "fn": "funcName",
-            "flag": {
-                "json": false,
-                "retval": true
-            },
         }
     ],
     "functions": [
