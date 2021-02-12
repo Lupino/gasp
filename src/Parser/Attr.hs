@@ -17,6 +17,7 @@ data AttrProperty
     | Def    !Double
     | GenSet !Bool
     | Scale  !Double
+    | Prec   !Integer
     deriving (Show, Eq)
 
 -- | Parses gasp property along with the key, "key: value".
@@ -31,6 +32,7 @@ cusL = do
     "default" -> Def <$> float
     "scale"   -> Scale <$> float
     "gen_set" -> GenSet <$> bool
+    "prec"    -> Prec <$> integer
     _         -> fail $ "no such " ++ key
 
 -- | Parses supported app properties, expects format "key1: value1, key2: value2, ..."
@@ -55,6 +57,9 @@ getAttrScale def ps = fromMaybe def . listToMaybe $ [t | Scale t <- ps]
 getAttrGenSet :: [AttrProperty] -> Bool
 getAttrGenSet ps = fromMaybe True . listToMaybe $ [t | GenSet t <- ps]
 
+getAttrPrec :: Integer -> [AttrProperty] -> Integer
+getAttrPrec def ps = fromMaybe def . listToMaybe $ [t | Prec t <- ps]
+
 -- | Top level parser, parses Attr.
 attr :: Parser Attr.Attr
 attr = do
@@ -69,4 +74,5 @@ attr = do
         , Attr.attrDef    = getAttrDef    0 attrProps
         , Attr.attrGenSet = getAttrGenSet attrProps
         , Attr.attrScale  = getAttrScale  1 attrProps
+        , Attr.attrPrec   = fromIntegral $ getAttrPrec 2 attrProps
         }

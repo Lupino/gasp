@@ -485,7 +485,12 @@ void merge_json(char *dst, char *src, int *total_length) {
 {=# attrs =}
 int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
+        {=# is_float =}
+        {= type =} tmp = atof(requestValue);
+        {=/ is_float =}
+        {=^ is_float =}
         {= type =} tmp = atoi(requestValue);
+        {=/ is_float =}
         if (tmp > {= max =} || tmp < {= min =}) {
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min =}, {= max =}]\"}")));
           return RET_ERR;
@@ -498,7 +503,13 @@ int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, cha
 }
 
 int get_attr_{= name =}(char *retval) {
+    {=^ is_float =}
     sprintf(retval, FC(F("{\"{= name =}\": %d}")), ({= type =})attr_{= name =} / {= scale =});
+    {=/ is_float =}
+    {=# is_float =}
+    dtostrf(({= type =})attr_{= name =} / {= scale =}, {= width =}, {= prec =}, requestValue);
+    sprintf(retval, FC(F("{\"{= name =}\": %s}")), ltrim(requestValue));
+    {=/ is_float =}
     return RET_SUCC;
 }
 

@@ -81,7 +81,8 @@ attr attrName {
     max: 100,
     default: 0,
     scale: 1,
-    gen_set: true
+    gen_set: true,
+    prec: 2
 }
 ```
 
@@ -175,7 +176,10 @@ rule condition do action [else elseAction]
             "scale": 1,
             "type": "int",
             "gen_set": true,
-            "default": 0
+            "default": 0,
+            "is_float": false,
+            "prec": 2,
+            "width": 3
         }
     ],
     "metrics": [

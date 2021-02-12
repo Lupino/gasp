@@ -13,6 +13,7 @@ data Attr = Attr
     , attrDef    :: !Double
     , attrGenSet :: !Bool
     , attrScale  :: !Double
+    , attrPrec   :: !Int
     } deriving (Show, Eq)
 
 instance ToJSON Attr where
@@ -25,6 +26,17 @@ instance ToJSON Attr where
         , "scaled_min" .= (attrMin   attr * attrScale attr)
         , "scale"      .= attrScale  attr
         , "type"       .= attrType   attr
+        , "is_float"   .= isFloat (attrType attr)
         , "gen_set"    .= attrGenSet attr
         , "default"    .= (attrDef   attr * attrScale attr)
+        , "width"      .= calcWitdh (attrMax attr)
+        , "prec"       .= attrPrec   attr
         ]
+
+calcWitdh :: Double -> Int
+calcWitdh v = length $ show (floor v :: Int)
+
+isFloat :: String -> Bool
+isFloat ""                      = False
+isFloat ('f':'l':'o':'a':'t':_) = True
+isFloat (_:xs)                  = isFloat xs
