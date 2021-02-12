@@ -12,16 +12,17 @@ Concepts such as *app*, *attr*, *metirc*, *init*, *loop*, *setup*, etc. are bake
 NOTE: Gasp is still in alpha, meaning it has bugs, and many critical features are still missing and it is still changing a lot!
 
 ```js
-// dbt.wasp:
-app DhtApp {
+// dht.wasp:
+app dht {
   key: "product_key",
   token: "device_token"
 }
 
+
 init do
 #define GL_SERIAL Serial
 #define DEBUG_SERIAL Serial
-#define SEND_DELAY_MS attr_delay
+#define METRIC_DELAY_MS attr_delay
 done
 
 setup do
@@ -29,69 +30,101 @@ setup do
     while (!GL_SERIAL) {;}
 done
 
-init do
-#define DHTPIN 9     // what digital pin we're connected to
-// Uncomment whatever type you're using!
-#define DHTTYPE DHT11   // DHT 11
-// #define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
-// #define DHTTYPE DHT21   // DHT 21 (AM2301)
-
-// https://github.com/adafruit/DHT-sensor-library.git
-#include <DHT.h>
-
-DHT dht(DHTPIN, DHTTYPE);
-done
-
-setup do
-    dht.begin();
-done
-
-func read_temp do
-    // Reading temperature or humidity takes about 250 milliseconds!
-    // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
-    metric_humidity = dht.readHumidity();
-    metric_temperature = dht.readTemperature();
-done
-
 attr delay {
   type: "unsigned long",
-  default: 300,
+  default: 1800,
   min: 60,
   max: 86400,
   scale: 1000
 }
 
 metric temperature {
-    type: "float",
-    max_threshold: 100,
-    min_threshold: 1,
-    max: 100,
-    min: 0,
-    threshold: 1,
-    prec: 2
+  type: "float",
+  max: 100,
+  min: 0,
+  threshold: 1,
+  prec: 2
 }
 
-metric humidity {
-    type: "float",
-    max_threshold: 100,
-    min_threshold: 1,
-    max: 100,
-    min: 0,
-    threshold: 1,
-    prec: 2
-}
+func read_dht do
+    metric_temperature += 0.1;
+    if (metric_temperature > 100) {
+         metric_temperature = 0;
+    }
+done
 
-every read_temp 6000
+every read_dht 6000
 
 attr relay_state {
   type: "int",
+  default: 0,
+  min: 0,
   max: 1,
-  min: 0
+  gen_set: false
 }
 
-gpio relay 13 LOW -> link relay_state true
+func try_set_attr_relay_state do
+    if (attr_relay_mode == 1) {
+        return set_attr_relay_state(json, tokens, num_tokens, retval);
+    }
+    return RET_ERR;
+done
 
-rule metric_temperature > 30 do open_gpio_relay else close_gpio_relay
+command set_relay_state {
+    fn: try_set_attr_relay_state,
+    error: "only relay_mode is 1 can set this value"
+}
+
+attr relay_mode {
+  type: "int",
+  default: 0,
+  min: 0,
+  max: 1
+}
+
+func try_toggle_gpio_relay do
+    if (attr_relay_mode == 1) {
+        toggle_gpio_relay();
+    }
+done
+
+gpio relay_mode LED_BUILTIN -> link relay_mode
+gpio relay 12 -> link relay_state
+gpio btn0 11 HIGH -> click try_toggle_gpio_relay
+gpio btn1 10 HIGH -> click toggle_gpio_relay_mode
+
+attr high_temperature {
+  type: "float",
+  default: 30,
+  min: 0,
+  max: 100
+}
+
+attr low_temperature {
+  type: "float",
+  default: 20,
+  min: 0,
+  max: 100
+}
+rule metric_temperature < attr_high_temperature && metric_temperature > attr_low_temperature && attr_relay_mode == 1 do open_gpio_relay else close_gpio_relay
+
+init do
+bool want_reboot = false;
+done
+
+loop do
+    if (want_reboot) {
+        reset();
+    }
+done
+
+func reset_system do
+    want_reboot = true;
+done
+
+command reset_system {
+    fn: reset_system
+}
 ```
 
 Source files (`.wasp`, `.ino`, `.c`, `.h`, ...) are compiled (transpiled) by `gaspc` (Gasp compiler) into the iot technology stack of your choice (e.g. Arduino + sensor + ...).
