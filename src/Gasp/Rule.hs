@@ -3,10 +3,11 @@ module Gasp.Rule
   ) where
 
 import           Data.Aeson  (ToJSON (..), object, (.=))
+import           Data.List   (nub)
 import           Lexer       (identifier)
 import           Text.Parsec (parse)
 
-newtype MetricName = MetricName String
+newtype MetricName = MetricName String deriving (Show, Eq)
 instance ToJSON MetricName where
     toJSON (MetricName n) = object
       [ "name" .= n
@@ -25,7 +26,7 @@ instance ToJSON Rule where
         , "action"      .= ruleAction rule
         , "else_action" .= ruleElseAction rule
         , "has_else"    .= not (null $ ruleElseAction rule)
-        , "depends"     .= getMetricNames rule
+        , "depends"     .= nub (getMetricNames rule)
         ]
 
 
