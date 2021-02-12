@@ -231,6 +231,10 @@ void toggle_gpio_{= name =}();
 {=/ has_fn =}
 {=/ gpios =}
 {=# functions =}
+{=# has_argv =}
+int {= name =}({= argv =});
+{=/ has_argv =}
+{=^ has_argv =}
 {=# flag =}
 {=# retval =}
 {=# json =}
@@ -249,5 +253,6 @@ int {= name =}();
 {=/ json =}
 {=/ retval =}
 {=/ flag =}
+{=/ has_argv =}
 {=/ functions =}
 ```
