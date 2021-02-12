@@ -44,7 +44,7 @@ gpio gpioName pinName [LOW|HIGH] [-> click funcName [LOW|HIGH]]
 ## func
 
 ```
-func funcName do
+func funcName [(argv)] do
 done
 ```
 
@@ -139,6 +139,8 @@ rule condition do action [else elseAction]
         {
             "name": "funcName",
             "code": "// you func code\n",
+            "argv": "",
+            "has_argv": false,
             "flag": {
                 "json": false,
                 "retval": true

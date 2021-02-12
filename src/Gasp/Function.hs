@@ -15,14 +15,17 @@ data Function = Function
     { funcName :: !String
     , funcCode :: !Text
     , funcFlag :: !Flag
+    , funcArgv :: !String
     } deriving (Show, Eq)
 
 instance ToJSON Function where
     toJSON func = object
-        [ "name"   .= funcName func
-        , "code"   .= funcCode func
-        , "flag"   .= funcFlag func
-        , "return" .= lastReturn (funcCode func)
+        [ "name"     .= funcName func
+        , "code"     .= funcCode func
+        , "flag"     .= funcFlag func
+        , "argv"     .= funcArgv func
+        , "has_argv" .= not (null $ funcArgv func)
+        , "return"   .= lastReturn (funcCode func)
         ]
 
 lastReturn :: Text -> Bool

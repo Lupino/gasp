@@ -7,15 +7,30 @@ import           Text.Parsec.String (Parser)
 
 import           Gasp.Flag          (initFlag)
 import           Gasp.Function
-import qualified Lexer              as L
-import qualified Parser.Common      as P
+import           Lexer
+import           Parser.Common
+import           Text.Parsec        (anyChar, manyTill, option, try)
+
+argvParser :: Parser String
+argvParser = do
+  _ <- symbol "("
+  strip <$> manyTill anyChar (try (symbol ")"))
+
+-- func funcName [(argv)] do
+--
+-- done
 
 function :: Parser Function
 function = do
-    (name, code) <- P.gaspElementNameAndClosure L.reservedNameFunction P.gaspBlockClosure
+    reserved reservedNameFunction
+    name <- identifier
+    argv <- option "" argvParser
+    code <- gaspBlockClosure
+
 
     return Function
         { funcName = name
         , funcCode = Text.pack code
+        , funcArgv = argv
         , funcFlag = initFlag name
         }
