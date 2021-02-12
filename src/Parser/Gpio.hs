@@ -29,10 +29,10 @@ bindParser g = do
 
     _ -> fail $ "no such symbol " ++ sym
 
---                       default    open                        reverse
--- gpio gpioName pinName [LOW|HIGH] [LOW|HIGH] -> link attrName [false|true]
---                       default                      emit
--- gpio gpioName pinName [LOW|HIGH] -> click funcName [LOW|HIGH]
+--                       default   open                          reverse
+-- gpio gpioName pinName [LOW|HIGH [LOW|HIGH]] [-> link attrName [false|true]]
+--                       default                       emit
+-- gpio gpioName pinName [LOW|HIGH] [-> click funcName [LOW|HIGH]]
 
 -- | Top level parser, parses Gpio.
 gpio :: Parser Gpio

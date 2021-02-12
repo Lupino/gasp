@@ -35,16 +35,10 @@ done
 ## gpio
 
 ```
-gpio gpioName {
-    pin: "LED_BUILTIN",
-    link: attrName,
-    fn: funcName,
-    emit: HIGH,
-    state: LOW,
-    open: HIGH,
-    close: LOW
-    reverse: false
-}
+//                    default   open                          reverse
+gpio gpioName pinName [LOW|HIGH [LOW|HIGH]] [-> link attrName [false|true]]
+//                    default                       emit
+gpio gpioName pinName [LOW|HIGH] [-> click funcName [LOW|HIGH]]
 ```
 
 ## func
