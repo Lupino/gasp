@@ -8,19 +8,15 @@
 #include <EEPROM.h>
 
 {=/ use_eeprom =}
-{=# has_func =}
 #define RET_ERR -1
 #define RET_SUCC 0
-
-{=/ has_func =}
-unsigned long get_current_time_ms();
 
 {=# inits =}
 {=& code =}
 
 {=/ inits =}
 {=# has_app =}
-unsigned long auth_timer_ms = get_current_time_ms();
+unsigned long auth_timer_ms = 0;
 
 #ifndef AUTH_DELAY_MS
 #define AUTH_DELAY_MS 1000
@@ -42,8 +38,8 @@ unsigned long auth_timer_ms = get_current_time_ms();
 #define MAX_PING_FAILED 10
 #endif
 
-unsigned long pong_timer_ms = get_current_time_ms();
-unsigned long ping_timer_ms = get_current_time_ms();
+unsigned long pong_timer_ms = 0;
+unsigned long ping_timer_ms = 0;
 bool ponged = true;
 int ping_failed = 0;
 
@@ -62,6 +58,18 @@ int ping_failed = 0;
 #define MAX_REQUEST_VALUE_LENGTH {= max_cmd_len =}
 #endif
 
+givelink_context_t ctx0;
+givelink_context_t * ctx;
+{=# app =}
+uint8_t ctx_buff[{= context_len =}];
+const uint8_t key[{= key_len =}] = {{= key_hex_array =}};
+const uint8_t token[{= token_len =}] = {{= token_hex_array =}};
+{=/ app =}
+
+givelink_t m0;
+givelink_t * m;
+uint8_t m_buff[MAX_GL_PAYLOAD_LENGTH];
+
 uint16_t lastPayloadId = 0;
 uint16_t readedLen = 0;
 uint8_t  readedPayload[MAX_GL_PAYLOAD_LENGTH + 1];
@@ -71,17 +79,16 @@ uint8_t  sendedPayload[MAX_GL_PAYLOAD_LENGTH + 1];
 jsmn_parser requestJsmnParser;
 jsmntok_t requestJsmnTokens[MAX_NUM_TOKENS]; /* We expect no more than 128 tokens */
 char requestValue[MAX_REQUEST_VALUE_LENGTH];
-givelink_t * m = givelink_new(MAX_GL_PAYLOAD_LENGTH);
 char wantSendData[WANT_SEND_DATA_LENGTH];
 char tempSendData[WANT_SEND_DATA_LENGTH];
-char * wantSendDataTpl = (char *)malloc(WANT_SEND_DATA_LENGTH);
+char wantSendDataTpl[WANT_SEND_DATA_LENGTH];
 
 {=# has_metric =}
 #ifndef METRIC_DELAY_MS
 #define METRIC_DELAY_MS 1800000
 #endif
 
-unsigned long metric_timer_ms = get_current_time_ms();
+unsigned long metric_timer_ms = 0;
 
 {=/ has_metric =}
 {=# use_eeprom =}
@@ -107,7 +114,7 @@ bool requireReportMetric = true;
 
 {=/ metrics =}
 {=# actions =}
-unsigned long {= fn =}_timer_ms = get_current_time_ms();
+unsigned long {= fn =}_timer_ms = 0;
 {=/ actions =}
 
 {=# has_rule =}
@@ -124,16 +131,103 @@ int gpio_reading = 0;
 int gpio_{= name =}_pin = {= pin =};
 int gpio_{= name =}_state = {= state =};
 {=# has_fn =}
-unsigned long last_gpio_{= name =}_debounce_time_ms = get_current_time_ms();
+unsigned long last_gpio_{= name =}_debounce_time_ms = 0;
 int last_gpio_{= name =}_state = {= state =};
 {=/ has_fn =}
 
 {=/ gpios =}
 {=/ has_gpio =}
+// defined
+unsigned long get_current_time_ms();
+
+{=# has_app =}
+void noop();
+void send_packet();
+void send_packet_0(const uint8_t type);
+void send_packet_1(const uint8_t type, const char *data);
+void send_packet_rsp(const char *data);
+void next_packet(const uint8_t type);
+char * FC(const __FlashStringHelper *ifsh);
+char * ltrim(char *s);
+bool jsoneq(const char *json, jsmntok_t *token, const char *s);
+int jsonfind(const char *json, jsmntok_t *tokens, int num_tokens, const char *name);
+
+bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char *name, char *value);
+void merge_json(char *dst, char *src, int *total_length);
+{=# attrs =}
+void set_attr_{= name =}_raw({= type =} unscaled_value);
+int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
+int get_attr_{= name =}(char *retval);
+
+{=/ attrs =}
+{=# metrics =}
+int set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
+int get_metric_{= name =}_threshold(char *retval);
+bool check_metric_{= name =}();
+int invalid_metric_{= name =}_error(char *retval);
+int get_metric_{= name =}(char *retval);
+
+{=/ metrics =}
+{=/ has_app =}
+{=# gpios =}
+{=^ has_fn =}
+{=# has_link =}
+void open_gpio_{= name =}_raw();
+void close_gpio_{= name =}_raw();
+void open_gpio_{= name =}();
+void close_gpio_{= name =}();
+{=/ has_link =}
+{=^ has_link =}
+void open_gpio_{= name =}();
+void close_gpio_{= name =}();
+{=/ has_link =}
+void toggle_gpio_{= name =}();
+{=/ has_fn =}
+{=/ gpios =}
+{=# functions =}
+{=# has_argv =}
+int {= name =}({= argv =});
+{=/ has_argv =}
+{=^ has_argv =}
+{=# flag =}
+{=# retval =}
+{=# json =}
+int {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
+{=/ json =}
+{=^ json =}
+int {= name =}(char *retval);
+{=/ json =}
+{=/ retval =}
+{=^ retval =}
+{=# json =}
+int {= name =}(const char *json, jsmntok_t *tokens, int num_tokens);
+{=/ json =}
+{=^ json =}
+int {= name =}();
+{=/ json =}
+{=/ retval =}
+{=/ flag =}
+{=/ has_argv =}
+
+{=/ functions =}
+{=# has_app =}
+int processRequest(const char *json, int length, char *retval);
+{=# has_metric =}
+bool reportMetric(bool force);
+{=/ has_metric =}
+{=# use_eeprom =}
+bool reportAttribute(bool force);
+{=/ use_eeprom =}
+{=/ has_app =}
+// end defined
 void setup() {
     {=# has_app =}
     {=# app =}
-    givelink_init("{= key =}", "{= token =}");
+    ctx = givelink_context_init(&ctx0, ctx_buff);
+    givelink_context_set_key(ctx, key, {= key_len =});
+    givelink_context_set_token(ctx, token, {= token_len =});
+    givelink_set_auth(ctx, false);
+    m = givelink_init(&m0, m_buff);
     {=/ app =}
 
     {=/ has_app =}
@@ -221,8 +315,8 @@ void loop() {
     {=# has_app =}
     while (GL_SERIAL.available() > 0) {
         uint8_t outByte = GL_SERIAL.read();
-        if (givelink_recv(readedPayload, &readedLen, outByte)) {
-            if (givelink_from_binary(m, readedPayload, readedLen)) {
+        if (givelink_recv(ctx, readedPayload, &readedLen, outByte)) {
+            if (givelink_from_binary(ctx, m, readedPayload, readedLen)) {
                 {=# has_debug =}
                 #ifdef DEBUG_SERIAL
                 DEBUG_SERIAL.print(F("Recv Id: "));
@@ -267,7 +361,7 @@ void loop() {
         }
     }
 
-    if (givelink_authed()) {
+    if (givelink_authed(ctx)) {
         {=# use_eeprom =}
         reportAttribute(requireReportAttribute);
         if (requireReportAttribute) {
@@ -385,8 +479,8 @@ void send_packet() {
     DEBUG_SERIAL.println();
     #endif
     {=/ has_debug =}
-    givelink_to_binary(m, sendedPayload);
-    uint16_t length = givelink_get_length(m);
+    givelink_to_binary(ctx, m, sendedPayload);
+    uint16_t length = givelink_get_length(ctx, m);
     for (uint16_t i = 0; i < length; i ++) {
         GL_SERIAL.write(sendedPayload[i]);
     }
