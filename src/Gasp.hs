@@ -183,16 +183,17 @@ getMaxCommandLength = maximum . map getCommandLength . gaspExprs
 
 
 prepareGasp :: [Flag] -> Gasp -> Gasp
-prepareGasp flags = fromGaspExprs . go 1 . gaspExprs
-  where go :: Int -> [Expr] -> [Expr]
-        go _ []        = []
-        go addr (ExprAttr x:xs)
-          | attrKeep x = ExprAttr x {attrAddr = addr} : go (addr + 4) xs
-          | otherwise  = ExprAttr x : go addr xs
-        go addr (ExprMetric x:xs) = ExprMetric x {metricAddr = addr} : go (addr + 4) xs
-        go addr (ExprCmd x:xs) = ExprCmd (setCommandFlag flags x) : go addr xs
-        go addr (ExprFunction x:xs) = ExprFunction (setFunctionFlag flags x) : go addr xs
-        go addr (x:xs) = x : go addr xs
+prepareGasp flags = fromGaspExprs . go 1 1 . gaspExprs
+  where go :: Int -> Int -> [Expr] -> [Expr]
+        go _ _ []        = []
+        go ri addr (ExprAttr x:xs)
+          | attrKeep x = ExprAttr x {attrAddr = addr} : go ri (addr + 4) xs
+          | otherwise  = ExprAttr x : go ri addr xs
+        go ri addr (ExprMetric x:xs) = ExprMetric x {metricAddr = addr} : go ri (addr + 4) xs
+        go ri addr (ExprCmd x:xs) = ExprCmd (setCommandFlag flags x) : go ri addr xs
+        go ri addr (ExprFunction x:xs) = ExprFunction (setFunctionFlag flags x) : go ri addr xs
+        go ri addr (ExprRule x:xs) = ExprRule x {ruleIndex=ri} : go (ri + 1) addr xs
+        go ri addr (x:xs) = x : go ri addr xs
 
 guessFlag :: Flag -> [Expr] -> Flag
 guessFlag flag [] = flag

@@ -117,6 +117,14 @@ unsigned long {= fn =}_timer_ms = 0;
 
 {=# has_rule =}
 bool rule_depends_checked = false;
+{=# rules =}
+{=# has_later =}
+unsigned long rule_{= id =}_{= action =}_timer_ms = 0;
+{=/ has_later =}
+{=# has_else_later =}
+unsigned long rule_{= id =}_{= else_action =}_timer_ms = 0;
+{=/ has_else_later =}
+{=/ rules =}
 {=/ has_rule =}
 {=# has_input =}
 #ifndef DEBOUNCE_DELAY_MS
@@ -300,13 +308,49 @@ void loop() {
     }
     {=/ depends =}
     if (rule_depends_checked) {
+        {=# has_later =}
+        if ({=& condition =}) {
+            if (rule_{= id =}_{= action =}_timer_ms + {= later =} < get_current_time_ms()) {
+                {= action =}();
+            }
+            {=# has_else =}
+            {=# has_else_later =}
+            rule_{= id =}_{= else_action =}_timer_ms = get_current_time_ms();
+            {=/ has_else_later =}
+            {=/ has_else =}
+        } else {
+            rule_{= id =}_{= action =}_timer_ms = get_current_time_ms();
+            {=# has_else =}
+            {=# has_else_later =}
+            if (rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_current_time_ms()) {
+                {= else_action =}();
+            }
+            {=/ has_else_later =}
+            {=^ has_else_later =}
+            {= else_action =}();
+            {=/ has_else_later =}
+            {=/ has_else =}
+        }
+        {=/ has_later =}
+        {=^ has_later =}
         if ({=& condition =}) {
             {= action =}();
         {=# has_else =}
+            {=# has_else_later =}
+            rule_{= id =}_{= else_action =}_timer_ms = get_current_time_ms();
+            {=/ has_else_later =}
         } else {
+            {=# has_else_later =}
+            if (rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_current_time_ms()) {
+                {= else_action =}();
+            }
+            {=/ has_else_later =}
+            {=^ has_else_later =}
             {= else_action =}();
+            {=/ has_else_later =}
         {=/ has_else =}
         }
+        {=/ has_later =}
     }
     {=/ rules =}
     {=# has_app =}

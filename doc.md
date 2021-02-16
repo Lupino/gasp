@@ -98,7 +98,7 @@ metric metricName {
 ## rule
 
 ```
-rule condition do action [else elseAction]
+rule condition do [later do_later_ms ]action [else [later do_later_ms ]elseAction]
 ```
 
 # Template Special
@@ -211,7 +211,11 @@ rule condition do action [else elseAction]
             "action": "action",
             "else_action": "",
             "has_else": false,
-            "depends": []
+            "depends": [],
+            "has_later": false,
+            "later": "",
+            "has_else_later": false,
+            "else_later": ""
         }
     ],
     "has_attr": true,
