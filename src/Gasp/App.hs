@@ -26,7 +26,7 @@ instance ToJSON App where
             token = appToken app
             keyLen = length key `div` 2
             tokenLen = length token `div` 2
-            contextLen = 4 + 1 + keyLen + 1 + tokenLen
+            contextLen = 4 + 1 + keyLen + 1 + tokenLen + 4 + 1 + 4 + 1
 
 
 toHex :: String -> [String]

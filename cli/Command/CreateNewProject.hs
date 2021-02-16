@@ -40,8 +40,8 @@ createNewProject projectName = do
       mainGaspFileInGaspProjectDir = SP.fromPathRelFile [P.relfile|main.gasp|]
       mainGaspFileContent = unlines
           [ "app %s {" `printf` projectName
-          , "  key: \"%s\"," `printf` projectName
-          , "  token: \"%s\"" `printf` projectName
+          , "  key: \"1234567890abcdef\","
+          , "  token: \"1234567890abcdef\""
           , "}"
           , ""
           , "init do"

@@ -58,17 +58,15 @@ int ping_failed = 0;
 #define MAX_REQUEST_VALUE_LENGTH {= max_cmd_len =}
 #endif
 
-givelink_context_t ctx0;
-givelink_context_t * ctx;
+givelink_context_t ctx;
 {=# app =}
 uint8_t ctx_buff[{= context_len =}];
 const uint8_t key[{= key_len =}] = {{= key_hex_array =}};
 const uint8_t token[{= token_len =}] = {{= token_hex_array =}};
 {=/ app =}
 
-givelink_t m0;
-givelink_t * m;
-uint8_t m_buff[MAX_GL_PAYLOAD_LENGTH];
+givelink_t obj;
+uint8_t obj_buff[MAX_GL_PAYLOAD_LENGTH];
 
 uint16_t lastPayloadId = 0;
 uint16_t readedLen = 0;
@@ -223,11 +221,10 @@ bool reportAttribute(bool force);
 void setup() {
     {=# has_app =}
     {=# app =}
-    ctx = givelink_context_init(&ctx0, ctx_buff);
-    givelink_context_set_key(ctx, key, {= key_len =});
-    givelink_context_set_token(ctx, token, {= token_len =});
-    givelink_set_auth(ctx, false);
-    m = givelink_init(&m0, m_buff);
+    givelink_context_init(&ctx, ctx_buff);
+    givelink_context_set_key(key, {= key_len =});
+    givelink_context_set_token(token, {= token_len =});
+    givelink_init(&obj, obj_buff);
     {=/ app =}
 
     {=/ has_app =}
@@ -315,27 +312,27 @@ void loop() {
     {=# has_app =}
     while (GL_SERIAL.available() > 0) {
         uint8_t outByte = GL_SERIAL.read();
-        if (givelink_recv(ctx, readedPayload, &readedLen, outByte)) {
-            if (givelink_from_binary(ctx, m, readedPayload, readedLen)) {
+        if (givelink_recv(readedPayload, &readedLen, outByte)) {
+            if (givelink_from_binary(readedPayload, readedLen)) {
                 {=# has_debug =}
                 #ifdef DEBUG_SERIAL
                 DEBUG_SERIAL.print(F("Recv Id: "));
-                DEBUG_SERIAL.print(m -> id);
+                DEBUG_SERIAL.print(obj.id);
                 DEBUG_SERIAL.print(F(" Type: "));
-                DEBUG_SERIAL.print(m -> type);
-                if (m -> length > TYPE_LENGTH) {
+                DEBUG_SERIAL.print(obj.type);
+                if (obj.length > TYPE_LENGTH) {
                     DEBUG_SERIAL.print(F(" Data: "));
-                    for (uint16_t i = 0; i < m -> length - TYPE_LENGTH; i ++) {
-                        DEBUG_SERIAL.write(m -> data[i]);
+                    for (uint16_t i = 0; i < obj.length - TYPE_LENGTH; i ++) {
+                        DEBUG_SERIAL.write(obj.data[i]);
                     }
                 }
                 DEBUG_SERIAL.println();
                 #endif
 
                 {=/ has_debug =}
-                if (m -> type == REQUEST) {
+                if (obj.type == REQUEST) {
                     wantSendData[0] = '\0';
-                    int ret = processRequest((const char *)m -> data, m -> length - TYPE_LENGTH, wantSendData);
+                    int ret = processRequest((const char *)obj.data, obj.length - TYPE_LENGTH, wantSendData);
                     if (wantSendData[0] == '\0') {
                         if (ret > RET_ERR) {
                             sprintf(wantSendData, FC(F("{\"result\": \"OK\"}")));
@@ -345,7 +342,7 @@ void loop() {
                     }
                     send_packet_rsp(wantSendData);
                 }
-                if (m -> type == SUCCESS) {
+                if (obj.type == SUCCESS) {
                     ponged = true;
                 }
             }
@@ -361,7 +358,7 @@ void loop() {
         }
     }
 
-    if (givelink_authed(ctx)) {
+    if (givelink_authed()) {
         {=# use_eeprom =}
         reportAttribute(requireReportAttribute);
         if (requireReportAttribute) {
@@ -467,20 +464,20 @@ void send_packet() {
     {=# has_debug =}
     #ifdef DEBUG_SERIAL
     DEBUG_SERIAL.print(F("Send Id: "));
-    DEBUG_SERIAL.print(m -> id);
+    DEBUG_SERIAL.print(obj.id);
     DEBUG_SERIAL.print(F(" Type: "));
-    DEBUG_SERIAL.print(m -> type);
-    if (m -> length > TYPE_LENGTH) {
+    DEBUG_SERIAL.print(obj.type);
+    if (obj.length > TYPE_LENGTH) {
         DEBUG_SERIAL.print(F(" Data: "));
-        for (uint16_t i = 0; i < m -> length - TYPE_LENGTH; i ++) {
-            DEBUG_SERIAL.write(m -> data[i]);
+        for (uint16_t i = 0; i < obj.length - TYPE_LENGTH; i ++) {
+            DEBUG_SERIAL.write(obj.data[i]);
         }
     }
     DEBUG_SERIAL.println();
     #endif
     {=/ has_debug =}
-    givelink_to_binary(ctx, m, sendedPayload);
-    uint16_t length = givelink_get_length(ctx, m);
+    givelink_to_binary(sendedPayload);
+    uint16_t length = givelink_get_length();
     for (uint16_t i = 0; i < length; i ++) {
         GL_SERIAL.write(sendedPayload[i]);
     }
@@ -495,20 +492,20 @@ void send_packet_0(const uint8_t type) {
 
 void send_packet_1(const uint8_t type, const char *data) {
     next_packet(type);
-    givelink_set_data(m, (const uint8_t*)data, strlen(data));
+    givelink_set_data((const uint8_t*)data, strlen(data));
     send_packet();
 }
 
 void send_packet_rsp(const char *data) {
-    givelink_set_type(m, RESPONSE);
-    givelink_set_data(m, (const uint8_t*)wantSendData, strlen(data));
+    givelink_set_type(RESPONSE);
+    givelink_set_data((const uint8_t*)wantSendData, strlen(data));
     send_packet();
 }
 
 void next_packet(const uint8_t type) {
-    givelink_reset(m);
-    givelink_set_id(m, lastPayloadId);
-    givelink_set_type(m, type);
+    givelink_reset();
+    givelink_set_id(lastPayloadId);
+    givelink_set_type(type);
     lastPayloadId ++;
 }
 
