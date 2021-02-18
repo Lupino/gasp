@@ -153,6 +153,8 @@ int last_gpio_{= name =}_state = {= state =};
 {=/ has_gpio =}
 // defined
 unsigned long get_current_time_ms();
+bool is_valid_float(float number, float min, float max);
+bool is_valid_long(long number, long min, long max);
 
 {=# has_app =}
 void noop();
@@ -252,7 +254,12 @@ void setup() {
     {=# keep =}
     if (first_run_flag == 1) {
         EEPROM.get({= addr =}, attr_{= name =});
-        if (isnan(attr_{= name =}) || attr_{= name =} > {= scaled_max =} || attr_{= name =} < {= scaled_min =}) {
+        {=# is_float =}
+        if (!is_valid_float(attr_{= name =}, {= scaled_min =}, {= scaled_max =})) {
+        {=/ is_float =}
+        {=^ is_float =}
+        if (!is_valid_long(attr_{= name =}, {= scaled_min =}, {= scaled_max =})) {
+        {=/ is_float =}
             attr_{= name =} = {= default =};
         }
     } else {
@@ -265,7 +272,7 @@ void setup() {
     {=# metrics =}
     if (first_run_flag == 1) {
         EEPROM.get({= addr =}, metric_{= name =}_threshold);
-        if (isnan(metric_{= name =}_threshold) || metric_{= name =}_threshold > {= max_threshold =} || metric_{= name =}_threshold < {= min_threshold =}) {
+        if (!is_valid_float(metric_{= name =}_threshold, {= min_threshold =}, {= max_threshold =})) {
             metric_{= name =}_threshold = {= threshold =};
         }
     } else {
@@ -509,6 +516,20 @@ unsigned long get_current_time_ms() {
     return millis();
 }
 
+bool is_valid_float(float number, float min, float max) {
+    if (isnan(number)) return false;
+    if (isinf(number)) return false;
+    if (number > max) return false;  // constant determined empirically
+    if (number < min) return false;  // constant determined empirically
+    return true;
+}
+
+bool is_valid_long(long number, long min, long max) {
+    if (number > max) return false;  // constant determined empirically
+    if (number < min) return false;  // constant determined empirically
+    return true;
+}
+
 {=# has_app =}
 void noop() {}
 
@@ -642,11 +663,12 @@ int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, cha
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
         {=# is_float =}
         {= type =} tmp = atof(requestValue);
+        if (!is_valid_float(tmp, {= min =}, {= max =})) {
         {=/ is_float =}
         {=^ is_float =}
         {= type =} tmp = atoi(requestValue);
+        if (!is_valid_long(tmp, {= min =}, {= max =})) {
         {=/ is_float =}
-        if (tmp > {= max =} || tmp < {= min =}) {
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min =}, {= max =}]\"}")));
           return RET_ERR;
         }
@@ -672,7 +694,7 @@ int get_attr_{= name =}(char *retval) {
 int set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
         {= type =} tmp = atof(requestValue);
-        if (tmp < {= min_threshold =} || tmp > {= max_threshold =}) {
+        if (!is_valid_float(tmp, {= min_threshold =}, {= max_threshold =})) {
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min_threshold =}, {= max_threshold =}]\"}")));
           return RET_ERR;
         }
@@ -690,16 +712,7 @@ int get_metric_{= name =}_threshold(char *retval) {
 }
 
 bool check_metric_{= name =}() {
-    if (isnan(metric_{= name =})) {
-        return false;
-    }
-    if (metric_{= name =} < {= min =}) {
-        return false;
-    }
-    if (metric_{= name =} > {= max =}) {
-        return false;
-    }
-    return true;
+    return is_valid_float(metric_{= name =}, {= min =}, {= max =});
 }
 
 int invalid_metric_{= name =}_error(char *retval) {
@@ -919,7 +932,7 @@ bool reportMetric(bool force) {
     total_length += 1;
 
     {=# metrics =}
-    if ((!isnan(metric_{= name =}) && metric_{= name =} >= {= min =} && metric_{= name =} <= {= max =} && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || force) {
+    if ((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || force) {
         tempSendData[0] = '\0';
         if (get_metric_{= name =}(tempSendData) > RET_ERR) {
             merge_json(wantSendData, tempSendData, &total_length);
@@ -985,7 +998,7 @@ bool reportAttribute(bool force) {
 bool reportMetric(bool force) {
     bool sended = false;
     {=# metrics =}
-    if ((!isnan(metric_{= name =}) && metric_{= name =} >= {= min =} && metric_{= name =} <= {= max =} && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || force) {
+    if ((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || force) {
         wantSendData[0] = '\0';
         if (get_metric_{= name =}(wantSendData) > RET_ERR) {
             last_metric_{= name =} = metric_{= name =};
