@@ -46,8 +46,8 @@ int ping_failed = 0;
 #ifndef MAX_GL_PAYLOAD_LENGTH
 #define MAX_GL_PAYLOAD_LENGTH {= max_gl_len =}
 #endif
-#ifndef WANT_SEND_DATA_LENGTH
-#define WANT_SEND_DATA_LENGTH {= max_buf_len =}
+#ifndef MAX_BUFFER_LENGTH
+#define MAX_BUFFER_LENGTH {= max_buf_len =}
 #endif
 
 #ifndef MAX_NUM_TOKENS
@@ -70,7 +70,7 @@ const uint8_t token[{= token_len =}] = {{= token_hex_array =}};
 {=/ app =}
 
 givelink_t obj;
-uint8_t obj_buff[WANT_SEND_DATA_LENGTH];
+uint8_t obj_buff[MAX_BUFFER_LENGTH];
 
 uint16_t lastPayloadId = 0;
 uint16_t readedLen = 0;
@@ -81,7 +81,7 @@ uint8_t  sendedPayload[MAX_GL_PAYLOAD_LENGTH];
 jsmn_parser requestJsmnParser;
 jsmntok_t requestJsmnTokens[MAX_NUM_TOKENS]; /* We expect no more than 128 tokens */
 char requestValue[MAX_REQUEST_VALUE_LENGTH];
-char wantSendData[WANT_SEND_DATA_LENGTH];
+char wantSendData[MAX_BUFFER_LENGTH];
 char tempSendData[MAX_TMPL_LENGTH];
 char wantSendDataTpl[MAX_TMPL_LENGTH];
 
