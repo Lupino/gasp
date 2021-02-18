@@ -4,6 +4,7 @@ module Gasp.Attr
     , setAttrLength
     , getAttrValueLength
     , getAttrRspLength
+    , calcWidth
     ) where
 
 import           Data.Aeson (ToJSON (..), object, (.=))
@@ -34,13 +35,17 @@ instance ToJSON Attr where
         , "is_float"   .= isFloat (attrType attr)
         , "gen_set"    .= attrGenSet attr
         , "default"    .= (attrDef   attr * attrScale attr)
-        , "width"      .= calcWitdh (attrMax attr)
+        , "width"      .= calcAttrWidth attr
         , "prec"       .= attrPrec   attr
         , "keep"       .= attrKeep   attr
         ]
 
-calcWitdh :: Double -> Int
-calcWitdh v = length $ show (floor v :: Int)
+calcWidth :: Double -> Double -> Int
+calcWidth v0 v1 =
+  max (length $ show (floor v0 :: Int)) (length $ show (floor v1 :: Int))
+
+calcAttrWidth :: Attr -> Int
+calcAttrWidth attr = calcWidth (attrMax attr) (attrMin attr)
 
 isFloat :: String -> Bool
 isFloat ""                      = False
@@ -50,16 +55,12 @@ isFloat (_:xs)                  = isFloat xs
 -- {"name": vv.vv}
 -- {"name": vv}
 getAttrRspLength :: Attr -> Int
-getAttrRspLength attr
-  | isFloat (attrType attr) = 6 + length (attrName attr) + calcWitdh (attrMax attr) + 1 + attrPrec attr
-  | otherwise = 6 + length (attrName attr) + calcWitdh (attrMax attr)
+getAttrRspLength attr = 6 + length (attrName attr) + getAttrValueLength attr
 
 -- {"method": "set_name", "data": vv.vv}
 -- {"method": "set_name", "data": vv}
 setAttrLength :: Attr -> Int
-setAttrLength attr
-  | isFloat (attrType attr) = 28 + length (attrName attr) + calcWitdh (attrMax attr) + 1 + attrPrec attr
-  | otherwise = 28 + length (attrName attr) + calcWitdh (attrMax attr)
+setAttrLength attr = 28 + length (attrName attr) + getAttrValueLength attr
 
 getTotalAttrLength :: Int -> [Attr] -> Int
 getTotalAttrLength v []     = v
@@ -67,5 +68,5 @@ getTotalAttrLength v (x:xs) = getTotalAttrLength (v + getAttrRspLength x) xs
 
 getAttrValueLength :: Attr -> Int
 getAttrValueLength attr
-  | isFloat (attrType attr) = calcWitdh (attrMax attr) + 1 + attrPrec attr
-  | otherwise = calcWitdh (attrMax attr)
+  | isFloat (attrType attr) = calcAttrWidth attr + 1 + attrPrec attr
+  | otherwise = calcAttrWidth attr
