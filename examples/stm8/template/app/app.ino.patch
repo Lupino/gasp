@@ -1,0 +1,19 @@
+4a5
+> #include "dtostrf.h"
+92d92
+< char wantSendDataTpl[MAX_TMPL_LENGTH];
+169d168
+< char * FC(const __FlashStringHelper *ifsh);
+594,605d592
+< char * FC(const __FlashStringHelper *ifsh) {
+<     PGM_P p = reinterpret_cast<PGM_P>(ifsh);
+<     size_t n = 0;
+<     while (1) {
+<         unsigned char c = pgm_read_byte(p++);
+<         wantSendDataTpl[n] = c;
+<         n++;
+<         if (c == 0) break;
+<     }
+<     return wantSendDataTpl;
+< }
+< 
