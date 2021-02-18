@@ -213,7 +213,7 @@ getMaxTmplLength = maximum . map getTmplLength . gaspExprs
 
 
 prepareGasp :: [Flag] -> Gasp -> Gasp
-prepareGasp flags = fromGaspExprs . go 1 1 . gaspExprs
+prepareGasp flags gasp = setGaspExprs gasp . go 1 1 $ gaspExprs gasp
   where go :: Int -> Int -> [Expr] -> [Expr]
         go _ _ []        = []
         go ri addr (ExprAttr x:xs)
