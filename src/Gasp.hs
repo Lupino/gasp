@@ -174,12 +174,31 @@ setCommandFlag flags cmd = cmd
 
 getCommandLength :: Expr -> Int
 getCommandLength (ExprCmd cmd)   = length $ cmdFunc cmd
-getCommandLength (ExprAttr attr) = length (attrName attr) + 4
-getCommandLength (ExprMetric m)  = length (metricName m) + 17
+getCommandLength (ExprAttr attr) = setAttrLength attr
+getCommandLength (ExprMetric m)  = setMetricThresholdLength m
 getCommandLength _               = 0
+
 
 getMaxCommandLength :: Gasp -> Int
 getMaxCommandLength = maximum . map getCommandLength . gaspExprs
+
+getRequestValueLength :: Expr -> Int
+getRequestValueLength (ExprAttr attr) = getAttrValueLength attr
+getRequestValueLength (ExprMetric m)  = getMetricValueLength m
+getRequestValueLength _               = 0
+
+
+getMaxRequestValueLength :: Gasp -> Int
+getMaxRequestValueLength = maximum . map getRequestValueLength . gaspExprs
+
+getTmplLength :: Expr -> Int
+getTmplLength (ExprAttr attr) = getAttrRspLength attr
+getTmplLength (ExprMetric m)  = getMetricThresholdRspLength m
+getTmplLength _               = 0
+
+
+getMaxTmplLength :: Gasp -> Int
+getMaxTmplLength = maximum . map getTmplLength . gaspExprs
 
 
 prepareGasp :: [Flag] -> Gasp -> Gasp
@@ -231,7 +250,10 @@ instance ToJSON Gasp where
         , "metrics"     .= metrics
         , "has_metric"  .= hasMetric
         , "use_eeprom"  .= useEeprom
-        , "max_cmd_len" .= (getMaxCommandLength gasp + 1)
+        , "max_req_len" .= (getMaxRequestValueLength gasp + 1)
+        , "max_buf_len" .= (bufLen + 1)
+        , "max_tpl_len" .= (getMaxTmplLength gasp + 1)
+        , "max_gl_len"  .= (contextLen + bufLen + 1)
         , "actions"     .= getEverys gasp
         , "gpios"       .= gpios
         , "rules"       .= rules
@@ -253,3 +275,6 @@ instance ToJSON Gasp where
               useEeprom = hasMetric || hasAttr
               app = getApp gasp
               rules = getRules gasp
+              maxCmdLength = getMaxCommandLength gasp
+              bufLen = max maxCmdLength $ getTotalMetricThresholdLength (getTotalAttrLength 0 attrs) metrics
+              contextLen = maybe 0 appContexLength app

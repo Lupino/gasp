@@ -1,5 +1,6 @@
 module Gasp.App
     ( App(..)
+    , appContexLength
     ) where
 
 import           Data.Aeson (ToJSON (..), object, (.=))
@@ -38,3 +39,11 @@ hexArray :: [String] -> String
 hexArray []     = []
 hexArray [x]    = "0x" ++ x
 hexArray (x:xs) = "0x" ++ x ++ ", " ++ hexArray xs
+
+appContexLength :: App -> Int
+appContexLength app = contextLen
+  where key = appKey app
+        token = appToken app
+        keyLen = length key `div` 2
+        tokenLen = length token `div` 2
+        contextLen = 4 + 1 + keyLen + 1 + tokenLen + 4 + 1 + 4 + 1
