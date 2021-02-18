@@ -131,6 +131,13 @@ initDebug (x:xs)
 getAttrs:: Gasp -> [Attr]
 getAttrs gasp = [attr | (ExprAttr attr) <- gaspExprs gasp]
 
+
+hasFloatAttr :: [Attr] -> Bool
+hasFloatAttr [] = False
+hasFloatAttr (x:xs)
+  | isFloatAttr x = True
+  | otherwise     = hasFloatAttr xs
+
 -- * Metrics
 
 getMetrics:: Gasp -> [Metric]
@@ -269,10 +276,11 @@ instance ToJSON Gasp where
         , "gpios"       .= gpios
         , "rules"       .= rules
         , "has_gpio"    .= not (null gpios)
-        , "has_func"    .= not (null funcs)
+        , "has_func"    .= (hasFunc || useEeprom)
         , "has_input"   .= hasInput gpios
         , "has_debug"   .= initDebug inits
         , "has_rule"    .= not (null rules)
+        , "has_float"   .= (hasFloatAttr attrs || hasMetric)
         , "low_memory"  .= getLowMemory gasp
         ]
         where gasp = prepareGasp (getFlags gasp0) gasp0
@@ -281,6 +289,7 @@ instance ToJSON Gasp where
               gpios = getGpios gasp
               cmds = getCmds gasp
               funcs = getFunctions gasp
+              hasFunc = not (null funcs)
               inits = getInits gasp
               hasMetric = not (null metrics)
               hasAttr = not (null attrs)

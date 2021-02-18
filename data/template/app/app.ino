@@ -8,9 +8,11 @@
 #include <EEPROM.h>
 
 {=/ use_eeprom =}
+{=# has_func =}
 #define RET_ERR -1
 #define RET_SUCC 0
 
+{=/ has_func =}
 {=# inits =}
 {=& code =}
 
@@ -153,9 +155,10 @@ int last_gpio_{= name =}_state = {= state =};
 {=/ has_gpio =}
 // defined
 unsigned long get_current_time_ms();
-bool is_valid_float(float number, float min, float max);
-bool is_valid_long(long number, long min, long max);
 
+{=# has_float =}
+bool is_valid_float(float number, float min, float max);
+{=/ has_float =}
 {=# has_app =}
 void noop();
 void send_packet();
@@ -258,7 +261,7 @@ void setup() {
         if (!is_valid_float(attr_{= name =}, {= scaled_min =}, {= scaled_max =})) {
         {=/ is_float =}
         {=^ is_float =}
-        if (!is_valid_long(attr_{= name =}, {= scaled_min =}, {= scaled_max =})) {
+        if (attr_{= name =} < {= scaled_min =} || attr_{= name =} > {= scaled_max =}) {
         {=/ is_float =}
             attr_{= name =} = {= default =};
         }
@@ -516,6 +519,7 @@ unsigned long get_current_time_ms() {
     return millis();
 }
 
+{=# has_float =}
 bool is_valid_float(float number, float min, float max) {
     if (isnan(number)) return false;
     if (isinf(number)) return false;
@@ -524,12 +528,7 @@ bool is_valid_float(float number, float min, float max) {
     return true;
 }
 
-bool is_valid_long(long number, long min, long max) {
-    if (number > max) return false;  // constant determined empirically
-    if (number < min) return false;  // constant determined empirically
-    return true;
-}
-
+{=/ has_float =}
 {=# has_app =}
 void noop() {}
 
@@ -667,7 +666,7 @@ int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, cha
         {=/ is_float =}
         {=^ is_float =}
         {= type =} tmp = atoi(requestValue);
-        if (!is_valid_long(tmp, {= min =}, {= max =})) {
+        if (tmp < {= min =} || tmp > {= max =}) {
         {=/ is_float =}
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min =}, {= max =}]\"}")));
           return RET_ERR;

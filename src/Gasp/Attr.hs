@@ -5,6 +5,7 @@ module Gasp.Attr
     , getAttrValueLength
     , getAttrRspLength
     , calcWidth
+    , isFloatAttr
     ) where
 
 import           Data.Aeson (ToJSON (..), object, (.=))
@@ -32,7 +33,7 @@ instance ToJSON Attr where
         , "scaled_min" .= (attrMin   attr * attrScale attr)
         , "scale"      .= attrScale  attr
         , "type"       .= attrType   attr
-        , "is_float"   .= isFloat (attrType attr)
+        , "is_float"   .= isFloatAttr attr
         , "gen_set"    .= attrGenSet attr
         , "default"    .= (attrDef   attr * attrScale attr)
         , "width"      .= calcAttrWidth attr
@@ -52,6 +53,9 @@ isFloat ""                      = False
 isFloat ('f':'l':'o':'a':'t':_) = True
 isFloat (_:xs)                  = isFloat xs
 
+isFloatAttr :: Attr -> Bool
+isFloatAttr = isFloat . attrType
+
 -- {"name": vv.vv}
 -- {"name": vv}
 getAttrRspLength :: Attr -> Int
@@ -68,5 +72,5 @@ getTotalAttrLength v (x:xs) = getTotalAttrLength (v + getAttrRspLength x) xs
 
 getAttrValueLength :: Attr -> Int
 getAttrValueLength attr
-  | isFloat (attrType attr) = calcAttrWidth attr + 1 + attrPrec attr
+  | isFloatAttr attr = calcAttrWidth attr + 1 + attrPrec attr
   | otherwise = calcAttrWidth attr
