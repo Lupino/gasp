@@ -4,6 +4,8 @@ module Gasp
     , fromGaspExprs
     , setGaspExprs
     , getGaspExprs
+    , setLowMemory
+    , getLowMemory
 
     , module Gasp.Attr
     , module Gasp.Metric
@@ -32,8 +34,9 @@ import           Gasp.Setup
 -- * Gasp
 
 data Gasp = Gasp
-    { gaspExprs         :: [Expr]
-    , externalCodeFiles :: [ExternalCode.File]
+    { gaspExprs         :: ![Expr]
+    , externalCodeFiles :: ![ExternalCode.File]
+    , isLowMemory       :: !Bool
     } deriving (Show, Eq)
 
 data Expr
@@ -54,6 +57,7 @@ fromGaspExprs :: [Expr] -> Gasp
 fromGaspExprs exprs = Gasp
     { gaspExprs = exprs
     , externalCodeFiles = []
+    , isLowMemory = False
     }
 
 setGaspExprs :: Gasp -> [Expr] -> Gasp
@@ -69,6 +73,13 @@ getExternalCodeFiles = externalCodeFiles
 
 setExternalCodeFiles :: Gasp -> [ExternalCode.File] -> Gasp
 setExternalCodeFiles wasp files = wasp { externalCodeFiles = files }
+
+-- * Low Memory
+setLowMemory :: Gasp -> Bool -> Gasp
+setLowMemory gasp lowMem = gasp { isLowMemory = lowMem }
+
+getLowMemory :: Gasp -> Bool
+getLowMemory = isLowMemory
 
 -- * App
 
@@ -252,7 +263,7 @@ instance ToJSON Gasp where
         , "use_eeprom"  .= useEeprom
         , "max_req_len" .= (getMaxRequestValueLength gasp + 1)
         , "max_buf_len" .= (bufLen + 1)
-        , "max_tpl_len" .= (getMaxTmplLength gasp + 1)
+        , "max_tpl_len" .= (maxTmplLen + 1)
         , "max_gl_len"  .= (contextLen + bufLen + 1)
         , "actions"     .= getEverys gasp
         , "gpios"       .= gpios
@@ -262,6 +273,7 @@ instance ToJSON Gasp where
         , "has_input"   .= hasInput gpios
         , "has_debug"   .= initDebug inits
         , "has_rule"    .= not (null rules)
+        , "low_memory"  .= getLowMemory gasp
         ]
         where gasp = prepareGasp (getFlags gasp0) gasp0
               attrs = getAttrs gasp
@@ -275,6 +287,8 @@ instance ToJSON Gasp where
               useEeprom = hasMetric || hasAttr
               app = getApp gasp
               rules = getRules gasp
-              maxCmdLength = getMaxCommandLength gasp
-              bufLen = max maxCmdLength $ getTotalMetricThresholdLength (getTotalAttrLength 0 attrs) metrics
+              maxCmdLen = getMaxCommandLength gasp
+              maxTmplLen = getMaxTmplLength gasp
+              bufLen0 = getTotalMetricThresholdLength (getTotalAttrLength 0 attrs) metrics
+              bufLen = if getLowMemory gasp then max maxCmdLen maxTmplLen else max maxCmdLen bufLen0
               contextLen = maybe 0 appContexLength app

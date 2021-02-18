@@ -16,4 +16,5 @@ data CompileOptions = CompileOptions
     , showSyntaxTree      :: !Bool
     , projectRootDir      :: !(Path Abs (Dir ProjectRootDir))
     , templateDir         :: !(Path Abs (Dir TemplateDir))
+    , lowMemory           :: !Bool
     }

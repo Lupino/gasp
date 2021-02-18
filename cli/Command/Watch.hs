@@ -19,10 +19,10 @@ import           StrongPath              (Abs, Dir, Path)
 import qualified StrongPath              as SP
 
 
-compileAndWatch :: Command ()
-compileAndWatch = do
-  (gaspProjectDir, options) <- compileOptions False
-  compile False
+compileAndWatch :: Bool -> Command ()
+compileAndWatch lowMem = do
+  (gaspProjectDir, options) <- compileOptions False lowMem
+  compile False lowMem
   liftIO $ watch gaspProjectDir options
 
 

@@ -20,9 +20,9 @@ import qualified StrongPath             as SP
 import qualified Util.IO
 
 
-compile :: Bool -> Command ()
-compile syntaxTree = do
-  (gaspProjectDir, options) <- compileOptions syntaxTree
+compile :: Bool -> Bool -> Command ()
+compile syntaxTree lowMem = do
+  (gaspProjectDir, options) <- compileOptions syntaxTree lowMem
   unless syntaxTree $ gaspSaysC "Compiling gasp code..."
   compilationResult <- liftIO $ compileIO gaspProjectDir options
   case compilationResult of
@@ -47,8 +47,8 @@ compileIO gaspProjectDir options = do
     isGaspFile path = ".gasp" `isSuffixOf` P.toFilePath path
                       && (length (P.toFilePath path) > length (".gasp" :: String))
 
-compileOptions :: Bool -> Command (Path Abs (Dir Common.GaspProjectDir), CompileOptions)
-compileOptions syntaxTree = do
+compileOptions :: Bool -> Bool -> Command (Path Abs (Dir Common.GaspProjectDir), CompileOptions)
+compileOptions syntaxTree lowMem = do
   gaspProjectDir <- findGaspProjectRootDirFromCwd
   gaspTemplateDir <- findGaspTemplateDir gaspProjectDir
   return (gaspProjectDir , CompileOptions
@@ -56,4 +56,5 @@ compileOptions syntaxTree = do
     , showSyntaxTree = syntaxTree
     , projectRootDir = gaspProjectDir </> Common.buildGaspDirInGaspProjectDir
     , templateDir    = gaspTemplateDir
+    , lowMemory      = lowMem
     })

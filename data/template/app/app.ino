@@ -82,7 +82,9 @@ jsmn_parser requestJsmnParser;
 jsmntok_t requestJsmnTokens[MAX_NUM_TOKENS]; /* We expect no more than 128 tokens */
 char requestValue[MAX_REQUEST_VALUE_LENGTH];
 char wantSendData[MAX_BUFFER_LENGTH];
+{=^ low_memory =}
 char tempSendData[MAX_TMPL_LENGTH];
+{=/ low_memory =}
 char wantSendDataTpl[MAX_TMPL_LENGTH];
 
 {=# has_metric =}
@@ -896,6 +898,7 @@ int processRequest(const char *json, int length, char *retval) {
     return RET_ERR;
 }
 
+{=^ low_memory =}
 {=# has_metric =}
 bool reportMetric(bool force) {
     bool wantSend = false;
@@ -964,4 +967,53 @@ bool reportAttribute(bool force) {
     return false;
 }
 {=/ use_eeprom =}
+{=/ low_memory =}
+{=# low_memory =}
+{=# has_metric =}
+bool reportMetric(bool force) {
+    bool sended = false;
+    {=# metrics =}
+    if ((!isnan(metric_{= name =}) && metric_{= name =} >= {= min =} && metric_{= name =} <= {= max =} && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || force) {
+        wantSendData[0] = '\0';
+        if (get_metric_{= name =}(wantSendData) > RET_ERR) {
+            last_metric_{= name =} = metric_{= name =};
+            send_packet_1(TELEMETRY, wantSendData);
+            sended = true;
+        }
+    }
+
+    {=/ metrics =}
+    return sended;
+}
+
+{=/ has_metric =}
+{=# use_eeprom =}
+bool reportAttribute(bool force) {
+    bool sended = true;
+    {=# attrs =}
+    if (last_attr_{= name =} != attr_{= name =} || force) {
+        wantSendData[0] = '\0';
+        if (get_attr_{= name =}(wantSendData) > RET_ERR) {
+            sended = true;
+            last_attr_{= name =} = attr_{= name =};
+            send_packet_1(ATTRIBUTE, wantSendData);
+        }
+    }
+
+    {=/ attrs =}
+    {=# metrics =}
+    if (last_metric_{= name =}_threshold != metric_{= name =}_threshold || force) {
+        wantSendData[0] = '\0';
+        if (get_metric_{= name =}_threshold(wantSendData) > RET_ERR) {
+            sended = true;
+            last_metric_{= name =}_threshold = metric_{= name =}_threshold;
+            send_packet_1(ATTRIBUTE, wantSendData);
+        }
+    }
+
+    {=/ metrics =}
+    return sended;
+}
+{=/ use_eeprom =}
+{=/ low_memory =}
 {=/ has_app =}
