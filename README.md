@@ -14,15 +14,15 @@ NOTE: Gasp is still in alpha, meaning it has bugs, and many critical features ar
 ```js
 // dht.wasp:
 app dht {
-  key: "product_key",
-  token: "device_token"
+  key: "1234567890abcdef", // product_key
+  token: "1234567890abcdef" // device_token
 }
-
 
 init do
 #define GL_SERIAL Serial
 #define DEBUG_SERIAL Serial
 #define METRIC_DELAY_MS attr_delay
+#define PING_FAILED_CB noop
 done
 
 setup do
@@ -107,7 +107,23 @@ attr low_temperature {
   min: 0,
   max: 100
 }
-rule metric_temperature < attr_high_temperature && metric_temperature > attr_low_temperature && attr_relay_mode == 1 do open_gpio_relay else close_gpio_relay
+
+attr open_delay {
+  type: "unsigned long",
+  default: 5,
+  min: 0,
+  max: 3600,
+  scale: 1000
+}
+
+attr close_delay {
+  type: "unsigned long",
+  default: 5,
+  min: 0,
+  max: 3600,
+  scale: 1000
+}
+rule metric_temperature < attr_high_temperature && metric_temperature > attr_low_temperature && attr_relay_mode == 1 do later attr_open_delay open_gpio_relay else later attr_close_delay close_gpio_relay
 
 init do
 #include <avr/wdt.h>
@@ -143,6 +159,8 @@ command reset_system {
     fn: reset_system
 }
 ```
+
+- compiled syntax see <doc.md> Template Special.
 
 Source files (`.wasp`, `.ino`, `.c`, `.h`, ...) are compiled (transpiled) by `gaspc` (Gasp compiler) into the iot technology stack of your choice (e.g. Arduino + sensor + ...).
 
