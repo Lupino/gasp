@@ -244,7 +244,7 @@ void setup() {
     {=# keep =}
     if (first_run_flag == 1) {
         EEPROM.get({= addr =}, attr_{= name =});
-        if (attr_{= name =} > {= scaled_max =} || attr_{= name =} < {= scaled_min =}) {
+        if (isnan(attr_{= name =}) || attr_{= name =} > {= scaled_max =} || attr_{= name =} < {= scaled_min =}) {
             attr_{= name =} = {= default =};
         }
     } else {
@@ -257,7 +257,7 @@ void setup() {
     {=# metrics =}
     if (first_run_flag == 1) {
         EEPROM.get({= addr =}, metric_{= name =}_threshold);
-        if (metric_{= name =}_threshold > {= max_threshold =} || metric_{= name =}_threshold < {= min_threshold =}) {
+        if (isnan(metric_{= name =}_threshold) || metric_{= name =}_threshold > {= max_threshold =} || metric_{= name =}_threshold < {= min_threshold =}) {
             metric_{= name =}_threshold = {= threshold =};
         }
     } else {
