@@ -75,7 +75,9 @@ uint8_t obj_buff[MAX_BUFFER_LENGTH];
 uint16_t lastPayloadId = 0;
 uint16_t readedLen = 0;
 uint8_t  readedPayload[MAX_GL_PAYLOAD_LENGTH];
+{=^ low_memory =}
 uint8_t  sendedPayload[MAX_GL_PAYLOAD_LENGTH];
+{=/ low_memory =}
 
 
 jsmn_parser requestJsmnParser;
@@ -526,10 +528,20 @@ void send_packet() {
     DEBUG_SERIAL.println();
     #endif
     {=/ has_debug =}
+    {=# low_memory =}
+    givelink_to_binary(readedPayload);
+    {=/ low_memory =}
+    {=^ low_memory =}
     givelink_to_binary(sendedPayload);
+    {=/ low_memory =}
     uint16_t length = givelink_get_length();
     for (uint16_t i = 0; i < length; i ++) {
+        {=# low_memory =}
+        GL_SERIAL.write(readedPayload[i]);
+        {=/ low_memory =}
+        {=^ low_memory =}
         GL_SERIAL.write(sendedPayload[i]);
+        {=/ low_memory =}
     }
     GL_SERIAL.write('\r');
     GL_SERIAL.write('\n');
