@@ -250,44 +250,29 @@ void setup() {
 
     {=/ has_app =}
     {=# use_eeprom =}
-    byte first_run_flag = 0;
-    EEPROM.get(0, first_run_flag);
-
     {=# attrs =}
     {=# keep =}
-    if (first_run_flag == 1) {
-        EEPROM.get({= addr =}, attr_{= name =});
-        {=# is_float =}
-        if (!is_valid_float(attr_{= name =}, {= scaled_min =}, {= scaled_max =})) {
-        {=/ is_float =}
-        {=^ is_float =}
-        if (attr_{= name =} < {= scaled_min =} || attr_{= name =} > {= scaled_max =}) {
-        {=/ is_float =}
-            attr_{= name =} = {= default =};
-        }
-    } else {
-        EEPROM.put({= addr =}, attr_{= name =});
+    EEPROM.get({= addr =}, attr_{= name =});
+    {=# is_float =}
+    if (!is_valid_float(attr_{= name =}, {= scaled_min =}, {= scaled_max =})) {
+    {=/ is_float =}
+    {=^ is_float =}
+    if (attr_{= name =} < {= scaled_min =} || attr_{= name =} > {= scaled_max =}) {
+    {=/ is_float =}
+        attr_{= name =} = {= default =};
     }
 
     {=/ keep =}
     {=/ attrs =}
     {=# has_app =}
     {=# metrics =}
-    if (first_run_flag == 1) {
-        EEPROM.get({= addr =}, metric_{= name =}_threshold);
-        if (!is_valid_float(metric_{= name =}_threshold, {= min_threshold =}, {= max_threshold =})) {
-            metric_{= name =}_threshold = {= threshold =};
-        }
-    } else {
-        EEPROM.put({= addr =}, metric_{= name =}_threshold);
+    EEPROM.get({= addr =}, metric_{= name =}_threshold);
+    if (!is_valid_float(metric_{= name =}_threshold, {= min_threshold =}, {= max_threshold =})) {
+        metric_{= name =}_threshold = {= threshold =};
     }
 
     {=/ metrics =}
     {=/ has_app =}
-    if (first_run_flag != 0) {
-      first_run_flag = 1;
-      EEPROM.put(0, first_run_flag);
-    }
 
     {=/ use_eeprom =}
     {=# has_gpio =}
