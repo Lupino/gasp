@@ -644,7 +644,7 @@ void merge_json(char *dst, char *src, int *total_length) {
 void set_attr_{= name =}_raw({= type =} unscaled_value) {
     attr_{= name =} = unscaled_value * {= scale =};
     {=# keep =}
-    EEPROM.put({= addr =}, unscaled_value);
+    EEPROM.put({= addr =}, attr_{= name =});
     {=/ keep =}
 }
 
