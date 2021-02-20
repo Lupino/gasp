@@ -98,7 +98,7 @@ metric metricName {
 ## rule
 
 ```
-rule condition do [later do_later_ms ]action [else [later do_later_ms ]elseAction]
+rule condition do [later do_later_ms ]action [else [later do_later_ms ]elseAction] [on onCondition]
 ```
 
 # Template Special
@@ -200,14 +200,15 @@ gpios:
 rules:
 - depends:
   - name: temperature
+  on_condition: attr_relay_mode == 0
   has_else_later: true
   has_later: true
   action: open_gpio_relay
   later: attr_open_delay
+  has_on: true
   has_else: true
   id: 1
   condition: metric_temperature < attr_high_temperature && metric_temperature > attr_low_temperature
-    && attr_relay_mode == 1
   else_later: attr_close_delay
   else_action: close_gpio_relay
 actions:

@@ -76,6 +76,8 @@ command set_relay_state {
     error: "only relay_mode is 1 can set this value"
 }
 
+// relay_mode 1 manual mode
+//            0 auto mode
 attr relay_mode {
   type: "int",
   default: 0,
@@ -123,7 +125,8 @@ attr close_delay {
   max: 3600,
   scale: 1000
 }
-rule metric_temperature < attr_high_temperature && metric_temperature > attr_low_temperature && attr_relay_mode == 1 do later attr_open_delay open_gpio_relay else later attr_close_delay close_gpio_relay
+
+rule metric_temperature < attr_high_temperature && metric_temperature > attr_low_temperature do later attr_open_delay open_gpio_relay else later attr_close_delay close_gpio_relay on attr_relay_mode == 0
 
 init do
 #include <avr/wdt.h>

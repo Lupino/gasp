@@ -15,17 +15,20 @@ instance ToJSON MetricName where
 
 
 data Rule = Rule
-    { ruleCondition  :: !String
-    , ruleAction     :: !String
-    , ruleLater      :: !String
-    , ruleElseAction :: !String
-    , ruleElseLater  :: !String
-    , ruleIndex      :: !Int
+    { ruleCondition   :: !String
+    , ruleOnCondition :: !String
+    , ruleAction      :: !String
+    , ruleLater       :: !String
+    , ruleElseAction  :: !String
+    , ruleElseLater   :: !String
+    , ruleIndex       :: !Int
     } deriving (Show, Eq)
 
 instance ToJSON Rule where
     toJSON rule = object
         [ "condition"      .= ruleCondition rule
+        , "on_condition"   .= ruleOnCondition rule
+        , "has_on"         .= not (null $ ruleOnCondition rule)
         , "action"         .= ruleAction rule
         , "later"          .= ruleLater rule
         , "has_later"      .= not (null $ ruleLater rule)

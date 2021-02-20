@@ -310,7 +310,12 @@ void loop() {
         rule_depends_checked = false;
     }
     {=/ depends =}
+    {=# has_on =}
+    if (rule_depends_checked && {=& on_condition =}) {
+    {=/ has_on =}
+    {=^ has_on =}
     if (rule_depends_checked) {
+    {=/ has_on =}
         {=# has_later =}
         if ({=& condition =}) {
             if (rule_{= id =}_{= action =}_timer_ms + {= later =} < get_current_time_ms()) {
