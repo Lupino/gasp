@@ -88,6 +88,7 @@ givelink_context_t ctx;
 uint8_t ctx_buff[{= context_len =}];
 const uint8_t key[{= key_len =}] = {{= key_hex_array =}};
 const uint8_t token[{= token_len =}] = {{= token_hex_array =}};
+uint8_t addr[{= addr_len =}] = {{= addr_hex_array =}};
 {=/ app =}
 
 givelink_t obj;
@@ -179,6 +180,7 @@ unsigned long get_current_time_ms();
 bool is_valid_float(float number, float min, float max);
 {=/ has_float =}
 {=# has_app =}
+bool is_valid_addr();
 void noop();
 void send_packet();
 void send_packet_0(const uint8_t type);
@@ -265,6 +267,11 @@ void setup() {
     givelink_context_set_key(key, {= key_len =});
     givelink_context_set_token(token, {= token_len =});
     givelink_init(&obj, obj_buff);
+    EEPROM.get(0, addr);
+    if (is_valid_addr(addr)) {
+        givelink_context_set_addr(addr, {= addr_len =});
+        givelink_context_set_auth(true);
+    }
     {=/ app =}
 
     {=/ has_app =}
@@ -401,6 +408,13 @@ void loop() {
                 #endif
 
                 {=/ has_debug =}
+                if (obj.type == AUTHRES) {
+                    {=# app =}
+                    for (int i = 0; i < {= addr_len =}; i ++) {
+                        EEPROM.write(i, obj.data[i]);
+                    }
+                    {=/ app =}
+                }
                 if (obj.type == REQUEST) {
                     wantSendData[0] = '\0';
                     int ret = processRequest((const char *)obj.data, obj.length - TYPE_LENGTH, wantSendData);
@@ -429,7 +443,7 @@ void loop() {
         }
     }
 
-    if (givelink_authed()) {
+    if (givelink_context_authed()) {
         {=# use_eeprom =}
         if (REPORT_ATTR) {
             reportAttribute(requireReportAttribute);
@@ -547,6 +561,17 @@ bool is_valid_float(float number, float min, float max) {
 
 {=/ has_float =}
 {=# has_app =}
+bool is_valid_addr() {
+    {=# app =}
+    for (int i = 0; i < {= addr_len =}; i ++) {
+        if (addr[i] != '\0') {
+            return true;
+        }
+    }
+    return false;
+    {=/ app =}
+}
+
 void noop() {}
 
 void send_packet() {

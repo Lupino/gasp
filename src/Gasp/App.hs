@@ -10,6 +10,7 @@ data App = App
   { appName  :: !String -- Identifier
   , appKey   :: !String
   , appToken :: !String
+  , appAddr  :: !String
   } deriving (Show, Eq)
 
 instance ToJSON App where
@@ -21,13 +22,18 @@ instance ToJSON App where
       , "token" .= token
       , "token_len" .= tokenLen
       , "token_hex_array" .= hexArray (toHex token)
+      , "addr" .= addr
+      , "addr_len" .= addrLen
+      , "addr_hex_array" .= hexArray (toHex addr)
       , "context_len" .= contextLen
       ]
       where key = appKey app
             token = appToken app
             keyLen = length key `div` 2
             tokenLen = length token `div` 2
-            contextLen = 4 + 1 + keyLen + 1 + tokenLen + 4 + 1 + 4 + 1
+            addr = appAddr app
+            addrLen = length addr `div` 2
+            contextLen = 4 + 1 + keyLen + 1 + tokenLen + 4 + 1 + addrLen + 1
 
 
 toHex :: String -> [String]
@@ -46,4 +52,6 @@ appContexLength app = contextLen
         token = appToken app
         keyLen = length key `div` 2
         tokenLen = length token `div` 2
-        contextLen = 4 + 1 + keyLen + 1 + tokenLen + 4 + 1 + 4 + 1
+        addr = appAddr app
+        addrLen = length addr `div` 2
+        contextLen = 4 + 1 + keyLen + 1 + tokenLen + 4 + 1 + addrLen + 1

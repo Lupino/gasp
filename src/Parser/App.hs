@@ -5,34 +5,39 @@ module Parser.App
 import           Text.Parsec
 import           Text.Parsec.String (Parser)
 
+import           Data.Maybe         (fromMaybe, listToMaybe)
 import qualified Gasp.App           as App
 import           Lexer
 import           Parser.Common
 
 -- | A type that describes supported app properties.
 data AppProperty
-    = Key !String
+    = Key   !String
     | Token !String
+    | Addr  !String
     deriving (Show, Eq)
 
 -- | Parses supported app properties, expects format "key1: value1, key2: value2, ..."
 appProperties :: Parser [AppProperty]
-appProperties = commaSep1 $ appPropertyKey <|> appPropertyToken
+appProperties = commaSep1 $ appPropertyKey <|> appPropertyToken <|> appPropertyAddr
 
 appPropertyKey :: Parser AppProperty
 appPropertyKey = Key <$> gaspPropertyStringLiteral "key"
 
 appPropertyToken :: Parser AppProperty
--- TODO(matija): 'fav.png' currently does not work because of '.'. Support it.
 appPropertyToken = Token <$> gaspPropertyStringLiteral "token"
 
--- TODO(matija): unsafe, what if empty list?
+appPropertyAddr :: Parser AppProperty
+appPropertyAddr = Addr <$> gaspPropertyStringLiteral "addr"
+
 getAppKey :: [AppProperty] -> String
 getAppKey ps = head $ [t | Key t <- ps]
 
--- TODO(matija): unsafe, what if empty list?
 getAppToken :: [AppProperty] -> String
 getAppToken ps = head $ [t | Token t <- ps]
+
+getAppAddr :: [AppProperty] -> String
+getAppAddr ps = fromMaybe "00000000" $ listToMaybe $ [t | Addr t <- ps]
 
 -- | Top level parser, parses App.
 app :: Parser App.App
@@ -43,4 +48,5 @@ app = do
         { App.appName = appName
         , App.appKey = getAppKey appProps
         , App.appToken = getAppToken appProps
+        , App.appAddr  = getAppAddr appProps
         }

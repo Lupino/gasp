@@ -304,7 +304,7 @@ instance ToJSON Gasp where
         , "low_memory"  .= getLowMemory gasp
         , "consts"      .= getConstants gasp
         ]
-        where gasp = prepareGasp (getStartAddr gasp0) (getFlags gasp0) gasp0
+        where gasp = prepareGasp (getStartAddr gasp0 + addrLen) (getFlags gasp0) gasp0
               attrs = getAttrs gasp
               metrics = getMetrics gasp
               gpios = getGpios gasp
@@ -315,10 +315,11 @@ instance ToJSON Gasp where
               hasMetric = not (null metrics)
               hasAttr = not (null attrs)
               useEeprom = hasMetric || hasAttr
-              app = getApp gasp
+              app = getApp gasp0
               rules = getRules gasp
               maxCmdLen = getMaxCommandLength gasp
               maxTmplLen = getMaxTmplLength gasp
               bufLen0 = getTotalMetricThresholdLength (getTotalAttrLength 0 attrs) metrics
               bufLen = if getLowMemory gasp then max maxCmdLen maxTmplLen else max maxCmdLen bufLen0
               contextLen = maybe 0 appContexLength app
+              addrLen = maybe 0 (length . appAddr) app
