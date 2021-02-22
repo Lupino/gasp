@@ -7,9 +7,6 @@ module Gasp
     , setLowMemory
     , getLowMemory
 
-    , setStartAddr
-    , getStartAddr
-
     , module Gasp.Attr
     , module Gasp.Metric
 
@@ -41,7 +38,6 @@ data Gasp = Gasp
     { gaspExprs         :: ![Expr]
     , externalCodeFiles :: ![ExternalCode.File]
     , isLowMemory       :: !Bool
-    , startAddr         :: !Int
     } deriving (Show, Eq)
 
 data Expr
@@ -64,7 +60,6 @@ fromGaspExprs exprs = Gasp
     { gaspExprs = exprs
     , externalCodeFiles = []
     , isLowMemory = False
-    , startAddr = 0
     }
 
 setGaspExprs :: Gasp -> [Expr] -> Gasp
@@ -87,14 +82,6 @@ setLowMemory gasp lowMem = gasp { isLowMemory = lowMem }
 
 getLowMemory :: Gasp -> Bool
 getLowMemory = isLowMemory
-
--- * Start Addr
-
-setStartAddr :: Gasp -> Int -> Gasp
-setStartAddr gasp addr = gasp { startAddr = addr }
-
-getStartAddr :: Gasp -> Int
-getStartAddr = startAddr
 
 -- * App
 
@@ -304,7 +291,7 @@ instance ToJSON Gasp where
         , "low_memory"  .= getLowMemory gasp
         , "consts"      .= getConstants gasp
         ]
-        where gasp = prepareGasp (getStartAddr gasp0 + addrLen) (getFlags gasp0) gasp0
+        where gasp = prepareGasp (startAddr + addrLen) (getFlags gasp0) gasp0
               attrs = getAttrs gasp
               metrics = getMetrics gasp
               gpios = getGpios gasp
@@ -323,3 +310,4 @@ instance ToJSON Gasp where
               bufLen = if getLowMemory gasp then max maxCmdLen maxTmplLen else max maxCmdLen bufLen0
               contextLen = maybe 0 appContexLength app
               addrLen = maybe 0 (length . appAddr) app
+              startAddr = maybe 0 appStartAddr app

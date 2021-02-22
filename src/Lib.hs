@@ -12,8 +12,7 @@ import           Data.Yaml             (encode)
 import qualified ExternalCode
 import           Gasp                  (Attr (..), Expr (..), Gasp, Metric (..),
                                         getGaspExprs, setExternalCodeFiles,
-                                        setGaspExprs, setLowMemory,
-                                        setStartAddr)
+                                        setGaspExprs, setLowMemory)
 import           Generator             (writeAppCode)
 import           Generator.Common      (ProjectRootDir)
 import           Generator.Template    (TemplateDir)
@@ -121,5 +120,4 @@ enrichGaspASTBasedOnCompileOptions :: Gasp -> CompileOptions -> IO Gasp
 enrichGaspASTBasedOnCompileOptions gasp options = do
     externalCodeFiles <- ExternalCode.readFiles (CompileOptions.externalCodeDirPath options)
     return (gasp `setExternalCodeFiles` externalCodeFiles
-                 `setLowMemory` CompileOptions.lowMemory options
-                 `setStartAddr` CompileOptions.startAutoAddr options)
+                 `setLowMemory` CompileOptions.lowMemory options)

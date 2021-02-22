@@ -331,14 +331,18 @@ consts:
 - value: attr_delay
   name: METRIC_DELAY_MS
 app:
+  addr_hex_array: 0x00, 0x00, 0x00, 0x00
   key_len: 8
   token_hex_array: 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
   token: 1234567890abcdef
+  addr: '00000000'
+  start_addr: 0
   key: 1234567890abcdef
   name: dht
   context_len: 32
   token_len: 8
   key_hex_array: 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
+  addr_len: 4
 has_app: true
 has_debug: true
 low_memory: false

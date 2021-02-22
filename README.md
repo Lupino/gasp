@@ -14,8 +14,10 @@ NOTE: Gasp is still in alpha, meaning it has bugs, and many critical features ar
 ```js
 // dht.wasp:
 app dht {
-  key: "1234567890abcdef", // product_key
-  token: "1234567890abcdef" // device_token
+  key: "1234567890abcdef",   // product_key
+  token: "1234567890abcdef", // device_token
+  addr: "00000000",
+  start_addr: 0
 }
 
 GL_SERIAL = Serial

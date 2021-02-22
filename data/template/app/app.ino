@@ -267,7 +267,9 @@ void setup() {
     givelink_context_set_key(key, {= key_len =});
     givelink_context_set_token(token, {= token_len =});
     givelink_init(&obj, obj_buff);
-    EEPROM.get(0, addr);
+    for (int i = 0; i < {= addr_len =}; i ++) {
+        addr[i] = EEPROM.read({= start_addr =} + i);
+    }
     if (is_valid_addr(addr)) {
         givelink_context_set_addr(addr, {= addr_len =});
         givelink_context_set_auth(true);
@@ -411,7 +413,7 @@ void loop() {
                 if (obj.type == AUTHRES) {
                     {=# app =}
                     for (int i = 0; i < {= addr_len =}; i ++) {
-                        EEPROM.write(i, obj.data[i]);
+                        EEPROM.write({= start_addr =} + i, obj.data[i]);
                     }
                     {=/ app =}
                 }

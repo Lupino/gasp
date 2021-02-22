@@ -41,7 +41,9 @@ createNewProject projectName = do
       mainGaspFileContent = unlines
           [ "app %s {" `printf` projectName
           , "  key: \"1234567890abcdef\","
-          , "  token: \"1234567890abcdef\""
+          , "  token: \"1234567890abcdef\","
+          , "  addr: \"00000000\","
+          , "  start_addr: 0"
           , "}"
           , ""
           , "GL_SERIAL = Serial"

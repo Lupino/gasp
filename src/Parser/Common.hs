@@ -5,6 +5,7 @@
 module Parser.Common
   ( runGaspParser
   , gaspPropertyStringLiteral
+  , gaspPropertyInteger
   , gaspElementNameAndClosureContent
   , gaspPropertyBool
   , gaspProperty
@@ -73,6 +74,11 @@ gaspProperty key value = L.symbol key <* L.colon *> value
 -- e.g.: title: "my first app"
 gaspPropertyStringLiteral :: String -> Parser String
 gaspPropertyStringLiteral key = gaspProperty key L.stringLiteral
+
+-- | Parses gasp property which has a string literal for a value.
+-- e.g.: title: 10
+gaspPropertyInteger :: String -> Parser Integer
+gaspPropertyInteger key = gaspProperty key L.integer
 
 -- | Parses gasp property which has a bool for a value. E.g.: "onEnter: true".
 gaspPropertyBool :: String -> Parser Bool

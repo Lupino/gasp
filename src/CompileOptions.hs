@@ -17,5 +17,4 @@ data CompileOptions = CompileOptions
     , projectRootDir      :: !(Path Abs (Dir ProjectRootDir))
     , templateDir         :: !(Path Abs (Dir TemplateDir))
     , lowMemory           :: !Bool
-    , startAutoAddr       :: !Int
     }

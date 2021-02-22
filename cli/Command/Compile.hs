@@ -58,12 +58,10 @@ compileOptions syntaxTree argv = do
     , projectRootDir = gaspProjectDir </> Common.buildGaspDirInGaspProjectDir
     , templateDir    = gaspTemplateDir
     , lowMemory      = False
-    , startAutoAddr  = 0
     } argv)
 
 parseCompileOptions :: CompileOptions -> [String] -> CompileOptions
 parseCompileOptions opts []                   = opts
 parseCompileOptions opts ("--low-memory":xs)   = parseCompileOptions opts {lowMemory = True} xs
-parseCompileOptions opts ("--start-addr":v:xs) = parseCompileOptions opts {startAutoAddr = read v} xs
 parseCompileOptions opts ("--template":v:xs) = parseCompileOptions opts {templateDir = fromJust $ SP.parseAbsDir v} xs
 parseCompileOptions opts (_:xs) = parseCompileOptions opts xs
