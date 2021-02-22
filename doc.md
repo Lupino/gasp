@@ -4,7 +4,10 @@
 ```
 app appName {
     key: "you_key",
-    token: "you_token"
+    token: "you_token",
+    addr: "00000000",
+    start_addr: 0,
+    ctrl_mode: false
 }
 ```
 
@@ -220,6 +223,7 @@ rules:
 actions:
 - delay_ms: 6000
   fn: read_dht
+ctrl_mode: false
 max_req_len: 7
 has_float: true
 attrs:

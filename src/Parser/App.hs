@@ -16,11 +16,18 @@ data AppProperty
     | Token     !String
     | Addr      !String
     | StartAddr !Int
+    | Ctrl      !Bool
     deriving (Show, Eq)
 
 -- | Parses supported app properties, expects format "key1: value1, key2: value2, ..."
 appProperties :: Parser [AppProperty]
-appProperties = commaSep1 $ appPropertyKey <|> appPropertyToken <|> appPropertyAddr <|> appPropertyStartAddr
+appProperties =
+  commaSep1
+  $ appPropertyKey
+  <|> appPropertyToken
+  <|> appPropertyAddr
+  <|> appPropertyStartAddr
+  <|> appPropertyCtrl
 
 appPropertyKey :: Parser AppProperty
 appPropertyKey = Key <$> gaspPropertyStringLiteral "key"
@@ -34,6 +41,9 @@ appPropertyAddr = Addr <$> gaspPropertyStringLiteral "addr"
 appPropertyStartAddr :: Parser AppProperty
 appPropertyStartAddr = StartAddr . fromIntegral <$> gaspPropertyInteger "start_addr"
 
+appPropertyCtrl :: Parser AppProperty
+appPropertyCtrl = Ctrl <$> gaspPropertyBool "ctrl_mode"
+
 getAppKey :: [AppProperty] -> String
 getAppKey ps = head $ [t | Key t <- ps]
 
@@ -46,6 +56,9 @@ getAppAddr ps = fromMaybe "00000000" $ listToMaybe $ [t | Addr t <- ps]
 getAppStartAddr :: [AppProperty] -> Int
 getAppStartAddr ps = fromMaybe 0 $ listToMaybe $ [t | StartAddr t <- ps]
 
+getAppCtrl :: [AppProperty] -> Bool
+getAppCtrl ps = fromMaybe False $ listToMaybe $ [t | Ctrl t <- ps]
+
 -- | Top level parser, parses App.
 app :: Parser App.App
 app = do
@@ -57,4 +70,5 @@ app = do
         , App.appToken     = getAppToken appProps
         , App.appAddr      = getAppAddr appProps
         , App.appStartAddr = getAppStartAddr appProps
+        , App.appCtrl      = getAppCtrl appProps
         }

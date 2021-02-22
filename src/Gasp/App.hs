@@ -12,6 +12,7 @@ data App = App
   , appToken     :: !String
   , appAddr      :: !String
   , appStartAddr :: !Int
+  , appCtrl      :: !Bool
   } deriving (Show, Eq)
 
 instance ToJSON App where

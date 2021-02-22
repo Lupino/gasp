@@ -290,6 +290,7 @@ instance ToJSON Gasp where
         , "has_float"   .= (hasFloatAttr attrs || hasMetric)
         , "low_memory"  .= getLowMemory gasp
         , "consts"      .= getConstants gasp
+        , "ctrl_mode"   .= ctrlMode
         ]
         where gasp = prepareGasp (startAddr + addrLen) (getFlags gasp0) gasp0
               attrs = getAttrs gasp
@@ -311,3 +312,4 @@ instance ToJSON Gasp where
               contextLen = maybe 0 appContexLength app
               addrLen = maybe 0 (length . appAddr) app
               startAddr = maybe 0 appStartAddr app
+              ctrlMode = maybe False appCtrl app

@@ -43,22 +43,6 @@ unsigned long auth_timer_ms = 0;
 #define MAX_PING_FAILED 10
 #endif
 
-#ifndef REPORT_ATTR
-#define REPORT_ATTR 1
-#endif
-
-#ifndef REPORT_METRIC
-#define REPORT_METRIC 1
-#endif
-
-#ifndef AUTO_AUTH
-#define AUTO_AUTH 1
-#endif
-
-#ifndef AUTO_PING_PONG
-#define AUTO_PING_PONG 1
-#endif
-
 unsigned long pong_timer_ms = 0;
 unsigned long ping_timer_ms = 0;
 bool ponged = true;
@@ -120,7 +104,7 @@ unsigned long metric_timer_ms = 0;
 
 {=/ has_metric =}
 {=# use_eeprom =}
-bool requireReportAttribute = false;
+bool requireReportAttribute = true;
 bool requireReportMetric = true;
 
 {=/ use_eeprom =}
@@ -180,6 +164,7 @@ unsigned long get_current_time_ms();
 bool is_valid_float(float number, float min, float max);
 {=/ has_float =}
 {=# has_app =}
+void mainAction();
 bool is_valid_addr();
 void noop();
 void send_packet();
@@ -432,6 +417,12 @@ void loop() {
                 if (obj.type == SUCCESS) {
                     ponged = true;
                 }
+                if (obj.type == CTRLREQ) {
+                    {=# ctrl_mode =}
+                    mainAction();
+                    {=/ ctrl_mode =}
+                    send_packet_0(CTRLRES);
+                }
             }
             readedLen = 0;
         }
@@ -445,58 +436,18 @@ void loop() {
         }
     }
 
-    if (givelink_context_authed()) {
-        {=# use_eeprom =}
-        if (REPORT_ATTR) {
-            reportAttribute(requireReportAttribute);
-            if (requireReportAttribute) {
-                requireReportAttribute = false;
-            }
-        }
-        {=/ use_eeprom =}
-        {=# has_metric =}
-        if (REPORT_ATTR) {
-            if (metric_timer_ms + METRIC_DELAY_MS < get_current_time_ms()) {
-                requireReportMetric = true;
-            }
-            if (reportMetric(requireReportMetric)) {
-                metric_timer_ms = get_current_time_ms();
-                requireReportMetric = false;
-            }
-        }
-        {=/ has_metric =}
-
-        if (AUTO_PING_PONG) {
-            if (ping_timer_ms + PING_DELAY_MS < get_current_time_ms()) {
-                send_packet_0(PING);
-                ponged = false;
-                ping_timer_ms = get_current_time_ms();
-                pong_timer_ms = get_current_time_ms();
-            }
-
-            if (ponged) {
-                ping_failed = 0;
-            } else {
-                if (pong_timer_ms + PONG_DELAY_MS < get_current_time_ms()) {
-                    ping_failed += 1;
-                    pong_timer_ms = get_current_time_ms();
-
-                    if (ping_failed > MAX_PING_FAILED) {
-                        PING_FAILED_CB();
-                    }
-                }
-            }
-        }
-    } else {
+    if (!givelink_context_authed()) {
         {=# use_eeprom =}
         requireReportAttribute = true;
         {=/ use_eeprom =}
-        if (AUTO_AUTH) {
-            if (auth_timer_ms + AUTH_DELAY_MS < get_current_time_ms()) {
-                send_packet_0(AUTHREQ);
-                auth_timer_ms = get_current_time_ms();
-            }
+        if (auth_timer_ms + AUTH_DELAY_MS < get_current_time_ms()) {
+            send_packet_0(AUTHREQ);
+            auth_timer_ms = get_current_time_ms();
         }
+    {=^ ctrl_mode =}
+    } else {
+        mainAction();
+    {=/ ctrl_mode =}
     }
 
     {=/ has_app =}
@@ -563,6 +514,44 @@ bool is_valid_float(float number, float min, float max) {
 
 {=/ has_float =}
 {=# has_app =}
+void mainAction() {
+    {=# use_eeprom =}
+    reportAttribute(requireReportAttribute);
+    if (requireReportAttribute) {
+        requireReportAttribute = false;
+    }
+    {=/ use_eeprom =}
+    {=# has_metric =}
+    if (metric_timer_ms + METRIC_DELAY_MS < get_current_time_ms()) {
+        requireReportMetric = true;
+    }
+    if (reportMetric(requireReportMetric)) {
+        metric_timer_ms = get_current_time_ms();
+        requireReportMetric = false;
+    }
+    {=/ has_metric =}
+
+    if (ping_timer_ms + PING_DELAY_MS < get_current_time_ms()) {
+        send_packet_0(PING);
+        ponged = false;
+        ping_timer_ms = get_current_time_ms();
+        pong_timer_ms = get_current_time_ms();
+    }
+
+    if (ponged) {
+        ping_failed = 0;
+    } else {
+        if (pong_timer_ms + PONG_DELAY_MS < get_current_time_ms()) {
+            ping_failed += 1;
+            pong_timer_ms = get_current_time_ms();
+
+            if (ping_failed > MAX_PING_FAILED) {
+                PING_FAILED_CB();
+            }
+        }
+    }
+}
+
 bool is_valid_addr() {
     {=# app =}
     for (int i = 0; i < {= addr_len =}; i ++) {
