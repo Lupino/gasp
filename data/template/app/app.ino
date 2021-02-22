@@ -43,6 +43,22 @@ unsigned long auth_timer_ms = 0;
 #define MAX_PING_FAILED 10
 #endif
 
+#ifndef REPORT_ATTR
+#define REPORT_ATTR 1
+#endif
+
+#ifndef REPORT_METRIC
+#define REPORT_METRIC 1
+#endif
+
+#ifndef AUTO_AUTH
+#define AUTO_AUTH 1
+#endif
+
+#ifndef AUTO_PING_PONG
+#define AUTO_PING_PONG 1
+#endif
+
 unsigned long pong_timer_ms = 0;
 unsigned long ping_timer_ms = 0;
 bool ponged = true;
@@ -415,37 +431,43 @@ void loop() {
 
     if (givelink_authed()) {
         {=# use_eeprom =}
-        reportAttribute(requireReportAttribute);
-        if (requireReportAttribute) {
-            requireReportAttribute = false;
+        if (REPORT_ATTR) {
+            reportAttribute(requireReportAttribute);
+            if (requireReportAttribute) {
+                requireReportAttribute = false;
+            }
         }
         {=/ use_eeprom =}
         {=# has_metric =}
-        if (metric_timer_ms + METRIC_DELAY_MS < get_current_time_ms()) {
-            requireReportMetric = true;
-        }
-        if (reportMetric(requireReportMetric)) {
-            metric_timer_ms = get_current_time_ms();
-            requireReportMetric = false;
+        if (REPORT_ATTR) {
+            if (metric_timer_ms + METRIC_DELAY_MS < get_current_time_ms()) {
+                requireReportMetric = true;
+            }
+            if (reportMetric(requireReportMetric)) {
+                metric_timer_ms = get_current_time_ms();
+                requireReportMetric = false;
+            }
         }
         {=/ has_metric =}
 
-        if (ping_timer_ms + PING_DELAY_MS < get_current_time_ms()) {
-            send_packet_0(PING);
-            ponged = false;
-            ping_timer_ms = get_current_time_ms();
-            pong_timer_ms = get_current_time_ms();
-        }
-
-        if (ponged) {
-            ping_failed = 0;
-        } else {
-            if (pong_timer_ms + PONG_DELAY_MS < get_current_time_ms()) {
-                ping_failed += 1;
+        if (AUTO_PING_PONG) {
+            if (ping_timer_ms + PING_DELAY_MS < get_current_time_ms()) {
+                send_packet_0(PING);
+                ponged = false;
+                ping_timer_ms = get_current_time_ms();
                 pong_timer_ms = get_current_time_ms();
+            }
 
-                if (ping_failed > MAX_PING_FAILED) {
-                    PING_FAILED_CB();
+            if (ponged) {
+                ping_failed = 0;
+            } else {
+                if (pong_timer_ms + PONG_DELAY_MS < get_current_time_ms()) {
+                    ping_failed += 1;
+                    pong_timer_ms = get_current_time_ms();
+
+                    if (ping_failed > MAX_PING_FAILED) {
+                        PING_FAILED_CB();
+                    }
                 }
             }
         }
@@ -453,9 +475,11 @@ void loop() {
         {=# use_eeprom =}
         requireReportAttribute = true;
         {=/ use_eeprom =}
-        if (auth_timer_ms + AUTH_DELAY_MS < get_current_time_ms()) {
-            send_packet_0(AUTHREQ);
-            auth_timer_ms = get_current_time_ms();
+        if (AUTO_AUTH) {
+            if (auth_timer_ms + AUTH_DELAY_MS < get_current_time_ms()) {
+                send_packet_0(AUTHREQ);
+                auth_timer_ms = get_current_time_ms();
+            }
         }
     }
 
