@@ -7,6 +7,9 @@ module Gasp
     , setLowMemory
     , getLowMemory
 
+    , setStartAddr
+    , getStartAddr
+
     , module Gasp.Attr
     , module Gasp.Metric
 
@@ -38,6 +41,7 @@ data Gasp = Gasp
     { gaspExprs         :: ![Expr]
     , externalCodeFiles :: ![ExternalCode.File]
     , isLowMemory       :: !Bool
+    , startAddr         :: !Int
     } deriving (Show, Eq)
 
 data Expr
@@ -60,6 +64,7 @@ fromGaspExprs exprs = Gasp
     { gaspExprs = exprs
     , externalCodeFiles = []
     , isLowMemory = False
+    , startAddr = 0
     }
 
 setGaspExprs :: Gasp -> [Expr] -> Gasp
@@ -82,6 +87,14 @@ setLowMemory gasp lowMem = gasp { isLowMemory = lowMem }
 
 getLowMemory :: Gasp -> Bool
 getLowMemory = isLowMemory
+
+-- * Start Addr
+
+setStartAddr :: Gasp -> Int -> Gasp
+setStartAddr gasp addr = gasp { startAddr = addr }
+
+getStartAddr :: Gasp -> Int
+getStartAddr = startAddr
 
 -- * App
 
@@ -226,8 +239,8 @@ getMaxTmplLength :: Gasp -> Int
 getMaxTmplLength = maximum . map getTmplLength . gaspExprs
 
 
-prepareGasp :: [Flag] -> Gasp -> Gasp
-prepareGasp flags gasp = setGaspExprs gasp . go 1 1 $ gaspExprs gasp
+prepareGasp :: Int -> [Flag] -> Gasp -> Gasp
+prepareGasp sAddr flags gasp = setGaspExprs gasp . go 1 sAddr $ gaspExprs gasp
   where go :: Int -> Int -> [Expr] -> [Expr]
         go _ _ []        = []
         go ri addr (ExprAttr x:xs)
@@ -291,7 +304,7 @@ instance ToJSON Gasp where
         , "low_memory"  .= getLowMemory gasp
         , "consts"      .= getConstants gasp
         ]
-        where gasp = prepareGasp (getFlags gasp0) gasp0
+        where gasp = prepareGasp (getStartAddr gasp0) (getFlags gasp0) gasp0
               attrs = getAttrs gasp
               metrics = getMetrics gasp
               gpios = getGpios gasp

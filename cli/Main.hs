@@ -15,16 +15,13 @@ main :: IO ()
 main = do
     args <- getArgs
     case args of
-        ["new", projectName]        -> runCommand $ createNewProject projectName
-        ["clean"]                   -> runCommand clean
-        ["compile"]                 -> runCommand $ compile False False
-        ["syntax"]                  -> runCommand $ compile True False
-        ["compile", "--low-memory"] -> runCommand $ compile False True
-        ["syntax", "--low-memory"]  -> runCommand $ compile True True
-        ["watch"]                   -> runCommand $ compileAndWatch False
-        ["watch", "--low-memory"]   -> runCommand $ compileAndWatch True
-        ["version"]                 -> printVersion
-        _                           -> printUsage
+        ["new", projectName] -> runCommand $ createNewProject projectName
+        ["clean"]            -> runCommand clean
+        ("compile":xs)       -> runCommand $ compile False xs
+        ("syntax":xs)        -> runCommand $ compile True xs
+        ("watch":xs)         -> runCommand $ compileAndWatch xs
+        ["version"]          -> printVersion
+        _                    -> printUsage
 
 printUsage :: IO ()
 printUsage = putStrLn $ unlines
@@ -33,9 +30,9 @@ printUsage = putStrLn $ unlines
     , ""
     , "Commands:"
     , "  new <project-name>"
-    , "  syntax [--low-memory]"
-    , "  compile [--low-memory]"
-    , "  watch [--low-memory]"
+    , "  syntax [--low-memory] [--start-addr]"
+    , "  compile [--low-memory] [--start-addr] [--template PATH]"
+    , "  watch [--low-memory] [--start-addr] [--template PATH]"
     , "  clean"
     , "  version"
     , ""
