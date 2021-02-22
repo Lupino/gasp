@@ -330,8 +330,6 @@ consts:
   name: DEBUG_SERIAL
 - value: attr_delay
   name: METRIC_DELAY_MS
-- value: noop
-  name: PING_FAILED_CB
 app:
   key_len: 8
   token_hex_array: 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef

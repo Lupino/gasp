@@ -21,7 +21,23 @@ app dht {
 GL_SERIAL = Serial
 DEBUG_SERIAL = Serial
 METRIC_DELAY_MS = attr_delay
-PING_FAILED_CB = noop
+// PING_FAILED_CB = noop
+// AUTH_DELAY_MS = 1000
+// PONG_DELAY_MS = 6000
+// PING_DELAY_MS = 300000
+// PING_FAILED_CB = noop
+// MAX_PING_FAILED = 10
+// REPORT_ATTR = 1
+// REPORT_METRIC = 1
+// AUTO_AUTH = 1
+// AUTO_PING_PONG = 1
+// MAX_GL_PAYLOAD_LENGTH = {= max_gl_len =}
+// MAX_BUFFER_LENGTH = {= max_buf_len =}
+// MAX_NUM_TOKENS = 10
+// MAX_REQUEST_VALUE_LENGTH = {= max_req_len =}
+// MAX_TMPL_LENGTH = {= max_tpl_len =}
+// METRIC_DELAY_MS = 1800000
+// DEBOUNCE_DELAY_MS = 50
 
 setup do
     GL_SERIAL.begin(115200);
