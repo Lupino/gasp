@@ -18,12 +18,10 @@ app dht {
   token: "1234567890abcdef" // device_token
 }
 
-init do
-#define GL_SERIAL Serial
-#define DEBUG_SERIAL Serial
-#define METRIC_DELAY_MS attr_delay
-#define PING_FAILED_CB noop
-done
+GL_SERIAL = Serial
+DEBUG_SERIAL = Serial
+METRIC_DELAY_MS = attr_delay
+PING_FAILED_CB = noop
 
 setup do
     GL_SERIAL.begin(115200);

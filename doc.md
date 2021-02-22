@@ -8,6 +8,12 @@ app appName {
 }
 ```
 
+## Constant
+
+```
+name = value
+```
+
 ## init
 
 ```
@@ -317,6 +323,15 @@ attrs:
   gen_set: true
 max_tpl_len: 33
 has_input: true
+consts:
+- value: Serial
+  name: GL_SERIAL
+- value: Serial
+  name: DEBUG_SERIAL
+- value: attr_delay
+  name: METRIC_DELAY_MS
+- value: noop
+  name: PING_FAILED_CB
 app:
   key_len: 8
   token_hex_array: 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
@@ -392,11 +407,6 @@ functions:
   code: want_reboot = true;
 has_metric: true
 inits:
-- code: |-
-    #define GL_SERIAL Serial
-    #define DEBUG_SERIAL Serial
-    #define METRIC_DELAY_MS attr_delay
-    #define PING_FAILED_CB noop
 - code: |-
     #include <avr/wdt.h>
     bool want_reboot = false;

@@ -11,6 +11,9 @@
 {=# has_func =}
 #define RET_ERR -1
 #define RET_SUCC 0
+{=# consts =}
+#define {= name =} {= value =}
+{=/ consts =}
 
 {=/ has_func =}
 {=# inits =}

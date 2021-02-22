@@ -20,6 +20,7 @@ import qualified ExternalCode
 import           Gasp.App
 import           Gasp.Attr
 import           Gasp.Command
+import           Gasp.Constant
 import           Gasp.Every
 import           Gasp.Flag
 import           Gasp.Function
@@ -51,6 +52,7 @@ data Expr
     | ExprEvery !Every
     | ExprGpio !Gpio
     | ExprRule !Rule
+    | ExprConst !Constant
     deriving (Show, Eq)
 
 fromGaspExprs :: [Expr] -> Gasp
@@ -152,6 +154,11 @@ getEverys gasp = [every | (ExprEvery every) <- gaspExprs gasp]
 
 getRules:: Gasp -> [Rule]
 getRules gasp = [rule | (ExprRule rule) <- gaspExprs gasp]
+
+-- * Consts
+
+getConstants:: Gasp -> [Constant]
+getConstants gasp = [c | (ExprConst c) <- gaspExprs gasp]
 
 -- * Gpios
 
@@ -282,6 +289,7 @@ instance ToJSON Gasp where
         , "has_rule"    .= not (null rules)
         , "has_float"   .= (hasFloatAttr attrs || hasMetric)
         , "low_memory"  .= getLowMemory gasp
+        , "consts"      .= getConstants gasp
         ]
         where gasp = prepareGasp (getFlags gasp0) gasp0
               attrs = getAttrs gasp

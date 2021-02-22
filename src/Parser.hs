@@ -8,6 +8,7 @@ import           Parser.App         (app)
 import           Parser.Attr        (attr)
 import           Parser.Command     (command)
 import           Parser.Common      (runGaspParser)
+import           Parser.Constant    (constant)
 import           Parser.Every       (every)
 import           Parser.Function    (function)
 import           Parser.Gpio        (gpio)
@@ -32,6 +33,7 @@ expr
     <|> exprEvery
     <|> exprGpio
     <|> exprRule
+    <|> exprConst
 
 exprApp :: Parser Gasp.Expr
 exprApp = Gasp.ExprApp <$> app
@@ -66,6 +68,8 @@ exprGpio = Gasp.ExprGpio <$> gpio
 exprRule :: Parser Gasp.Expr
 exprRule = Gasp.ExprRule <$> rule
 
+exprConst :: Parser Gasp.Expr
+exprConst = Gasp.ExprConst <$> constant
 
 -- | Top level parser, produces Gasp.
 gaspParser :: Parser Gasp.Gasp
