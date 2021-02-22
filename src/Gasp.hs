@@ -292,7 +292,7 @@ instance ToJSON Gasp where
         , "consts"      .= getConstants gasp
         , "ctrl_mode"   .= ctrlMode
         ]
-        where gasp = prepareGasp (startAddr + addrLen) (getFlags gasp0) gasp0
+        where gasp = prepareGasp (startAddr + addrLen `div` 2) (getFlags gasp0) gasp0
               attrs = getAttrs gasp
               metrics = getMetrics gasp
               gpios = getGpios gasp
