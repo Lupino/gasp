@@ -122,11 +122,11 @@ getSetups gasp = [setup | (ExprSetup setup) <- gaspExprs gasp]
 getInits:: Gasp -> [Init]
 getInits gasp = [initv | (ExprInit initv) <- gaspExprs gasp]
 
-initDebug :: [Init] -> Bool
-initDebug [] = False
-initDebug (x:xs)
-  | hasToken "DEBUG_SERIAL" (initCode x) = True
-  | otherwise = initDebug xs
+constDebug :: [Constant] -> Bool
+constDebug [] = False
+constDebug (x:xs)
+  | constName x == "DEBUG_SERIAL" = True
+  | otherwise = constDebug xs
 
 -- * Attrs
 
@@ -285,11 +285,11 @@ instance ToJSON Gasp where
         , "has_gpio"    .= not (null gpios)
         , "has_func"    .= (hasFunc || useEeprom)
         , "has_input"   .= hasInput gpios
-        , "has_debug"   .= initDebug inits
+        , "has_debug"   .= constDebug consts
         , "has_rule"    .= not (null rules)
         , "has_float"   .= (hasFloatAttr attrs || hasMetric)
         , "low_memory"  .= getLowMemory gasp
-        , "consts"      .= getConstants gasp
+        , "consts"      .= consts
         , "ctrl_mode"   .= ctrlMode
         ]
         where gasp = prepareGasp (startAddr + addrLen `div` 2) (getFlags gasp0) gasp0
@@ -300,6 +300,7 @@ instance ToJSON Gasp where
               funcs = getFunctions gasp
               hasFunc = not (null funcs)
               inits = getInits gasp
+              consts = getConstants gasp
               hasMetric = not (null metrics)
               hasAttr = not (null attrs)
               useEeprom = hasMetric || hasAttr
