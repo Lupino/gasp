@@ -255,7 +255,7 @@ void setup() {
     for (int i = 0; i < {= addr_len =}; i ++) {
         addr[i] = EEPROM.read({= start_addr =} + i);
     }
-    if (is_valid_addr(addr)) {
+    if (is_valid_addr()) {
         givelink_context_set_addr(addr, {= addr_len =});
         givelink_context_set_auth(true);
     }
