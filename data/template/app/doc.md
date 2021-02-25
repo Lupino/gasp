@@ -146,38 +146,48 @@
 ## Custom commands
 
 {=# commands =}
+{=# docs =}
+### {= name =}
 
-{=^ has_doc =}
-
-### Command {= name =}
-
+{=# command =}
 @Command:
 
 ```json
-{
-    "method": "{= name =}"
-}
+{=& payload =}
 ```
+{=# has_doc =}
+{=# docs =}
+- {=& . =}
+{=/ docs =}
+{=/ has_doc =}
+{=/ command =}
 
+{=# return =}
 @Return:
 
 ```json
-{
-    "result": "OK"
-}
+{=& payload =}
 ```
+{=# has_doc =}
+{=# docs =}
+- {=& . =}
+{=/ docs =}
+{=/ has_doc =}
+{=/ return =}
 
+{=# error =}
 @Error:
 
 ```json
-{
-    "err": "{= error =}"
-}
+{=& payload =}
 ```
-{=/ has_doc =}
 {=# has_doc =}
-{=& doc =}
+{=# docs =}
+- {=& . =}
+{=/ docs =}
 {=/ has_doc =}
+{=/ error =}
+{=/ docs =}
 
 {=/ commands =}
 

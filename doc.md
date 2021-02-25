@@ -69,9 +69,21 @@ every funcName delay_ms
 command commandName {
     fn: funcName,
     error: "error info",
-    doc: do
-markdown doc
-done
+    docs: {
+        name: "docName",
+        command: {
+            docs: ["some doc"],
+            payload: {"method": "some method"}
+        },
+        return: {
+            docs: ["some doc"],
+            payload: {"some key": some_value}
+        },
+        error: {
+            docs: ["some doc"],
+            payload: {"err": "some error"}
+        }
+    }
 }
 ```
 
@@ -126,22 +138,48 @@ setups:
         wdt_disable();
         wdt_enable(WDTO_8S);
 commands:
-- doc: ''
-  error: only relay_mode is 1 can set this value
+- error: only relay_mode is 1 can set this value
   flag:
     json: true
     retval: true
   name: set_relay_state
-  has_doc: false
   fn: try_set_attr_relay_state
-- doc: ''
-  error: call reset_system failed
+  docs:
+    command:
+      payload: '{"method": "set_relay_state", "data": 0}'
+      has_doc: true
+      docs:
+      - data is between [0, 1]
+    return:
+      payload: '{"relay_state": 0}'
+      has_doc: true
+      docs:
+      - relay_state is between [0, 1]
+    error:
+      payload: '{"err": "only relay_mode is 1 can set this value"}'
+      has_doc: false
+      docs: []
+    name: Edit attribute relay_state
+- error: call reset_system failed
   flag:
     json: false
     retval: false
   name: reset_system
-  has_doc: false
   fn: reset_system
+  docs:
+    command:
+      payload: '{"method": "reset_system"}'
+      has_doc: false
+      docs: []
+    return:
+      payload: '{"result": "OK"}'
+      has_doc: false
+      docs: []
+    error:
+      payload: '{"err": "call reset_system failed"}'
+      has_doc: false
+      docs: []
+    name: Command reset_system
 loops:
 - code: |-
     wdt_reset();
@@ -152,7 +190,7 @@ metrics:
 - max: 100.0
   prec: 2
   min_threshold: 1
-  addr: 5
+  addr: 8
   width: 3
   max_threshold: 50.0
   name: temperature
@@ -233,7 +271,7 @@ attrs:
   scale: 1000.0
   default: 1800000.0
   keep: true
-  addr: 1
+  addr: 4
   width: 5
   scaled_min: 60000.0
   name: delay
@@ -261,7 +299,7 @@ attrs:
   scale: 1
   default: 0
   keep: true
-  addr: 9
+  addr: 12
   width: 1
   scaled_min: 0
   name: relay_mode
@@ -275,7 +313,7 @@ attrs:
   scale: 1
   default: 30.0
   keep: true
-  addr: 13
+  addr: 16
   width: 3
   scaled_min: 0
   name: high_temperature
@@ -289,7 +327,7 @@ attrs:
   scale: 1
   default: 20.0
   keep: true
-  addr: 17
+  addr: 20
   width: 3
   scaled_min: 0
   name: low_temperature
@@ -303,7 +341,7 @@ attrs:
   scale: 1000.0
   default: 5000.0
   keep: true
-  addr: 21
+  addr: 24
   width: 4
   scaled_min: 0
   name: open_delay
@@ -317,7 +355,7 @@ attrs:
   scale: 1000.0
   default: 5000.0
   keep: true
-  addr: 25
+  addr: 28
   width: 4
   scaled_min: 0
   name: close_delay

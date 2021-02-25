@@ -12,6 +12,7 @@ module Parser.Common
   , gaspElementNameAndClosure
   , gaspBlockClosure
   , gaspClosure
+  , gaspList
 
   , strip
   ) where
@@ -97,6 +98,8 @@ gaspBlockClosure = do
       closureStart = L.symbol "do"
       closureEnd = L.symbol "done"
 
+gaspList :: Parser a -> Parser [a]
+gaspList elementParser = L.brackets $ L.commaSep elementParser
 
 -- | Removes leading and trailing spaces from a string.
 strip :: String -> String

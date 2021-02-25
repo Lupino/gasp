@@ -1,19 +1,47 @@
 module Gasp.Command
     ( Command(..)
+    , DocItem (..)
+    , Doc (..)
     ) where
 
 import           Data.Aeson (ToJSON (..), object, (.=))
-import           Data.Text  (Text)
-import qualified Data.Text  as T (length)
 import           Gasp.Flag  (Flag)
 
+data DocItem = DocItem
+  { itemDocs :: [String]
+  , itemCmd  :: String
+  } deriving (Show, Eq)
+
+
+instance ToJSON DocItem where
+  toJSON di = object
+    [ "docs"    .= itemDocs di
+    , "payload" .= itemCmd di
+    , "has_doc" .= not (null $ itemDocs di)
+    ]
+
+data Doc = Doc
+  { docName :: String
+  , docCmd  :: DocItem
+  , docRet  :: DocItem
+  , docErr  :: DocItem
+  } deriving (Show, Eq)
+
+instance ToJSON Doc where
+  toJSON doc = object
+    [ "name"    .= docName doc
+    , "command" .= docCmd doc
+    , "return"  .= docRet doc
+    , "error"   .= docErr doc
+    ]
+
 data Command = Command
-    { cmdName :: !String -- Identifier
-    , cmdFunc :: !String
-    , cmdErrS :: !String
-    , cmdDocS :: !Text
-    , cmdFlag :: !Flag
-    } deriving (Show, Eq)
+  { cmdName :: !String -- Identifier
+  , cmdFunc :: !String
+  , cmdErrS :: !String
+  , cmdDocS :: !Doc
+  , cmdFlag :: !Flag
+  } deriving (Show, Eq)
 
 instance ToJSON Command where
     toJSON cmd = object
@@ -21,6 +49,5 @@ instance ToJSON Command where
         , "fn"      .= cmdFunc cmd
         , "flag"    .= cmdFlag cmd
         , "error"   .= cmdErrS cmd
-        , "doc"     .= cmdDocS cmd
-        , "has_doc" .= (T.length (cmdDocS cmd) > 0)
+        , "docs"    .= cmdDocS cmd
         ]

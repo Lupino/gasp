@@ -4,13 +4,13 @@
 {=# gen_set =}
 - name: Edit attribute {= name =}
   command:
-    doc:
+    docs:
     - data is between [{= min =}, {= max =}]
     payload:
       method: set_{= name =}
       data: {= min =}
   return:
-    doc:
+    docs:
     - {= name =} is between [{= min =}, {= max =}]
     payload:
       {= name =}: {= min =}
@@ -24,7 +24,7 @@
     payload:
       method: get_{= name =}
   return:
-    doc:
+    docs:
     - {= name =} is between [{= min =}, {= max =}]
     payload:
       {= name =}: {= min =}
@@ -32,13 +32,13 @@
 {=# metrics =}
 - name: Edit metric {= name =} report threshold
   command:
-    doc:
+    docs:
     - data is between [{= min_threshold =}, {= max_threshold =}]
     payload:
       method: set_{= name =}_threshold
       data: {= threshold =}
   return:
-    doc:
+    docs:
     - {= name =}_threshold is between [{= min_threshold =}, {= max_threshold =}]
     payload:
       {= name =}_threshold: {= threshold =}
@@ -50,7 +50,7 @@
     payload:
       method: get_{= name =}_threshold
   return:
-    doc:
+    docs:
     - {= name =}_threshold is between [{= min_threshold =}, {= max_threshold =}]
     payload:
       {= name =}_threshold: {= threshold =}
@@ -59,7 +59,7 @@
     payload:
       method: get_{= name =}
   return:
-    doc:
+    docs:
     - {= name =} is between [{= min =}, {= max =}]
     payload:
       {= name =}_threshold: {= min =}
@@ -68,27 +68,37 @@
       err: {= name =} is inviald
 {=/ metrics =}
 {=# commands =}
-
-{=^ has_doc =}
-- name: Command {= name =}
+{=# docs =}
+- name: {= name =}
+  {=# command =}
   command:
-    payload:
-      method: {= name =}
+    {=# has_doc =}
+    docs:
+    {=# docs =}
+    - {=& . =}
+    {=/ docs =}
+    {=/ has_doc =}
+    payload: {=& payload =}
+  {=/ command =}
+  {=# return =}
   return:
-    payload:
-      result: OK
+    {=# has_doc =}
+    docs:
+    {=# docs =}
+    - {=& . =}
+    {=/ docs =}
+    {=/ has_doc =}
+    payload: {=& payload =}
+  {=/ return =}
+  {=# error =}
   error:
-    payload:
-      err: {= error =}
-{=/ has_doc =}
-{=# has_doc =}
-- name: Command {= name =}
-  command:
-    payload:
-      method: {= name =}
-  error:
-    payload:
-      err: {= error =}
-{=/ has_doc =}
-
+    {=# has_doc =}
+    docs:
+    {=# docs =}
+    - {=& . =}
+    {=/ docs =}
+    {=/ has_doc =}
+    payload: {=& payload =}
+  {=/ error =}
+{=/ docs =}
 {=/ commands =}

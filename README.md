@@ -17,7 +17,8 @@ app dht {
   key: "1234567890abcdef",   // product_key
   token: "1234567890abcdef", // device_token
   addr: "00000000",
-  start_addr: 0
+  start_addr: 0,
+  ctrl_mode: false
 }
 
 GL_SERIAL = Serial
@@ -85,7 +86,21 @@ done
 
 command set_relay_state {
     fn: try_set_attr_relay_state,
-    error: "only relay_mode is 1 can set this value"
+    error: "only relay_mode is 1 can set this value",
+    docs: {
+        name: "Edit attribute relay_state",
+        command: {
+            docs: ["data is between [0, 1]"],
+            payload: {"method": "set_relay_state", "data": 0}
+        },
+        return: {
+            docs: ["relay_state is between [0, 1]"],
+            payload: {"relay_state": 0}
+        },
+        error: {
+            payload: {"err": "data must between: [0, 1]"}
+        }
+    }
 }
 
 // relay_mode 1 manual mode
@@ -137,7 +152,6 @@ attr close_delay {
   max: 3600,
   scale: 1000
 }
-
 rule metric_temperature < attr_high_temperature && metric_temperature > attr_low_temperature do later attr_open_delay open_gpio_relay else later attr_close_delay close_gpio_relay on attr_relay_mode == 0
 
 init do

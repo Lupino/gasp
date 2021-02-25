@@ -12,6 +12,7 @@ module Lexer
   , reservedNameGpio
   , reservedNameRule
   , braces
+  , brackets
   , symbol
   , bool
   , reserved
@@ -20,6 +21,7 @@ module Lexer
   , float
   , stringLiteral
   , whiteSpace
+  , commaSep
   , commaSep1
   , colon
   ) where
@@ -124,6 +126,12 @@ colon = Token.colon gaspLexer
 
 braces :: Parser a -> Parser a
 braces = Token.braces gaspLexer
+
+brackets :: Parser a -> Parser a
+brackets = Token.brackets gaspLexer
+
+commaSep :: Parser a -> Parser [a]
+commaSep = Token.commaSep gaspLexer
 
 commaSep1 :: Parser a -> Parser [a]
 commaSep1 = Token.commaSep1 gaspLexer
