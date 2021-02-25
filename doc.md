@@ -244,6 +244,17 @@ gpios:
   emit: LOW
   reverse: false
   fn: toggle_gpio_relay_mode
+- state: LOW
+  has_link: false
+  link: ''
+  close: LOW
+  open: HIGH
+  name: auth
+  pin: '9'
+  has_fn: true
+  emit: HIGH
+  reverse: false
+  fn: noop
 rules:
 - depends:
   - name: temperature
@@ -258,6 +269,18 @@ rules:
   condition: metric_temperature < attr_high_temperature && metric_temperature > attr_low_temperature
   else_later: attr_close_delay
   else_action: close_gpio_relay
+- depends: []
+  on_condition: givelink_context_authed()
+  has_else_later: false
+  has_later: true
+  action: emit_givelink_unauth
+  later: '2000'
+  has_on: true
+  has_else: true
+  id: 2
+  condition: gpio_auth_state == HIGH
+  else_later: ''
+  else_action: allow_emit_givelink_unauth
 actions:
 - delay_ms: 6000
   fn: read_dht
@@ -449,10 +472,31 @@ functions:
   has_argv: false
   argv: ''
   code: want_reboot = true;
+- return: false
+  flag:
+    json: false
+    retval: false
+  name: emit_givelink_unauth
+  has_argv: false
+  argv: ''
+  code: |-
+    if (can_emit_givelink_unauth) {
+            can_emit_givelink_unauth = false;
+            givelink_context_set_auth(false);
+        }
+- return: false
+  flag:
+    json: false
+    retval: false
+  name: allow_emit_givelink_unauth
+  has_argv: false
+  argv: ''
+  code: can_emit_givelink_unauth = true;
 has_metric: true
 inits:
 - code: |-
     #include <avr/wdt.h>
     bool want_reboot = false;
+- code: bool can_emit_givelink_unauth = false;
 
 ```
