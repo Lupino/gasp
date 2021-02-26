@@ -412,6 +412,9 @@ void loop() {
                             sprintf(wantSendData, FC(F("{\"err\": \"not support\"}")));
                         }
                     }
+                    {=# ctrl_mode =}
+                    mainAction();
+                    {=/ ctrl_mode =}
                     send_packet_rsp(wantSendData);
                 }
                 if (obj.type == SUCCESS) {
