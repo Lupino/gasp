@@ -7,6 +7,7 @@ module Gasp
     , setLowMemory
     , getLowMemory
 
+    , module Gasp.App
     , module Gasp.Attr
     , module Gasp.Metric
 
@@ -57,9 +58,9 @@ data Expr
 
 fromGaspExprs :: [Expr] -> Gasp
 fromGaspExprs exprs = Gasp
-    { gaspExprs = exprs
+    { gaspExprs         = exprs
     , externalCodeFiles = []
-    , isLowMemory = False
+    , isLowMemory       = False
     }
 
 setGaspExprs :: Gasp -> [Expr] -> Gasp
@@ -77,6 +78,7 @@ setExternalCodeFiles :: Gasp -> [ExternalCode.File] -> Gasp
 setExternalCodeFiles wasp files = wasp { externalCodeFiles = files }
 
 -- * Low Memory
+
 setLowMemory :: Gasp -> Bool -> Gasp
 setLowMemory gasp lowMem = gasp { isLowMemory = lowMem }
 

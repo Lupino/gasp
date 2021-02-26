@@ -61,6 +61,7 @@ library:
     - regex-tdfa
     - utf8-string
     - yaml
+    - uuid
 
 executables:
   gasp:

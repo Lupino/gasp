@@ -8,11 +8,14 @@ import           CompileOptions        (CompileOptions)
 import qualified CompileOptions
 import           Control.Monad         (unless)
 import qualified Data.ByteString.Char8 as BC (putStrLn)
+import           Data.UUID             (toString)
+import           Data.UUID.V4          (nextRandom)
 import           Data.Yaml             (encode)
 import qualified ExternalCode
-import           Gasp                  (Attr (..), Expr (..), Gasp, Metric (..),
-                                        getGaspExprs, setExternalCodeFiles,
-                                        setGaspExprs, setLowMemory)
+import           Gasp                  (App (..), Attr (..), Expr (..), Gasp,
+                                        Metric (..), getGaspExprs,
+                                        setExternalCodeFiles, setGaspExprs,
+                                        setLowMemory)
 import           Generator             (writeAppCode)
 import           Generator.Common      (ProjectRootDir)
 import           Generator.Template    (TemplateDir)
@@ -104,6 +107,10 @@ preprocessGasp gasp = setGaspExprs gasp <$> mapM mapFunc (getGaspExprs gasp)
             ]
           return $ ExprMetric x {metricThreshold = defv}
           where (valid, defv) = getCenterValue (metricMinThreshold x, metricMaxThreshold x) (metricThreshold x)
+
+        mapFunc (ExprApp app@App{appToken=""}) = do
+          token <-  filter (/='-') . toString <$> nextRandom
+          return $ ExprApp app {appToken = token}
         mapFunc v             = return v
 
 getCenterValue :: (Ord a) => (a, a) -> a -> (Bool, a)

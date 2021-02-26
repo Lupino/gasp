@@ -48,7 +48,7 @@ getAppKey :: [AppProperty] -> String
 getAppKey ps = head $ [t | Key t <- ps]
 
 getAppToken :: [AppProperty] -> String
-getAppToken ps = head $ [t | Token t <- ps]
+getAppToken ps = fromMaybe "" $ listToMaybe $ [t | Token t <- ps]
 
 getAppAddr :: [AppProperty] -> String
 getAppAddr ps = fromMaybe "00000000" $ listToMaybe $ [t | Addr t <- ps]

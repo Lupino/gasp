@@ -41,7 +41,7 @@ createNewProject projectName = do
       mainGaspFileContent = unlines
           [ "app %s {" `printf` projectName
           , "  key: \"1234567890abcdef\","
-          , "  token: \"1234567890abcdef\","
+          , "  token: \"1234567890abcdef\", // commit when you use an random token"
           , "  addr: \"00000000\","
           , "  start_addr: 0,"
           , "  ctrl_mode: false"
