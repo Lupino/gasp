@@ -614,6 +614,7 @@ void send_packet() {
     }
     GL_SERIAL.write('\r');
     GL_SERIAL.write('\n');
+    GL_SERIAL.flush();
 }
 
 void send_packet_0(const uint8_t type) {
