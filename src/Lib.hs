@@ -13,9 +13,9 @@ import           Data.UUID.V4          (nextRandom)
 import           Data.Yaml             (encode)
 import qualified ExternalCode
 import           Gasp                  (App (..), Attr (..), Expr (..), Gasp,
-                                        Metric (..), getGaspExprs,
+                                        Metric (..), getGaspExprs, getProd,
                                         setExternalCodeFiles, setGaspExprs,
-                                        setLowMemory)
+                                        setLowMemory, setProd)
 import           Generator             (writeAppCode)
 import           Generator.Common      (ProjectRootDir)
 import           Generator.Template    (TemplateDir)
@@ -110,8 +110,8 @@ preprocessGasp gasp = setGaspExprs gasp <$> mapM mapFunc (getGaspExprs gasp)
 
         mapFunc (ExprApp app@App{appToken=""}) = do
           token <-  filter (/='-') . toString <$> nextRandom
-          return $ ExprApp app {appToken = token}
-        mapFunc v             = return v
+          return $ ExprApp app {appToken = token, appProd = getProd gasp}
+        mapFunc v = return v
 
 getCenterValue :: (Ord a) => (a, a) -> a -> (Bool, a)
 getCenterValue (minv, maxv) defv =
@@ -127,4 +127,5 @@ enrichGaspASTBasedOnCompileOptions :: Gasp -> CompileOptions -> IO Gasp
 enrichGaspASTBasedOnCompileOptions gasp options = do
     externalCodeFiles <- ExternalCode.readFiles (CompileOptions.externalCodeDirPath options)
     return (gasp `setExternalCodeFiles` externalCodeFiles
-                 `setLowMemory` CompileOptions.lowMemory options)
+                 `setLowMemory` CompileOptions.lowMemory options
+                 `setProd` CompileOptions.isProd options)

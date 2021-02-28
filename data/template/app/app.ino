@@ -71,8 +71,14 @@ givelink_context_t ctx;
 {=# app =}
 uint8_t ctx_buff[{= context_len =}];
 const uint8_t key[{= key_len =}] = {{= key_hex_array =}};
-const uint8_t token[{= token_len =}] = {{= token_hex_array =}};
+{=# production =}
+uint8_t token[{= token_len =}];
+uint8_t addr[{= addr_len =}];
+{=/ production =}
+{=^ production =}
+uint8_t token[{= token_len =}] = {{= token_hex_array =}};
 uint8_t addr[{= addr_len =}] = {{= addr_hex_array =}};
+{=/ production =}
 {=/ app =}
 
 givelink_t obj;
@@ -252,13 +258,18 @@ void setup() {
     givelink_context_set_key(key, {= key_len =});
     givelink_context_set_token(token, {= token_len =});
     givelink_init(&obj, obj_buff);
+    {=# production =}
+    for (int i = 0; i < {= token_len =}; i ++) {
+        token[i] = EEPROM.read({= token_addr =} + i);
+    }
     for (int i = 0; i < {= addr_len =}; i ++) {
-        addr[i] = EEPROM.read({= start_addr =} + i);
+        addr[i] = EEPROM.read({= addr_addr =} + i);
     }
     if (is_valid_addr()) {
         givelink_context_set_addr(addr, {= addr_len =});
         givelink_context_set_auth(true);
     }
+    {=/ production =}
     {=/ app =}
 
     {=/ has_app =}
@@ -396,11 +407,13 @@ void loop() {
 
                 {=/ has_debug =}
                 if (obj.type == AUTHRES) {
+                    {=# production =}
                     {=# app =}
                     for (int i = 0; i < {= addr_len =}; i ++) {
-                        EEPROM.write({= start_addr =} + i, obj.data[i]);
+                        EEPROM.write({= addr_addr =} + i, obj.data[i]);
                     }
                     {=/ app =}
+                    {=/ production =}
                 }
                 if (obj.type == REQUEST) {
                     wantSendData[0] = '\0';

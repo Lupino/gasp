@@ -6,6 +6,8 @@ module Gasp
     , getGaspExprs
     , setLowMemory
     , getLowMemory
+    , setProd
+    , getProd
 
     , module Gasp.App
     , module Gasp.Attr
@@ -39,6 +41,7 @@ data Gasp = Gasp
     { gaspExprs         :: ![Expr]
     , externalCodeFiles :: ![ExternalCode.File]
     , isLowMemory       :: !Bool
+    , isProd            :: !Bool
     } deriving (Show, Eq)
 
 data Expr
@@ -61,6 +64,7 @@ fromGaspExprs exprs = Gasp
     { gaspExprs         = exprs
     , externalCodeFiles = []
     , isLowMemory       = False
+    , isProd            = False
     }
 
 setGaspExprs :: Gasp -> [Expr] -> Gasp
@@ -84,6 +88,14 @@ setLowMemory gasp lowMem = gasp { isLowMemory = lowMem }
 
 getLowMemory :: Gasp -> Bool
 getLowMemory = isLowMemory
+
+-- * Production
+
+setProd :: Gasp -> Bool -> Gasp
+setProd gasp prod = gasp { isProd = prod }
+
+getProd :: Gasp -> Bool
+getProd = isProd
 
 -- * App
 
@@ -293,8 +305,9 @@ instance ToJSON Gasp where
         , "low_memory"  .= getLowMemory gasp
         , "consts"      .= consts
         , "ctrl_mode"   .= ctrlMode
+        , "production"  .= getProd gasp
         ]
-        where gasp = prepareGasp (startAddr + addrLen `div` 2) (getFlags gasp0) gasp0
+        where gasp = prepareGasp (maybe 0 startAddr app) (getFlags gasp0) gasp0
               attrs = getAttrs gasp
               metrics = getMetrics gasp
               gpios = getGpios gasp
@@ -312,7 +325,5 @@ instance ToJSON Gasp where
               maxTmplLen = getMaxTmplLength gasp
               bufLen0 = getTotalMetricThresholdLength (getTotalAttrLength 0 attrs) metrics
               bufLen = if getLowMemory gasp then max maxCmdLen maxTmplLen else max maxCmdLen bufLen0
-              contextLen = maybe 0 appContexLength app
-              addrLen = maybe 0 (length . appAddr) app
-              startAddr = maybe 0 appStartAddr app
+              contextLen = maybe 0 appContexLen app
               ctrlMode = maybe False appCtrl app

@@ -1,6 +1,8 @@
 module Gasp.App
-    ( App(..)
-    , appContexLength
+    ( App (..)
+    , appContexLen
+    , appTokenLen
+    , startAddr
     ) where
 
 import           Data.Aeson (ToJSON (..), object, (.=))
@@ -13,30 +15,28 @@ data App = App
   , appAddr      :: !String
   , appStartAddr :: !Int
   , appCtrl      :: !Bool
+  , appProd      :: !Bool
   } deriving (Show, Eq)
 
 instance ToJSON App where
     toJSON app = object
       [ "name"           .= appName app
       , "key"            .= key
-      , "key_len"        .= keyLen
+      , "key_len"        .= appKeyLen app
       , "key_hex_array"  .= hexArray (toHex key)
       , "token"          .= token
-      , "token_len"      .= tokenLen
+      , "token_addr"     .= appStartAddr app
+      , "token_len"      .= appTokenLen app
       , "token_hex_array".= hexArray (toHex token)
-      , "start_addr"     .= appStartAddr app
+      , "addr_addr"      .= (appStartAddr app + appTokenLen app)
       , "addr"           .= addr
-      , "addr_len"       .= addrLen
+      , "addr_len"       .= appAddrLen app
       , "addr_hex_array" .= hexArray (toHex addr)
-      , "context_len"    .= contextLen
+      , "context_len"    .= appContexLen app
       ]
       where key        = appKey app
             token      = appToken app
-            keyLen     = length key `div` 2
-            tokenLen   = length token `div` 2
             addr       = appAddr app
-            addrLen    = length addr `div` 2
-            contextLen = 4 + 1 + keyLen + 1 + tokenLen + 4 + 1 + addrLen + 1
 
 
 toHex :: String -> [String]
@@ -49,12 +49,31 @@ hexArray []     = []
 hexArray [x]    = "0x" ++ x
 hexArray (x:xs) = "0x" ++ x ++ ", " ++ hexArray xs
 
-appContexLength :: App -> Int
-appContexLength app = contextLen
-  where key = appKey app
-        token = appToken app
-        keyLen = length key `div` 2
-        tokenLen = length token `div` 2
-        addr = appAddr app
-        addrLen = length addr `div` 2
-        contextLen = 4 + 1 + keyLen + 1 + tokenLen + 4 + 1 + addrLen + 1
+hexLength :: String -> Int
+hexLength = (`div` 2) . length
+
+appTokenLen :: App -> Int
+appTokenLen = hexLength . appToken
+
+appKeyLen :: App -> Int
+appKeyLen = hexLength . appKey
+
+appAddrLen :: App -> Int
+appAddrLen = hexLength . appAddr
+
+magicLen :: Int
+magicLen = 4
+
+appContexLen :: App -> Int
+appContexLen app =
+  magicLen
+  + 1 + appKeyLen app
+  + 1 + appTokenLen app
+  + magicLen
+  + 1 + appAddrLen app
+  + 1
+
+startAddr :: App -> Int
+startAddr app =
+  if appProd app then appStartAddr app + appTokenLen app + appAddrLen app
+                 else appStartAddr app

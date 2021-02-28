@@ -71,4 +71,5 @@ app = do
         , App.appAddr      = getAppAddr appProps
         , App.appStartAddr = getAppStartAddr appProps
         , App.appCtrl      = getAppCtrl appProps
+        , App.appProd      = False
         }
