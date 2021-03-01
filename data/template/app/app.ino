@@ -85,6 +85,7 @@ givelink_t obj;
 uint8_t obj_buff[MAX_BUFFER_LENGTH];
 
 uint16_t lastPayloadId = 0;
+uint16_t rspId = 0;
 uint16_t readedLen = 0;
 uint8_t  readedPayload[MAX_GL_PAYLOAD_LENGTH];
 {=^ low_memory =}
@@ -427,6 +428,7 @@ void loop() {
                             sprintf(wantSendData, FC(F("{\"err\": \"not support\"}")));
                         }
                     }
+                    rspId = obj.id;
                     {=# ctrl_mode =}
                     mainAction();
                     {=/ ctrl_mode =}
@@ -631,6 +633,8 @@ void send_packet_1(const uint8_t type, const char *data) {
 }
 
 void send_packet_rsp(const char *data) {
+    givelink_reset();
+    givelink_set_id(rspId);
     givelink_set_type(RESPONSE);
     givelink_set_data((const uint8_t*)wantSendData, strlen(data));
     send_packet();
