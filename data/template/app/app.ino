@@ -256,12 +256,13 @@ void setup() {
     {=# app =}
     givelink_context_init(&ctx, ctx_buff);
     givelink_context_set_key(key, {= key_len =});
-    givelink_context_set_token(token, {= token_len =});
-    givelink_init(&obj, obj_buff);
     {=# production =}
     for (int i = 0; i < {= token_len =}; i ++) {
         token[i] = EEPROM.read({= token_addr =} + i);
     }
+    {=/ production =}
+    givelink_context_set_token(token, {= token_len =});
+    {=# production =}
     for (int i = 0; i < {= addr_len =}; i ++) {
         addr[i] = EEPROM.read({= addr_addr =} + i);
     }
@@ -270,6 +271,7 @@ void setup() {
         givelink_context_set_auth(true);
     }
     {=/ production =}
+    givelink_init(&obj, obj_buff);
     {=/ app =}
 
     {=/ has_app =}
