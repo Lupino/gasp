@@ -14,6 +14,7 @@ import qualified System.FilePath         as FP
 import           Command.Compile         (compile, compileIO, compileOptions)
 import           Common                  (gaspSays)
 import qualified Common
+import           CompileOptions          (CompileType (..))
 import           Control.Monad.IO.Class  (liftIO)
 import           StrongPath              (Abs, Dir, Path)
 import qualified StrongPath              as SP
@@ -21,8 +22,8 @@ import qualified StrongPath              as SP
 
 compileAndWatch :: [String] -> Command ()
 compileAndWatch argv = do
-  (gaspProjectDir, options) <- compileOptions False argv
-  compile False argv
+  (gaspProjectDir, options) <- compileOptions Compile argv
+  compile Compile argv
   liftIO $ watch gaspProjectDir options
 
 

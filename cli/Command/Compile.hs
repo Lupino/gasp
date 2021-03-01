@@ -8,8 +8,9 @@ import           Command                (Command, CommandError (..))
 import           Command.Common         (findGaspProjectRootDirFromCwd,
                                          findGaspTemplateDir, gaspSaysC)
 import qualified Common
-import           CompileOptions         (CompileOptions (..))
-import           Control.Monad          (unless)
+import           CompileOptions         (CompileOptions (..), CompileType,
+                                         isCompile)
+import           Control.Monad          (when)
 import           Control.Monad.Except   (throwError)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.List              (find, isSuffixOf)
@@ -21,14 +22,14 @@ import qualified StrongPath             as SP
 import qualified Util.IO
 
 
-compile :: Bool -> [String] -> Command ()
-compile syntaxTree argv = do
-  (gaspProjectDir, options) <- compileOptions syntaxTree argv
-  unless syntaxTree $ gaspSaysC "Compiling gasp code..."
+compile :: CompileType -> [String] -> Command ()
+compile ctp argv = do
+  (gaspProjectDir, options) <- compileOptions ctp argv
+  when (isCompile ctp) $ gaspSaysC "Compiling gasp code..."
   compilationResult <- liftIO $ compileIO gaspProjectDir options
   case compilationResult of
       Left compileError -> throwError $ CommandError $ "Compilation failed: " ++ compileError
-      Right () -> unless syntaxTree $ gaspSaysC "Code has been successfully compiled, project has been generated.\n"
+      Right () -> when (isCompile ctp) $ gaspSaysC "Code has been successfully compiled, project has been generated.\n"
 
 -- | Compiles Gasp source code in gaspProjectDir directory and generates a project
 --   in given outDir directory.
@@ -48,17 +49,17 @@ compileIO gaspProjectDir options = do
     isGaspFile path = ".gasp" `isSuffixOf` P.toFilePath path
                       && (length (P.toFilePath path) > length (".gasp" :: String))
 
-compileOptions :: Bool -> [String] -> Command (Path Abs (Dir Common.GaspProjectDir), CompileOptions)
-compileOptions syntaxTree argv = do
+compileOptions :: CompileType -> [String] -> Command (Path Abs (Dir Common.GaspProjectDir), CompileOptions)
+compileOptions ctp argv = do
   gaspProjectDir <- findGaspProjectRootDirFromCwd
   gaspTemplateDir <- findGaspTemplateDir gaspProjectDir
   return (gaspProjectDir , parseCompileOptions CompileOptions
     { externalCodeDirPath = gaspProjectDir </> Common.extCodeDirInGaspProjectDir
-    , showSyntaxTree = syntaxTree
-    , projectRootDir = gaspProjectDir </> Common.buildGaspDirInGaspProjectDir
-    , templateDir    = gaspTemplateDir
-    , lowMemory      = False
-    , isProd         = False
+    , compileType         = ctp
+    , projectRootDir      = gaspProjectDir </> Common.buildGaspDirInGaspProjectDir
+    , templateDir         = gaspTemplateDir
+    , lowMemory           = False
+    , isProd              = False
     } argv)
 
 parseCompileOptions :: CompileOptions -> [String] -> CompileOptions

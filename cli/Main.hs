@@ -9,6 +9,7 @@ import           Command.Clean            (clean)
 import           Command.Compile          (compile)
 import           Command.CreateNewProject (createNewProject)
 import           Command.Watch            (compileAndWatch)
+import           CompileOptions           (CompileType (..))
 
 
 main :: IO ()
@@ -17,8 +18,9 @@ main = do
     case args of
         ["new", projectName] -> runCommand $ createNewProject projectName
         ["clean"]            -> runCommand clean
-        ("compile":xs)       -> runCommand $ compile False xs
-        ("syntax":xs)        -> runCommand $ compile True xs
+        ("compile":xs)       -> runCommand $ compile Compile xs
+        ("syntax":xs)        -> runCommand $ compile Syntax xs
+        ("eeprom":xs)        -> runCommand $ compile Eeprom xs
         ("watch":xs)         -> runCommand $ compileAndWatch xs
         ["version"]          -> printVersion
         _                    -> printUsage
@@ -31,6 +33,7 @@ printUsage = putStrLn $ unlines
     , "Commands:"
     , "  new <project-name>"
     , "  syntax [--low-memory] [--production]"
+    , "  eeprom [--production]"
     , "  compile [--low-memory] [--template PATH] [--production]"
     , "  watch [--low-memory] [--template PATH] [--production]"
     , "  clean"

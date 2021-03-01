@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 736d8d41619032d437788623ce8d708fa6a5fb4c54944f22958429cf3323a288
+-- hash: bab8fbe1ac86ebad2f86556ac288f8f8bbc7c2751ccb5c3b2059529c201aced1
 
 name:           gasp
 version:        0.1.0.0
@@ -89,12 +89,14 @@ library
       aeson
     , async
     , base >=4.7 && <5
+    , binary
     , bytestring
     , conduit
     , conduit-extra
     , directory
     , exceptions
     , filepath
+    , hexstring
     , mustache
     , parsec
     , path

@@ -4,25 +4,28 @@ module Lib
     , TemplateDir
     ) where
 
-import           CompileOptions        (CompileOptions)
+import           CompileOptions             (CompileOptions, CompileType (..))
 import qualified CompileOptions
-import           Control.Monad         (unless)
-import qualified Data.ByteString.Char8 as BC (putStrLn)
-import           Data.UUID             (toString)
-import           Data.UUID.V4          (nextRandom)
-import           Data.Yaml             (encode)
+import           Control.Monad              (unless)
+import qualified Data.Binary                as Bin (encode)
+import qualified Data.ByteString.Char8      as BC (putStrLn)
+import qualified Data.ByteString.Lazy.Char8 as BL (putStrLn)
+import           Data.UUID                  (toString)
+import           Data.UUID.V4               (nextRandom)
+import           Data.Yaml                  (encode)
 import qualified ExternalCode
-import           Gasp                  (App (..), Attr (..), Expr (..), Gasp,
-                                        Metric (..), getGaspExprs, getProd,
-                                        setExternalCodeFiles, setGaspExprs,
-                                        setLowMemory, setProd)
-import           Generator             (writeAppCode)
-import           Generator.Common      (ProjectRootDir)
-import           Generator.Template    (TemplateDir)
-import           Parser                (parseGasp)
-import           StrongPath            (Abs, File, Path, toFilePath)
-import           Text.Printf           (printf)
-import qualified Util.Terminal         as Term
+import           Gasp                       (App (..), Attr (..), Expr (..),
+                                             Gasp, Metric (..), getGaspExprs,
+                                             getProd, setExternalCodeFiles,
+                                             setGaspExprs, setLowMemory,
+                                             setProd)
+import           Generator                  (writeAppCode)
+import           Generator.Common           (ProjectRootDir)
+import           Generator.Template         (TemplateDir)
+import           Parser                     (parseGasp)
+import           StrongPath                 (Abs, File, Path, toFilePath)
+import           Text.Printf                (printf)
+import qualified Util.Terminal              as Term
 
 
 type CompileError = String
@@ -38,10 +41,11 @@ compile gaspFile options = do
         Left err    -> return $ Left (show err)
         Right gasp ->
           enrichGaspASTBasedOnCompileOptions gasp options
-            >>= preprocessGasp >>= generateCode (CompileOptions.showSyntaxTree options)
+            >>= preprocessGasp >>= generateCode (CompileOptions.compileType options)
   where
-    generateCode False gasp = writeAppCode gasp outDir tempDir >> return (Right ())
-    generateCode True gasp  = BC.putStrLn (encode gasp) >> return (Right ())
+    generateCode Compile gasp = writeAppCode gasp outDir tempDir >> return (Right ())
+    generateCode Syntax gasp  = BC.putStrLn (encode gasp) >> return (Right ())
+    generateCode Eeprom gasp  = BL.putStrLn (Bin.encode gasp) >> return (Right ())
     outDir = CompileOptions.projectRootDir options
     tempDir = CompileOptions.templateDir options
 

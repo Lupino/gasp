@@ -17,8 +17,13 @@ module Gasp
     , getExternalCodeFiles
     ) where
 
-import           Data.Aeson    (ToJSON (..), object, (.=))
-import           Data.Maybe    (isJust)
+import           Data.Aeson            (ToJSON (..), object, (.=))
+import           Data.Binary           (Binary (..))
+import           Data.Binary.Put       (Put, putByteString, putFloatle,
+                                        putInt32le)
+import           Data.ByteString.Char8 as BC (pack)
+import           Data.HexString        (hexString, toBytes)
+import           Data.Maybe            (isJust)
 import qualified ExternalCode
 import           Gasp.App
 import           Gasp.Attr
@@ -327,3 +332,23 @@ instance ToJSON Gasp where
               bufLen = if getLowMemory gasp then max maxCmdLen maxTmplLen else max maxCmdLen bufLen0
               contextLen = maybe 0 appContexLen app
               ctrlMode = maybe False appCtrl app
+
+putExpr :: Expr -> Put
+putExpr (ExprAttr x)
+  | attrKeep x && isFloatAttr x = putFloatle . realToFrac $ attrDef x * attrScale x
+  | attrKeep x = putInt32le . floor $ attrDef x * attrScale x
+  | otherwise  = return ()
+putExpr (ExprMetric x) = putFloatle . realToFrac $ metricThreshold x
+putExpr _ = return ()
+
+instance Binary Gasp where
+  get = error "not implement"
+  put gasp@Gasp {isProd=True, gaspExprs=exprs} = do
+    putByteString $ toBytes $ hexString $ BC.pack token
+    putByteString $ toBytes $ hexString $ BC.pack addr
+    mapM_ putExpr exprs
+    where app = getApp gasp
+          token = maybe "1234567890ABCDEF" appToken app
+          addr = maybe "00000000" appAddr app
+
+  put Gasp {gaspExprs=exprs} = mapM_ putExpr exprs
