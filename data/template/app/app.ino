@@ -438,6 +438,13 @@ void loop() {
                     {=/ ctrl_mode =}
                     send_packet_0(CTRLRES);
                 }
+                if (obj.type == CTRLREQ1) {
+                    send_packet_0(PING);
+                    {=# ctrl_mode =}
+                    mainAction();
+                    {=/ ctrl_mode =}
+                    send_packet_0(CTRLRES);
+                }
             }
             readedLen = 0;
         }
