@@ -15,7 +15,6 @@ data App = App
   , appAddr      :: !String
   , appStartAddr :: !Int
   , appCtrl      :: !Bool
-  , appProd      :: !Bool
   } deriving (Show, Eq)
 
 instance ToJSON App where
@@ -73,7 +72,6 @@ appContexLen app =
   + 1 + appAddrLen app
   + 1
 
-startAddr :: App -> Int
-startAddr app =
-  if appProd app then appStartAddr app + appTokenLen app + appAddrLen app
-                 else appStartAddr app
+startAddr :: Bool -> App -> Int
+startAddr True app  = appStartAddr app + appTokenLen app + appAddrLen app
+startAddr False app = appStartAddr app

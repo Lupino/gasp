@@ -310,9 +310,10 @@ instance ToJSON Gasp where
         , "low_memory"  .= getLowMemory gasp
         , "consts"      .= consts
         , "ctrl_mode"   .= ctrlMode
-        , "production"  .= getProd gasp
+        , "production"  .= prod
         ]
-        where gasp = prepareGasp (maybe 0 startAddr app) (getFlags gasp0) gasp0
+        where gasp = prepareGasp (maybe 0 (startAddr prod) app) (getFlags gasp0) gasp0
+              prod = getProd gasp0
               attrs = getAttrs gasp
               metrics = getMetrics gasp
               gpios = getGpios gasp

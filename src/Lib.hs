@@ -114,7 +114,7 @@ preprocessGasp gasp = setGaspExprs gasp <$> mapM mapFunc (getGaspExprs gasp)
 
         mapFunc (ExprApp app@App{appToken=""}) = do
           token <-  filter (/='-') . toString <$> nextRandom
-          return $ ExprApp app {appToken = token, appProd = getProd gasp}
+          return $ ExprApp app {appToken = token}
         mapFunc v = return v
 
 getCenterValue :: (Ord a) => (a, a) -> a -> (Bool, a)
