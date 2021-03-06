@@ -36,6 +36,7 @@ instance ToJSON Attr where
         , "type"       .= attrType   attr
         , "is_float"   .= isFloatAttr attr
         , "uncheckmin" .= (isUnsigned (attrType attr) && attrMin attr == 0)
+        , "onebyte"    .= (getAttrDataLength attr == 1)
         , "gen_set"    .= attrGenSet attr
         , "default"    .= (attrDef   attr * attrScale attr)
         , "width"      .= calcAttrWidth attr

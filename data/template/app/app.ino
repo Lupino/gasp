@@ -278,7 +278,12 @@ void setup() {
     {=# use_eeprom =}
     {=# attrs =}
     {=# keep =}
+    {=# onebyte =}
+    attr_{= name =} = EEPROM.read({= addr =});
+    {=/ onebyte =}
+    {=^ onebyte =}
     EEPROM.get({= addr =}, attr_{= name =});
+    {=/ onebyte =}
     {=# is_float =}
     if (!is_valid_float(attr_{= name =}, {= scaled_min =}, {= scaled_max =})) {
     {=/ is_float =}
@@ -715,7 +720,12 @@ void merge_json(char *dst, char *src, int *total_length) {
 void set_attr_{= name =}_raw({= type =} unscaled_value) {
     attr_{= name =} = unscaled_value * {= scale =};
     {=# keep =}
+    {=# onebyte =}
+    EEPROM.write({= addr =}, attr_{= name =});
+    {=/ onebyte =}
+    {=^ onebyte =}
     EEPROM.put({= addr =}, attr_{= name =});
+    {=/ onebyte =}
     {=/ keep =}
 }
 
