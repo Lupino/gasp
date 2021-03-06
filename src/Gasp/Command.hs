@@ -2,6 +2,7 @@ module Gasp.Command
     ( Command(..)
     , DocItem (..)
     , Doc (..)
+    , getCmdRspLength
     ) where
 
 import           Data.Aeson (ToJSON (..), object, (.=))
@@ -51,3 +52,8 @@ instance ToJSON Command where
         , "error"   .= cmdErrS cmd
         , "docs"    .= cmdDocS cmd
         ]
+
+getCmdRspLength :: Command -> Int
+getCmdRspLength Command {cmdErrS = err} = max okLen errLen
+  where errLen = length err + 11
+        okLen  = 22

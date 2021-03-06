@@ -16,9 +16,8 @@ import           Data.Yaml                  (encode)
 import qualified ExternalCode
 import           Gasp                       (App (..), Attr (..), Expr (..),
                                              Gasp, Metric (..), getGaspExprs,
-                                             getProd, setExternalCodeFiles,
-                                             setGaspExprs, setLowMemory,
-                                             setProd)
+                                             setExternalCodeFiles, setGaspExprs,
+                                             setLowMemory, setProd)
 import           Generator                  (writeAppCode)
 import           Generator.Common           (ProjectRootDir)
 import           Generator.Template         (TemplateDir)

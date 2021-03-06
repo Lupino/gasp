@@ -236,6 +236,7 @@ getMaxRequestValueLength :: Gasp -> Int
 getMaxRequestValueLength = maximum . map getRequestValueLength . gaspExprs
 
 getTmplLength :: Expr -> Int
+getTmplLength (ExprCmd cmd)   = getCmdRspLength cmd
 getTmplLength (ExprAttr attr) = getAttrRspLength attr
 getTmplLength (ExprMetric m)  = getMetricThresholdRspLength m
 getTmplLength _               = 0
