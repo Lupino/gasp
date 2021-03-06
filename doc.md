@@ -190,7 +190,7 @@ metrics:
 - max: 100.0
   prec: 2
   min_threshold: 1
-  addr: 8
+  addr: 16
   width: 3
   max_threshold: 50.0
   name: temperature
@@ -294,10 +294,11 @@ attrs:
   scale: 1000.0
   default: 1800000.0
   keep: true
-  addr: 4
+  addr: 12
   width: 5
   scaled_min: 60000.0
   name: delay
+  uncheckmin: false
   scaled_max: 8.64e7
   min: 60.0
   type: unsigned long
@@ -312,9 +313,10 @@ attrs:
   width: 1
   scaled_min: 0
   name: relay_state
+  uncheckmin: true
   scaled_max: 1
   min: 0
-  type: int
+  type: uint8_t
   gen_set: false
 - max: 1
   prec: 2
@@ -322,13 +324,14 @@ attrs:
   scale: 1
   default: 0
   keep: true
-  addr: 12
+  addr: 20
   width: 1
   scaled_min: 0
   name: relay_mode
+  uncheckmin: true
   scaled_max: 1
   min: 0
-  type: int
+  type: uint8_t
   gen_set: true
 - max: 100.0
   prec: 2
@@ -336,10 +339,11 @@ attrs:
   scale: 1
   default: 30.0
   keep: true
-  addr: 16
+  addr: 21
   width: 3
   scaled_min: 0
   name: high_temperature
+  uncheckmin: false
   scaled_max: 100.0
   min: 0
   type: float
@@ -350,10 +354,11 @@ attrs:
   scale: 1
   default: 20.0
   keep: true
-  addr: 20
+  addr: 25
   width: 3
   scaled_min: 0
   name: low_temperature
+  uncheckmin: false
   scaled_max: 100.0
   min: 0
   type: float
@@ -364,10 +369,11 @@ attrs:
   scale: 1000.0
   default: 5000.0
   keep: true
-  addr: 24
+  addr: 29
   width: 4
   scaled_min: 0
   name: open_delay
+  uncheckmin: true
   scaled_max: 3600000.0
   min: 0
   type: unsigned long
@@ -378,15 +384,17 @@ attrs:
   scale: 1000.0
   default: 5000.0
   keep: true
-  addr: 28
+  addr: 33
   width: 4
   scaled_min: 0
   name: close_delay
+  uncheckmin: true
   scaled_max: 3600000.0
   min: 0
   type: unsigned long
   gen_set: true
-max_tpl_len: 33
+max_tpl_len: 51
+production: true
 has_input: true
 consts:
 - value: Serial
@@ -398,10 +406,11 @@ consts:
 app:
   addr_hex_array: 0x00, 0x00, 0x00, 0x00
   key_len: 8
+  addr_addr: 8
   token_hex_array: 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef
+  token_addr: 0
   token: 1234567890abcdef
   addr: '00000000'
-  start_addr: 0
   key: 1234567890abcdef
   name: dht
   context_len: 32

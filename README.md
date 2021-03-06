@@ -15,7 +15,7 @@ NOTE: Gasp is still in alpha, meaning it has bugs, and many critical features ar
 // dht.wasp:
 app dht {
   key: "1234567890abcdef",   // product_key
-  token: "1234567890abcdef", // device_token
+  token: "1234567890abcdef", // device_token. commit when you use an random token
   addr: "00000000",
   start_addr: 0,
   ctrl_mode: false
@@ -69,7 +69,7 @@ done
 every read_dht 6000
 
 attr relay_state {
-  type: "int",
+  type: "uint8_t",
   default: 0,
   min: 0,
   max: 1,
@@ -106,7 +106,7 @@ command set_relay_state {
 // relay_mode 1 manual mode
 //            0 auto mode
 attr relay_mode {
-  type: "int",
+  type: "uint8_t",
   default: 0,
   min: 0,
   max: 1

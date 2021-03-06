@@ -95,7 +95,7 @@ createNewProject projectName = do
           , "every read_%s 6000" `printf` projectName
           , ""
           , "attr relay_state {"
-          , "  type: \"int\","
+          , "  type: \"uint8_t\","
           , "  default: 0,"
           , "  min: 0,"
           , "  max: 1,"
@@ -132,7 +132,7 @@ createNewProject projectName = do
           , "// relay_mode 1 manual mode"
           , "//            0 auto mode"
           , "attr relay_mode {"
-          , "  type: \"int\","
+          , "  type: \"uint8_t\","
           , "  default: 0,"
           , "  min: 0,"
           , "  max: 1"

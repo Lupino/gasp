@@ -46,7 +46,7 @@ unsigned long auth_timer_ms = 0;
 unsigned long pong_timer_ms = 0;
 unsigned long ping_timer_ms = 0;
 bool ponged = true;
-int ping_failed = 0;
+uint8_t ping_failed = 0;
 
 #ifndef MAX_GL_PAYLOAD_LENGTH
 #define MAX_GL_PAYLOAD_LENGTH {= max_gl_len =}
@@ -150,15 +150,15 @@ unsigned long rule_{= id =}_{= else_action =}_timer_ms = 0;
 #ifndef DEBOUNCE_DELAY_MS
 #define DEBOUNCE_DELAY_MS 50
 #endif
-int gpio_reading = 0;
+uint8_t gpio_reading = 0;
 {=/ has_input =}
 {=# has_gpio =}
 {=# gpios =}
-int gpio_{= name =}_pin = {= pin =};
-int gpio_{= name =}_state = {= state =};
+uint8_t gpio_{= name =}_pin = {= pin =};
+uint8_t gpio_{= name =}_state = {= state =};
 {=# has_fn =}
 unsigned long last_gpio_{= name =}_debounce_time_ms = 0;
-int last_gpio_{= name =}_state = {= state =};
+uint8_t last_gpio_{= name =}_state = {= state =};
 {=/ has_fn =}
 
 {=/ gpios =}
@@ -283,7 +283,12 @@ void setup() {
     if (!is_valid_float(attr_{= name =}, {= scaled_min =}, {= scaled_max =})) {
     {=/ is_float =}
     {=^ is_float =}
+    {=# uncheckmin =}
+    if (attr_{= name =} > {= scaled_max =}) {
+    {=/ uncheckmin =}
+    {=^ uncheckmin =}
     if (attr_{= name =} < {= scaled_min =} || attr_{= name =} > {= scaled_max =}) {
+    {=/ uncheckmin =}
     {=/ is_float =}
         attr_{= name =} = {= default =};
     }
@@ -722,7 +727,12 @@ int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, cha
         {=/ is_float =}
         {=^ is_float =}
         {= type =} tmp = atoi(requestValue);
+        {=# uncheckmin =}
+        if (tmp > {= max =}) {
+        {=/ uncheckmin =}
+        {=^ uncheckmin =}
         if (tmp < {= min =} || tmp > {= max =}) {
+        {=/ uncheckmin =}
         {=/ is_float =}
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min =}, {= max =}]\"}")));
           return RET_ERR;

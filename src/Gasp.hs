@@ -251,7 +251,7 @@ prepareGasp sAddr flags gasp = setGaspExprs gasp . go 1 sAddr $ gaspExprs gasp
   where go :: Int -> Int -> [Expr] -> [Expr]
         go _ _ []        = []
         go ri addr (ExprAttr x:xs)
-          | attrKeep x = ExprAttr x {attrAddr = addr} : go ri (addr + 4) xs
+          | attrKeep x = ExprAttr x {attrAddr = addr} : go ri (addr + getAttrDataLength x) xs
           | otherwise  = ExprAttr x : go ri addr xs
         go ri addr (ExprMetric x:xs) = ExprMetric x {metricAddr = addr} : go ri (addr + 4) xs
         go ri addr (ExprCmd x:xs) = ExprCmd (setCommandFlag flags x) : go ri addr xs
