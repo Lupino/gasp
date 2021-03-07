@@ -5,19 +5,21 @@ module Gasp.Command
     , getCmdRspLength
     ) where
 
-import           Data.Aeson (ToJSON (..), object, (.=))
-import           Gasp.Flag  (Flag)
+import           Data.Aeson           (ToJSON (..), Value, encode, object, (.=))
+import           Data.ByteString.Lazy (toStrict)
+import           Data.Text.Encoding   (decodeUtf8)
+import           Gasp.Flag            (Flag)
 
 data DocItem = DocItem
   { itemDocs :: [String]
-  , itemCmd  :: String
+  , itemCmd  :: Value
   } deriving (Show, Eq)
 
 
 instance ToJSON DocItem where
   toJSON di = object
     [ "docs"    .= itemDocs di
-    , "payload" .= itemCmd di
+    , "payload" .= decodeUtf8 (toStrict (encode (itemCmd di)))
     , "has_doc" .= not (null $ itemDocs di)
     ]
 

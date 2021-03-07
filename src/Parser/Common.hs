@@ -13,12 +13,10 @@ module Parser.Common
   , gaspBlockClosure
   , gaspClosure
   , gaspList
-
-  , strip
   ) where
 
-import qualified Data.Text          as T
-import           Text.Parsec        (ParseError, anyChar, manyTill, parse, try)
+
+import           Text.Parsec        (ParseError, parse, try)
 import           Text.Parsec.String (Parser)
 
 import qualified Lexer              as L
@@ -91,16 +89,7 @@ gaspClosure = L.braces
 
 -- | Parses named gasp closure, which is do...done. Returns content within the closure.
 gaspBlockClosure :: Parser String
-gaspBlockClosure = do
-    _ <- closureStart
-    strip <$> manyTill anyChar (try closureEnd)
-  where
-      closureStart = L.symbol "do"
-      closureEnd = L.symbol "done"
+gaspBlockClosure = L.block "do" "done"
 
 gaspList :: Parser a -> Parser [a]
 gaspList elementParser = L.brackets $ L.commaSep elementParser
-
--- | Removes leading and trailing spaces from a string.
-strip :: String -> String
-strip = T.unpack . T.strip . T.pack

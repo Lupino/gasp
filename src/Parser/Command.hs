@@ -2,6 +2,8 @@ module Parser.Command
     ( command
     ) where
 
+
+import           Data.Aeson         (Value (Null), object, (.=))
 import           Data.Maybe         (fromMaybe, listToMaybe)
 import           Gasp.Command
 import           Gasp.Flag          (initFlag)
@@ -14,7 +16,7 @@ import           Text.Printf        (printf)
 getFromList :: a -> [a] -> a
 getFromList def = fromMaybe def . listToMaybe
 
-data DocItemProperty = ItemDocs ![String] | Payload !String
+data DocItemProperty = ItemDocs ![String] | Payload !Value
 
 docItemProperties :: Parser [DocItemProperty]
 docItemProperties = commaSep1 $ docItemPropertyDocs <|> docItemPropertyPayload
@@ -23,10 +25,10 @@ docItemPropertyDocs :: Parser DocItemProperty
 docItemPropertyDocs = ItemDocs <$> gaspProperty "docs" (gaspList stringLiteral)
 
 docItemPropertyPayload :: Parser DocItemProperty
-docItemPropertyPayload = Payload <$> gaspProperty "payload" (strip <$> manyTill anyChar (try (symbol "\n")))
+docItemPropertyPayload = Payload <$> gaspProperty "payload" json
 
 -- | Top level parser, parses DocItem.
-docItem :: String -> Parser DocItem
+docItem :: Value -> Parser DocItem
 docItem def = do
   props <- gaspClosure docItemProperties
 
@@ -41,13 +43,13 @@ docPropertyName :: Parser DocProperty
 docPropertyName = DocName <$> gaspProperty "name" stringLiteral
 
 docPropertyCmd :: Parser DocProperty
-docPropertyCmd =  DocCmd <$> gaspProperty "command" (docItem "")
+docPropertyCmd =  DocCmd <$> gaspProperty "command" (docItem Null)
 
 docPropertyRet :: Parser DocProperty
-docPropertyRet =  DocRet <$> gaspProperty "return" (docItem "{\"result\": \"OK\"}")
+docPropertyRet =  DocRet <$> gaspProperty "return" (docItem $ object [ "result" .= ("OK" :: String) ])
 
 docPropertyErr :: Parser DocProperty
-docPropertyErr =  DocRet <$> gaspProperty "error" (docItem "")
+docPropertyErr =  DocRet <$> gaspProperty "error" (docItem Null)
 
 docProperties :: Parser [DocProperty]
 docProperties = commaSep1 $ docPropertyName <|> docPropertyCmd <|> docPropertyRet <|> docPropertyErr
@@ -55,13 +57,13 @@ docProperties = commaSep1 $ docPropertyName <|> docPropertyCmd <|> docPropertyRe
 noneDocItem :: DocItem
 noneDocItem = DocItem
   { itemDocs = []
-  , itemCmd = ""
+  , itemCmd = Null
   }
 
 retDocItem :: DocItem
 retDocItem = DocItem
   { itemDocs = []
-  , itemCmd = "{\"result\": \"OK\"}"
+  , itemCmd = object [ "result" .= ("OK" :: String) ]
   }
 
 -- | Top level parser, parses Doc.
@@ -95,11 +97,11 @@ updateDocName _ d = d
 updateDocCmd :: String -> Doc -> Doc
 updateDocCmd name d@Doc
   { docCmd = i@DocItem
-    { itemCmd = ""
+    { itemCmd = Null
     }
   } = d
     { docCmd = i
-      { itemCmd = "{\"method\": \"" ++ name ++ "\"}"
+      { itemCmd = object [ "method" .= name ]
       }
     }
 updateDocCmd _ d = d
@@ -107,11 +109,11 @@ updateDocCmd _ d = d
 updateDocErr :: String -> Doc -> Doc
 updateDocErr err d@Doc
   { docErr = i@DocItem
-    { itemCmd = ""
+    { itemCmd = Null
     }
   } = d
     { docErr = i
-      { itemCmd = "{\"err\": \"" ++ err ++ "\"}"
+      { itemCmd = object [ "err" .= err ]
       }
     }
 updateDocErr _ d = d

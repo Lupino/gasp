@@ -24,11 +24,21 @@ module Lexer
   , commaSep
   , commaSep1
   , colon
+
+  , strip
+  , block
+  , json
   ) where
 
+
+import           Control.Monad        (unless, void)
+import           Data.Aeson           (FromJSON)
 import           Data.Functor         (($>))
-import           Text.Parsec          (alphaNum, char, letter, many, oneOf,
-                                       (<|>))
+import qualified Data.Text            as T
+import           Data.Text.Encoding   (encodeUtf8)
+import           Data.Yaml            (decodeEither')
+import           Text.Parsec          (alphaNum, anyChar, char, letter, many,
+                                       manyTill, oneOf, try, (<|>))
 import           Text.Parsec.Language (emptyDef)
 import           Text.Parsec.String   (Parser)
 import qualified Text.Parsec.Token    as Token
@@ -174,3 +184,21 @@ boolTrue = reserved reservedNameBooleanTrue $> True
 
 boolFalse :: Parser Bool
 boolFalse = reserved reservedNameBooleanFalse $> False
+
+block :: String -> String -> Parser String
+block start end = do
+  unless (null start) $ void $ symbol start
+  strip <$> manyTill anyChar (try (symbol end))
+
+
+json :: FromJSON a => Parser a
+json = do
+  v <- block "{" "}"
+
+  case decodeEither' (encodeUtf8 $ T.pack $ '{' : v ++ "}") of
+    Left _   -> fail $ '{' : v ++ "}"
+    Right vv -> return vv
+
+-- | Removes leading and trailing spaces from a string.
+strip :: String -> String
+strip = T.unpack . T.strip . T.pack
