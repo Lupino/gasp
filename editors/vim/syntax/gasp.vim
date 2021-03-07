@@ -10,7 +10,10 @@ elseif exists("b:current_syntax")
 endif
 
 " Values
-syn match gaspIdentifier "\<\(attr\|metric\|gpio\)_\(\w\|\'\)*\>"
+syn match gaspIdentifier "\<\(attr\|metric\|gpio\)_[A-Za-z0-9_]*\>"
+syn match gaspColon ":" contained
+syn match gaspFlagKey "[A-Za-z0-9\_]*" contained
+syn match gaspEntry "^\s*[A-Za-z][a-zA-Z0-9\_]*:" contains=gaspFlagKey,gaspColon
 
 syn match gaspNumber "0[xX][0-9a-fA-F]\+\|0[oO][0-7]\|[0-9]\+"
 syn match gaspFloat "[0-9]\+\.[0-9]\+\([eE][-+]\=[0-9]\+\)\="
@@ -23,21 +26,13 @@ syn match gaspDelimiter "[,;|.()[\]{}]"
 syn match gaspOperator "\([-!#$%&\*\+/<=>\?@\\^|~:]\|\<_\>\)"
 syn match gaspComment "//*\([^-!#$%&\*\+./<=>\?@\\^|~].*\)\?$" contains=@Spell
 
-syn keyword gaspApp     app
-syn keyword gaspInit    init
-syn keyword gaspSetup   setup
-syn keyword gaspLoop    loop
-syn keyword gaspGpio    gpio
-syn keyword gaspFunc    func
-syn keyword gaspEvery   every
-syn keyword gaspCommand command
-syn keyword gaspAttr    attr
-syn keyword gaspMetric  metric
-syn keyword gaspRule    rule
 syn keyword gaspLink    link
 syn keyword gaspClick   click
+syn keyword gaspLater   later
 
-syn keyword gaspConditional rule do later else on
+syn match gaspSection "^\(app\|init\|setup\|loop\|gpio\|func\|every\|command\|attr\|attr\|metric\|rule\)"
+
+syn keyword gaspConditional do else on
 syn keyword gaspStatement do done
 
 syn sync fromstart
@@ -52,6 +47,8 @@ if version >= 508 || !exists("did_hs_syntax_inits")
 
   HiLink gaspIdentifier Identifier
 
+  HiLink gaspFlagKey Type
+
   HiLink gaspBoolean Boolean
   HiLink gaspNumber Number
   HiLink gaspFloat Float
@@ -59,23 +56,15 @@ if version >= 508 || !exists("did_hs_syntax_inits")
 
   HiLink gaspDelimiter Delimiter
 
-  HiLink gaspApp     Keyword
-  HiLink gaspInit    Keyword
-  HiLink gaspSetup   Keyword
-  HiLink gaspLoop    Keyword
-  HiLink gaspGpio    Keyword
-  HiLink gaspFunc    Keyword
-  HiLink gaspEvery   Keyword
-  HiLink gaspCommand Keyword
-  HiLink gaspAttr    Keyword
-  HiLink gaspMetric  Keyword
-  HiLink gaspRule    Keyword
   HiLink gaspLink    Keyword
   HiLink gaspClick   Keyword
-  HiLink gaspConditional Conditional
+  HiLink gaspLater   Keyword
   HiLink gaspStatement Statement
+  HiLink gaspConditional Conditional
   HiLink gaspComment Comment
   HiLink gaspOperator Operator
+
+  HiLink gaspSection Structure
 
   delcommand HiLink
 endif
