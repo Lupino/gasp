@@ -429,7 +429,7 @@ void loop() {
                 }
                 if (obj.type == REQUEST) {
                     wantSendData[0] = '\0';
-                    int ret = processRequest((const char *)obj.data, obj.length - TYPE_LENGTH, wantSendData);
+                    int ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
                     if (wantSendData[0] == '\0') {
                         if (ret > RET_ERR) {
                             sprintf(wantSendData, FC(F("{\"result\": \"OK\"}")));
@@ -604,9 +604,9 @@ void send_packet() {
     DEBUG_SERIAL.print(obj.id);
     DEBUG_SERIAL.print(F(" Type: "));
     DEBUG_SERIAL.print(obj.type);
-    if (obj.length > TYPE_LENGTH) {
+    if (givelink_get_data_length() > 0) {
         DEBUG_SERIAL.print(F(" Data: "));
-        for (uint16_t i = 0; i < obj.length - TYPE_LENGTH; i ++) {
+        for (uint16_t i = 0; i < givelink_get_data_length(); i ++) {
             DEBUG_SERIAL.write(obj.data[i]);
         }
     }
