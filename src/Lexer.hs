@@ -190,12 +190,15 @@ block start end = do
   unless (null start) $ void $ symbol start
   strip <$> manyTill anyChar (try (symbol end))
 
+rmHeadSpace :: String -> String
+rmHeadSpace = unlines . map strip . lines
+
 
 json :: FromJSON a => Parser a
 json = do
-  v <- block "{" "}"
+  v <- rmHeadSpace <$> block "{" "}"
 
-  case decodeEither' (encodeUtf8 $ T.pack $ '{' : v ++ "}") of
+  case decodeEither' (encodeUtf8 $ T.pack v) of
     Left _   -> fail $ '{' : v ++ "}"
     Right vv -> return vv
 
