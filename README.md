@@ -85,33 +85,33 @@ func try_set_attr_relay_state {
 }
 
 command set_relay_state {
-    fn: try_set_attr_relay_state,
-    error: "only relay_mode is 1 can set this value",
-    docs: {
-        name: "Edit attribute relay_state",
-        command: {
-            docs: [
-                 - data is between [0, 1]
-             ],
-            payload: {
-                method: set_relay_state,
-                data: 0
-            }
-        },
-        return: {
-            docs: [
-                 - relay_state is between [0, 1]
-             ],
-            payload: {
-                relay_state: 0
-            }
-        },
-        error: {
-            payload: {
-                err: data must between [0, 1]
-            }
-        }
+  fn: try_set_attr_relay_state,
+  error: "only relay_mode is 1 can set this value",
+  docs: {
+    name: "Edit attribute relay_state",
+    command: {
+      docs: [
+        - data is between [0, 1]
+       ],
+      payload: {
+        method: set_relay_state,
+        data: 0
+      }
+    },
+    return: {
+      docs: [
+         - relay_state is between [0, 1]
+       ],
+      payload: {
+        relay_state: 0
+      }
+    },
+    error: {
+      payload: {
+        err data must between: [0, 1]
+      }
     }
+  }
 }
 
 // relay_mode 1 manual mode
@@ -164,9 +164,9 @@ attr close_delay {
   scale: 1000
 }
 rule metric_temperature < attr_high_temperature && metric_temperature > attr_low_temperature
-    do later attr_open_delay open_gpio_relay
-    else later attr_close_delay close_gpio_relay
-    on attr_relay_mode == 0
+  do later attr_open_delay open_gpio_relay
+  else later attr_close_delay close_gpio_relay
+  on attr_relay_mode == 0
 
 init {
 #include <avr/wdt.h>
@@ -199,7 +199,7 @@ func reset_system {
 }
 
 command reset_system {
-    fn: reset_system
+  fn: reset_system
 }
 
 init {
@@ -220,9 +220,9 @@ func allow_emit_givelink_unauth {
 gpio auth 9 LOW -> click noop
 
 rule gpio_auth_state == HIGH
-    do later 2000 emit_givelink_unauth
-    else allow_emit_givelink_unauth
-    on givelink_context_authed()
+  do later 2000 emit_givelink_unauth
+  else allow_emit_givelink_unauth
+  on givelink_context_authed()
 ```
 
 - compiled syntax see <doc.md> Template Special.
