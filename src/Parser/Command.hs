@@ -22,10 +22,10 @@ docItemProperties :: Parser [DocItemProperty]
 docItemProperties = commaSep1 $ docItemPropertyDocs <|> docItemPropertyPayload
 
 docItemPropertyDocs :: Parser DocItemProperty
-docItemPropertyDocs = ItemDocs <$> gaspProperty "docs" (gaspList stringLiteral)
+docItemPropertyDocs = ItemDocs <$> gaspProperty "docs" jsonArray
 
 docItemPropertyPayload :: Parser DocItemProperty
-docItemPropertyPayload = Payload <$> gaspProperty "payload" json
+docItemPropertyPayload = Payload <$> gaspProperty "payload" jsonObject
 
 -- | Top level parser, parses DocItem.
 docItem :: Value -> Parser DocItem

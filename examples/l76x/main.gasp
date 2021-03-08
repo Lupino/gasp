@@ -3,16 +3,16 @@ app l76x {
   token: "14b61d617a9c428a95542dbd097d7a0e"
 }
 
-init do
+init {
 #define GL_SERIAL Serial
 #define DEBUG_SERIAL Serial
 #define METRIC_DELAY_MS attr_delay
-done
+}
 
-setup do
+setup {
     GL_SERIAL.begin(115200);
     while (!GL_SERIAL) {;}
-done
+}
 
 attr delay {
   type: "unsigned long",
@@ -22,7 +22,7 @@ attr delay {
   scale: 1000
 }
 
-init do
+init {
 #include <SoftwareSerial.h>
 #include "DEV_Config.h"
 #include "L76X.h"
@@ -30,9 +30,9 @@ uint8_t L76X_buff[100] = {0};
 uint16_t L76X_buff_size = 0;
 GNRMC GPS1;
 Coordinates coord;
-done
+}
 
-setup do
+setup {
     DEV_Set_Baudrate(115200);
     L76X_Send_Command(SET_NMEA_OUTPUT);
     L76X_Send_Command(SET_NMEA_BAUDRATE_9600);
@@ -42,9 +42,9 @@ setup do
     DEV_Delay_ms(500);
     L76X_Send_Command(SET_NMEA_OUTPUT);
     L76X_Send_Command(SET_POS_FIX_10S);
-done
+}
 
-loop do
+loop {
     while (DEV_Uart_Avaliable() > 0) {
         uint8_t outByte = DEV_Uart_Read();
         if (L76X_recv(L76X_buff, &L76X_buff_size, outByte)) {
@@ -68,7 +68,7 @@ loop do
             L76X_buff_size = 0;
         }
     }
-done
+}
 
 metric lat {
   type: "float",
@@ -90,7 +90,7 @@ metric lon {
   prec: 6
 }
 
-func read_l76x do
+func read_l76x {
     if (GPS1.Status == 0) {
         return RET_ERR;
     }
@@ -98,6 +98,6 @@ func read_l76x do
     coord = L76X_Baidu_Coordinates();
     metric_lon = coord.Lon;
     metric_lat = coord.Lat;
-done
+}
 
 every read_l76x 6000

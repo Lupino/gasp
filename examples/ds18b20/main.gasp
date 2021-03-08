@@ -3,16 +3,16 @@ app ds18b20 {
   token: "14b61d617a9c428a95542dbd097d7a0e"
 }
 
-init do
+init {
 #define GL_SERIAL Serial
 #define DEBUG_SERIAL Serial
 #define METRIC_DELAY_MS attr_delay
-done
+}
 
-setup do
+setup {
     GL_SERIAL.begin(115200);
     while (!GL_SERIAL) {;}
-done
+}
 
 attr delay {
   type: "unsigned long",
@@ -24,7 +24,7 @@ attr delay {
 
 // Init DS18B20 code
 
-init do
+init {
 #define ONE_WIRE_BUS 9
 #include <Wire.h>
 // https://github.com/PaulStoffregen/OneWire.git
@@ -40,9 +40,9 @@ DallasTemperature sensors(&oneWire);
 
 // arrays to hold device address
 DeviceAddress insideThermometer;
-done
+}
 
-setup do
+setup {
     sensors.begin();
     #ifdef DEBUG
     DEBUG_SERIAL.print("Found ");
@@ -102,7 +102,7 @@ setup do
 
     // set the resolution to 9 bit (Each Dallas/Maxim device is capable of several different resolutions)
     sensors.setResolution(insideThermometer, 9);
-done
+}
 
 metric temperature {
   type: "float",
@@ -112,7 +112,7 @@ metric temperature {
   prec: 2
 }
 
-func read_ds18b20 do
+func read_ds18b20 {
     // call sensors.requestTemperatures() to issue a global temperature
     // request to all devices on the bus
     #ifdef DEBUG
@@ -143,6 +143,6 @@ func read_ds18b20 do
         DEBUG_SERIAL.println(F("Failed to read from DS18B20 sensor!"));
     }
     #endif
-done
+}
 
 every read_ds18b20 6000

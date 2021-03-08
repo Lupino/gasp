@@ -12,6 +12,9 @@
 {=# has_func =}
 #define RET_ERR -1
 #define RET_SUCC 0
+{=# consts =}
+#define {= name =} {= value =}
+{=/ consts =}
 
 {=/ has_func =}
 {=# inits =}
@@ -44,7 +47,7 @@ unsigned long auth_timer_ms = 0;
 unsigned long pong_timer_ms = 0;
 unsigned long ping_timer_ms = 0;
 bool ponged = true;
-int ping_failed = 0;
+uint8_t ping_failed = 0;
 
 #ifndef MAX_GL_PAYLOAD_LENGTH
 #define MAX_GL_PAYLOAD_LENGTH {= max_gl_len =}
@@ -69,7 +72,14 @@ givelink_context_t ctx;
 {=# app =}
 uint8_t ctx_buff[{= context_len =}];
 const uint8_t key[{= key_len =}] = {{= key_hex_array =}};
-const uint8_t token[{= token_len =}] = {{= token_hex_array =}};
+{=# production =}
+uint8_t token[{= token_len =}];
+uint8_t addr[{= addr_len =}];
+{=/ production =}
+{=^ production =}
+uint8_t token[{= token_len =}] = {{= token_hex_array =}};
+uint8_t addr[{= addr_len =}] = {{= addr_hex_array =}};
+{=/ production =}
 {=/ app =}
 
 givelink_t obj;
@@ -100,7 +110,7 @@ unsigned long metric_timer_ms = 0;
 
 {=/ has_metric =}
 {=# use_eeprom =}
-bool requireReportAttribute = false;
+bool requireReportAttribute = true;
 bool requireReportMetric = true;
 
 {=/ use_eeprom =}
@@ -140,15 +150,15 @@ unsigned long rule_{= id =}_{= else_action =}_timer_ms = 0;
 #ifndef DEBOUNCE_DELAY_MS
 #define DEBOUNCE_DELAY_MS 50
 #endif
-int gpio_reading = 0;
+uint8_t gpio_reading = 0;
 {=/ has_input =}
 {=# has_gpio =}
 {=# gpios =}
-int gpio_{= name =}_pin = {= pin =};
-int gpio_{= name =}_state = {= state =};
+uint8_t gpio_{= name =}_pin = {= pin =};
+uint8_t gpio_{= name =}_state = {= state =};
 {=# has_fn =}
 unsigned long last_gpio_{= name =}_debounce_time_ms = 0;
-int last_gpio_{= name =}_state = {= state =};
+uint8_t last_gpio_{= name =}_state = {= state =};
 {=/ has_fn =}
 
 {=/ gpios =}
@@ -160,6 +170,8 @@ unsigned long get_current_time_ms();
 bool is_valid_float(float number, float min, float max);
 {=/ has_float =}
 {=# has_app =}
+void mainAction();
+bool is_valid_addr();
 void noop();
 void send_packet();
 void send_packet_0(const uint8_t type);
@@ -243,50 +255,59 @@ void setup() {
     {=# app =}
     givelink_context_init(&ctx, ctx_buff);
     givelink_context_set_key(key, {= key_len =});
+    {=# production =}
+    for (int i = 0; i < {= token_len =}; i ++) {
+        token[i] = EEPROM_read({= token_addr =} + i);
+    }
+    {=/ production =}
     givelink_context_set_token(token, {= token_len =});
+    {=# production =}
+    for (int i = 0; i < {= addr_len =}; i ++) {
+        addr[i] = EEPROM_read({= addr_addr =} + i);
+    }
+    if (is_valid_addr()) {
+        givelink_context_set_addr(addr, {= addr_len =});
+        givelink_context_set_auth(true);
+    }
+    {=/ production =}
     givelink_init(&obj, obj_buff);
     {=/ app =}
 
     {=/ has_app =}
     {=# use_eeprom =}
-    byte first_run_flag = 0;
-    EEPROM_get(0, first_run_flag);
-
     {=# attrs =}
     {=# keep =}
-    if (first_run_flag == 1) {
-        EEPROM_get({= addr =}, attr_{= name =});
-        {=# is_float =}
-        if (!is_valid_float(attr_{= name =}, {= scaled_min =}, {= scaled_max =})) {
-        {=/ is_float =}
-        {=^ is_float =}
-        if (attr_{= name =} < {= scaled_min =} || attr_{= name =} > {= scaled_max =}) {
-        {=/ is_float =}
-            attr_{= name =} = {= default =};
-        }
-    } else {
-        EEPROM_put({= addr =}, attr_{= name =});
+    {=# onebyte =}
+    attr_{= name =} = EEPROM_read({= addr =});
+    {=/ onebyte =}
+    {=^ onebyte =}
+    EEPROM_get({= addr =}, attr_{= name =});
+    {=/ onebyte =}
+    {=# is_float =}
+    if (!is_valid_float(attr_{= name =}, {= scaled_min =}, {= scaled_max =})) {
+    {=/ is_float =}
+    {=^ is_float =}
+    {=# uncheckmin =}
+    if (attr_{= name =} > {= scaled_max =}) {
+    {=/ uncheckmin =}
+    {=^ uncheckmin =}
+    if (attr_{= name =} < {= scaled_min =} || attr_{= name =} > {= scaled_max =}) {
+    {=/ uncheckmin =}
+    {=/ is_float =}
+        attr_{= name =} = {= default =};
     }
 
     {=/ keep =}
     {=/ attrs =}
     {=# has_app =}
     {=# metrics =}
-    if (first_run_flag == 1) {
-        EEPROM_get({= addr =}, metric_{= name =}_threshold);
-        if (!is_valid_float(metric_{= name =}_threshold, {= min_threshold =}, {= max_threshold =})) {
-            metric_{= name =}_threshold = {= threshold =};
-        }
-    } else {
-        EEPROM_put({= addr =}, metric_{= name =}_threshold);
+    EEPROM_get({= addr =}, metric_{= name =}_threshold);
+    if (!is_valid_float(metric_{= name =}_threshold, {= min_threshold =}, {= max_threshold =})) {
+        metric_{= name =}_threshold = {= threshold =};
     }
 
     {=/ metrics =}
     {=/ has_app =}
-    if (first_run_flag != 0) {
-      first_run_flag = 1;
-      EEPROM_put(0, first_run_flag);
-    }
 
     {=/ use_eeprom =}
     {=# has_gpio =}
@@ -324,7 +345,12 @@ void loop() {
         rule_depends_checked = false;
     }
     {=/ depends =}
+    {=# has_on =}
+    if (rule_depends_checked && {=& on_condition =}) {
+    {=/ has_on =}
+    {=^ has_on =}
     if (rule_depends_checked) {
+    {=/ has_on =}
         {=# has_later =}
         if ({=& condition =}) {
             if (rule_{= id =}_{= action =}_timer_ms + {= later =} < get_current_time_ms()) {
@@ -391,9 +417,18 @@ void loop() {
                 #endif
 
                 {=/ has_debug =}
+                if (obj.type == AUTHRES) {
+                    {=# production =}
+                    {=# app =}
+                    for (int i = 0; i < {= addr_len =}; i ++) {
+                        EEPROM_write({= addr_addr =} + i, obj.data[i]);
+                    }
+                    {=/ app =}
+                    {=/ production =}
+                }
                 if (obj.type == REQUEST) {
                     wantSendData[0] = '\0';
-                    int ret = processRequest((const char *)obj.data, obj.length - TYPE_LENGTH, wantSendData);
+                    int ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
                     if (wantSendData[0] == '\0') {
                         if (ret > RET_ERR) {
                             sprintf(wantSendData, "{\"result\": \"OK\"}");
@@ -405,6 +440,19 @@ void loop() {
                 }
                 if (obj.type == SUCCESS) {
                     ponged = true;
+                }
+                if (obj.type == CTRLREQ) {
+                    {=# ctrl_mode =}
+                    mainAction();
+                    {=/ ctrl_mode =}
+                    send_packet_0(CTRLRES);
+                }
+                if (obj.type == CTRLREQ1) {
+                    send_packet_0(PING);
+                    {=# ctrl_mode =}
+                    mainAction();
+                    {=/ ctrl_mode =}
+                    send_packet_0(CTRLRES);
                 }
             }
             readedLen = 0;
@@ -419,43 +467,7 @@ void loop() {
         }
     }
 
-    if (givelink_authed()) {
-        {=# use_eeprom =}
-        reportAttribute(requireReportAttribute);
-        if (requireReportAttribute) {
-            requireReportAttribute = false;
-        }
-        {=/ use_eeprom =}
-        {=# has_metric =}
-        if (metric_timer_ms + METRIC_DELAY_MS < get_current_time_ms()) {
-            requireReportMetric = true;
-        }
-        if (reportMetric(requireReportMetric)) {
-            metric_timer_ms = get_current_time_ms();
-            requireReportMetric = false;
-        }
-        {=/ has_metric =}
-
-        if (ping_timer_ms + PING_DELAY_MS < get_current_time_ms()) {
-            send_packet_0(PING);
-            ponged = false;
-            ping_timer_ms = get_current_time_ms();
-            pong_timer_ms = get_current_time_ms();
-        }
-
-        if (ponged) {
-            ping_failed = 0;
-        } else {
-            if (pong_timer_ms + PONG_DELAY_MS < get_current_time_ms()) {
-                ping_failed += 1;
-                pong_timer_ms = get_current_time_ms();
-
-                if (ping_failed > MAX_PING_FAILED) {
-                    PING_FAILED_CB();
-                }
-            }
-        }
-    } else {
+    if (!givelink_context_authed()) {
         {=# use_eeprom =}
         requireReportAttribute = true;
         {=/ use_eeprom =}
@@ -463,6 +475,10 @@ void loop() {
             send_packet_0(AUTHREQ);
             auth_timer_ms = get_current_time_ms();
         }
+    {=^ ctrl_mode =}
+    } else {
+        mainAction();
+    {=/ ctrl_mode =}
     }
 
     {=/ has_app =}
@@ -529,6 +545,55 @@ bool is_valid_float(float number, float min, float max) {
 
 {=/ has_float =}
 {=# has_app =}
+void mainAction() {
+    {=# use_eeprom =}
+    reportAttribute(requireReportAttribute);
+    if (requireReportAttribute) {
+        requireReportAttribute = false;
+    }
+    {=/ use_eeprom =}
+    {=# has_metric =}
+    if (metric_timer_ms + METRIC_DELAY_MS < get_current_time_ms()) {
+        requireReportMetric = true;
+    }
+    if (reportMetric(requireReportMetric)) {
+        metric_timer_ms = get_current_time_ms();
+        requireReportMetric = false;
+    }
+    {=/ has_metric =}
+
+    if (ping_timer_ms + PING_DELAY_MS < get_current_time_ms()) {
+        send_packet_0(PING);
+        ponged = false;
+        ping_timer_ms = get_current_time_ms();
+        pong_timer_ms = get_current_time_ms();
+    }
+
+    if (ponged) {
+        ping_failed = 0;
+    } else {
+        if (pong_timer_ms + PONG_DELAY_MS < get_current_time_ms()) {
+            ping_failed += 1;
+            pong_timer_ms = get_current_time_ms();
+
+            if (ping_failed > MAX_PING_FAILED) {
+                PING_FAILED_CB();
+            }
+        }
+    }
+}
+
+bool is_valid_addr() {
+    {=# app =}
+    for (int i = 0; i < {= addr_len =}; i ++) {
+        if (addr[i] != '\0') {
+            return true;
+        }
+    }
+    return false;
+    {=/ app =}
+}
+
 void noop() {}
 
 void send_packet() {
@@ -538,9 +603,9 @@ void send_packet() {
     DEBUG_SERIAL_print(obj.id);
     DEBUG_SERIAL_print(F(" Type: "));
     DEBUG_SERIAL_print(obj.type);
-    if (obj.length > TYPE_LENGTH) {
+    if (givelink_get_data_length() > 0) {
         DEBUG_SERIAL_print(F(" Data: "));
-        for (uint16_t i = 0; i < obj.length - TYPE_LENGTH; i ++) {
+        for (uint16_t i = 0; i < givelink_get_data_length(); i ++) {
             DEBUG_SERIAL_write(obj.data[i]);
         }
     }
@@ -564,6 +629,7 @@ void send_packet() {
     }
     GL_SERIAL_write('\r');
     GL_SERIAL_write('\n');
+    GL_SERIAL_flush();
 }
 
 void send_packet_0(const uint8_t type) {
@@ -641,7 +707,12 @@ void merge_json(char *dst, char *src, int *total_length) {
 void set_attr_{= name =}_raw({= type =} unscaled_value) {
     attr_{= name =} = unscaled_value * {= scale =};
     {=# keep =}
-    EEPROM_put({= addr =}, unscaled_value);
+    {=# onebyte =}
+    EEPROM_write({= addr =}, attr_{= name =});
+    {=/ onebyte =}
+    {=^ onebyte =}
+    EEPROM_put({= addr =}, attr_{= name =});
+    {=/ onebyte =}
     {=/ keep =}
 }
 
@@ -653,7 +724,12 @@ int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, cha
         {=/ is_float =}
         {=^ is_float =}
         {= type =} tmp = atoi(requestValue);
+        {=# uncheckmin =}
+        if (tmp > {= max =}) {
+        {=/ uncheckmin =}
+        {=^ uncheckmin =}
         if (tmp < {= min =} || tmp > {= max =}) {
+        {=/ uncheckmin =}
         {=/ is_float =}
           sprintf(retval, "{\"err\": \"data must between: [{= min =}, {= max =}]\"}");
           return RET_ERR;

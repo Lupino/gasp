@@ -3,18 +3,18 @@ app dht {
   token: "14b61d617a9c428a95542dbd097d7a0e"
 }
 
-init do
+init {
 #define GL_SERIAL Serial
 #define DEBUG_SERIAL Serial
 #define METRIC_DELAY_MS attr_delay
-done
+}
 
-setup do
+setup {
     GL_SERIAL.begin(115200);
     while (!GL_SERIAL) {;}
-done
+}
 
-init do
+init {
 #define DHTPIN 9     // what digital pin we're connected to
 // Uncomment whatever type you're using!
 #define DHTTYPE DHT11   // DHT 11
@@ -25,18 +25,18 @@ init do
 #include <DHT.h>
 
 DHT dht(DHTPIN, DHTTYPE);
-done
+}
 
-setup do
+setup {
     dht.begin();
-done
+}
 
-func read_temp do
+func read_temp {
     // Reading temperature or humidity takes about 250 milliseconds!
     // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
     metric_humidity = dht.readHumidity();
     metric_temperature = dht.readTemperature();
-done
+}
 
 attr delay {
   type: "unsigned long",

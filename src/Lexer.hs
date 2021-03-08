@@ -27,7 +27,10 @@ module Lexer
 
   , strip
   , block
+  , blockC
   , json
+  , jsonObject
+  , jsonArray
   ) where
 
 
@@ -38,7 +41,8 @@ import qualified Data.Text            as T
 import           Data.Text.Encoding   (encodeUtf8)
 import           Data.Yaml            (decodeEither')
 import           Text.Parsec          (alphaNum, anyChar, char, letter, many,
-                                       manyTill, oneOf, try, (<|>))
+                                       manyTill, oneOf, option, spaces, string,
+                                       try, (<|>))
 import           Text.Parsec.Language (emptyDef)
 import           Text.Parsec.String   (Parser)
 import qualified Text.Parsec.Token    as Token
@@ -190,17 +194,51 @@ block start end = do
   unless (null start) $ void $ symbol start
   strip <$> manyTill anyChar (try (symbol end))
 
+blockC :: Char -> Char -> Parser String
+blockC start end = do
+  spaces
+  v <- drop 1 . strip <$> block0 0 start end
+  spaces
+  return v
+
+block0 :: Int -> Char -> Char -> Parser String
+block0 n startC endC = block1 n startC endC =<< anyChar
+
+block1 :: Int -> Char -> Char -> Char -> Parser String
+block1 n startC endC c
+  | c == startC = (c:) <$> block0 (n + 1) startC endC
+  | c /= endC = (c:) <$> block0 n startC endC
+  | n <= 1 = return []
+  | otherwise = (c:) <$> block0 (n - 1) startC endC
+
+isFstSpace :: [String] -> Bool
+isFstSpace []           = True
+isFstSpace ((' ':_):xs) = isFstSpace xs
+isFstSpace _            = False
+
 rmHeadSpace :: String -> String
-rmHeadSpace = unlines . map strip . lines
+rmHeadSpace = unlines . go . lines
+  where go :: [String] -> [String]
+        go [] = []
+        go xs
+          | isFstSpace xs = go (map (drop 1) xs)
+          | otherwise = xs
 
 
-json :: FromJSON a => Parser a
-json = do
-  v <- rmHeadSpace <$> block "{" "}"
-
+json :: FromJSON a => Char -> Char -> Parser a
+json start end = do
+  v <- rmHeadSpace <$> blockC start end
+  spaces
   case decodeEither' (encodeUtf8 $ T.pack v) of
-    Left _   -> fail $ '{' : v ++ "}"
+    Left _   -> fail $ [start]  ++ v ++ [end]
     Right vv -> return vv
+
+jsonObject :: FromJSON a => Parser a
+jsonObject = json '{' '}'
+
+
+jsonArray :: FromJSON a => Parser a
+jsonArray = json '[' ']'
 
 -- | Removes leading and trailing spaces from a string.
 strip :: String -> String

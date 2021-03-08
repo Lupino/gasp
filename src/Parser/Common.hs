@@ -89,7 +89,7 @@ gaspClosure = L.braces
 
 -- | Parses named gasp closure, which is do...done. Returns content within the closure.
 gaspBlockClosure :: Parser String
-gaspBlockClosure = L.block "do" "done"
+gaspBlockClosure = L.strip <$> L.blockC '{' '}'
 
 gaspList :: Parser a -> Parser [a]
 gaspList elementParser = L.brackets $ L.commaSep elementParser

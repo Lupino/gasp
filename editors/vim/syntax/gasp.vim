@@ -33,7 +33,6 @@ syn keyword gaspLater   later
 syn match gaspSection "^\(app\|init\|setup\|loop\|gpio\|func\|every\|command\|attr\|attr\|metric\|rule\)"
 
 syn keyword gaspConditional do else on
-syn keyword gaspStatement do done
 
 syn sync fromstart
 
@@ -59,7 +58,6 @@ if version >= 508 || !exists("did_hs_syntax_inits")
   HiLink gaspLink    Keyword
   HiLink gaspClick   Keyword
   HiLink gaspLater   Keyword
-  HiLink gaspStatement Statement
   HiLink gaspConditional Conditional
   HiLink gaspComment Comment
   HiLink gaspOperator Operator

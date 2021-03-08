@@ -3,15 +3,15 @@ app led {
   token: "14b61d617a9c428a95542dbd097d7a0e"
 }
 
-init do
+init {
 #define GL_SERIAL Serial
 #define DEBUG_SERIAL Serial
-done
+}
 
-setup do
+setup {
     GL_SERIAL.begin(115200);
     while (!GL_SERIAL) {;}
-done
+}
 
 attr led_state {
   type: "int",
@@ -20,90 +20,81 @@ attr led_state {
   gen_set: false
 }
 
-func toggle_led do
+func toggle_led {
     toggle_gpio_blinker();
     get_attr_led_state(retval);
-done
+}
 
 
-func open_led do
+func open_led {
     attr_led_state = HIGH;
     get_attr_led_state(retval);
-done
+}
 
 
-func close_led do
+func close_led {
     attr_led_state = LOW;
     get_attr_led_state(retval);
-done
+}
 
 command toggle {
   fn: toggle_led,
-  doc: do
-### Toggle led
-
-@Command:
-
-```
-{
-    "method": "toggle"
-}
-```
-
-@Return:
-
-```
-{
-    "led_state": 0
-}
-```
-done
+  docs: {
+    name: "Toggle Led",
+    command: {
+      payload: {
+        method: toggle
+      }
+    },
+    return: {
+      docs: [
+        - led_state is between [0, 1]
+      ],
+      payload: {
+        led_state: 1
+      }
+    }
+  }
 }
 
 command open {
   fn: open_led,
-  doc: do
-### Open led
-
-@Command:
-
-```
-{
-    "method": "open"
-}
-```
-
-@Return:
-
-```
-{
-    "led_state": 1
-}
-```
-done
+  docs: {
+    name: "Open Led",
+    command: {
+      payload: {
+        method: open
+      }
+    },
+    return: {
+      docs: [
+        - led_state is between [0, 1]
+      ],
+      payload: {
+        led_state: 1
+      }
+    }
+  }
 }
 
 command close {
   fn: close_led,
-  doc: do
-### Close led
-
-@Command:
-
-```
-{
-    "method": "close"
-}
-```
-
-@Return:
-
-```
-{
-    "led_state": 0
-}
-```
-done
+  docs: {
+    name: "Close Led",
+    command: {
+      payload: {
+        method: close
+      }
+    },
+    return: {
+      docs: [
+        - led_state is between [0, 1]
+      ],
+      payload: {
+        led_state: 0
+      }
+    }
+  }
 }
 
 gpio blinker LED_BUILTIN -> link led_state

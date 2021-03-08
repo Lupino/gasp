@@ -1,0 +1,107 @@
+{{={= =}=}}
+{=# attrs =}
+
+{=# gen_set =}
+- name: Edit attribute {= name =}
+  command:
+    docs:
+    - data is between [{= min =}, {= max =}]
+    payload:
+      method: set_{= name =}
+      data: {= min =}
+  return:
+    docs:
+    - {= name =} is between [{= min =}, {= max =}]
+    payload:
+      {= name =}: {= min =}
+  error:
+    payload:
+      err: data must between [{= min =}, {= max =}]
+
+{=/ gen_set =}
+- name: Get attribute {= name =}
+  command:
+    payload:
+      method: get_{= name =}
+  return:
+    docs:
+    - {= name =} is between [{= min =}, {= max =}]
+    payload:
+      {= name =}: {= min =}
+{=/ attrs =}
+{=# metrics =}
+- name: Edit metric {= name =} report threshold
+  command:
+    docs:
+    - data is between [{= min_threshold =}, {= max_threshold =}]
+    payload:
+      method: set_{= name =}_threshold
+      data: {= threshold =}
+  return:
+    docs:
+    - {= name =}_threshold is between [{= min_threshold =}, {= max_threshold =}]
+    payload:
+      {= name =}_threshold: {= threshold =}
+  error:
+    payload:
+      err: data must between [{= min_threshold =}, {= max_threshold =}]
+- name: Get metric {= name =} report threshold
+  command:
+    payload:
+      method: get_{= name =}_threshold
+  return:
+    docs:
+    - {= name =}_threshold is between [{= min_threshold =}, {= max_threshold =}]
+    payload:
+      {= name =}_threshold: {= threshold =}
+- name: Get metric {= name =}
+  command:
+    payload:
+      method: get_{= name =}
+  return:
+    docs:
+    - {= name =} is between [{= min =}, {= max =}]
+    payload:
+      {= name =}_threshold: {= min =}
+  error:
+    payload:
+      err: {= name =} is inviald
+{=/ metrics =}
+{=# commands =}
+{=# docs =}
+- name: {= name =}
+  {=# command =}
+  command:
+    {=# has_doc =}
+    docs:
+    {=# docs =}
+    - {=& . =}
+    {=/ docs =}
+    {=/ has_doc =}
+    payload:
+      {=& payload_yaml =}
+  {=/ command =}
+  {=# return =}
+  return:
+    {=# has_doc =}
+    docs:
+    {=# docs =}
+    - {=& . =}
+    {=/ docs =}
+    {=/ has_doc =}
+    payload:
+      {=& payload_yaml =}
+  {=/ return =}
+  {=# error =}
+  error:
+    {=# has_doc =}
+    docs:
+    {=# docs =}
+    - {=& . =}
+    {=/ docs =}
+    {=/ has_doc =}
+    payload:
+      {=& payload_yaml =}
+  {=/ error =}
+{=/ docs =}
+{=/ commands =}

@@ -20,25 +20,25 @@ name = value
 ## init
 
 ```
-init do
+init {
 // you init code
-done
+}
 ```
 
 ## setup
 
 ```
-setup do
+setup {
 // you setup code
-done
+}
 ```
 
 ## loop
 
 ```
-loop do
+loop {
 // you loop code
-done
+}
 ```
 
 ## gpio
@@ -53,8 +53,9 @@ gpio gpioName pinName [LOW|HIGH] [-> click funcName [LOW|HIGH]]
 ## func
 
 ```
-func funcName [(argv)] do
-done
+func funcName [(argv)] {
+    // you func code
+}
 ```
 
 ## every
@@ -72,16 +73,31 @@ command commandName {
     docs: {
         name: "docName",
         command: {
-            docs: ["some doc"],
-            payload: {"method": "some method"}
+            docs: [
+                - some yaml doc
+            ],
+            payload: {
+                method: some method
+                # yaml code
+            }
         },
         return: {
-            docs: ["some doc"],
-            payload: {"some key": some_value}
+            docs: [
+                - some yaml doc
+            ],
+            payload: {
+                # yaml code
+                some_key: some_value
+            }
         },
         error: {
-            docs: ["some doc"],
-            payload: {"err": "some error"}
+            docs: [
+                - some yaml doc
+            ],
+            payload: {
+                # yaml code
+                err: some error
+            }
         }
     }
 }
@@ -146,18 +162,23 @@ commands:
   fn: try_set_attr_relay_state
   docs:
     command:
-      payload: '{"method": "set_relay_state", "data": 0}'
+      payload: '{"data":0,"method":"set_relay_state,"}'
       has_doc: true
+      payload_yaml: |-
+        data: 0
+              method: set_relay_state,
       docs:
       - data is between [0, 1]
     return:
-      payload: '{"relay_state": 0}'
+      payload: '{"relay_state":0}'
       has_doc: true
+      payload_yaml: 'relay_state: 0'
       docs:
       - relay_state is between [0, 1]
     error:
-      payload: '{"err": "only relay_mode is 1 can set this value"}'
+      payload: '{"err":"only relay_mode is 1 can set this value"}'
       has_doc: false
+      payload_yaml: 'err: only relay_mode is 1 can set this value'
       docs: []
     name: Edit attribute relay_state
 - error: call reset_system failed
@@ -168,16 +189,19 @@ commands:
   fn: reset_system
   docs:
     command:
-      payload: '{"method": "reset_system"}'
+      payload: '{"method":"reset_system"}'
       has_doc: false
+      payload_yaml: 'method: reset_system'
       docs: []
     return:
-      payload: '{"result": "OK"}'
+      payload: '{"result":"OK"}'
       has_doc: false
+      payload_yaml: 'result: OK'
       docs: []
     error:
-      payload: '{"err": "call reset_system failed"}'
+      payload: '{"err":"call reset_system failed"}'
       has_doc: false
+      payload_yaml: 'err: call reset_system failed'
       docs: []
     name: Command reset_system
 loops:
@@ -296,6 +320,7 @@ attrs:
   keep: true
   addr: 12
   width: 5
+  onebyte: false
   scaled_min: 60000.0
   name: delay
   uncheckmin: false
@@ -311,6 +336,7 @@ attrs:
   keep: false
   addr: 0
   width: 1
+  onebyte: true
   scaled_min: 0
   name: relay_state
   uncheckmin: true
@@ -326,6 +352,7 @@ attrs:
   keep: true
   addr: 20
   width: 1
+  onebyte: true
   scaled_min: 0
   name: relay_mode
   uncheckmin: true
@@ -341,6 +368,7 @@ attrs:
   keep: true
   addr: 21
   width: 3
+  onebyte: false
   scaled_min: 0
   name: high_temperature
   uncheckmin: false
@@ -356,6 +384,7 @@ attrs:
   keep: true
   addr: 25
   width: 3
+  onebyte: false
   scaled_min: 0
   name: low_temperature
   uncheckmin: false
@@ -371,6 +400,7 @@ attrs:
   keep: true
   addr: 29
   width: 4
+  onebyte: false
   scaled_min: 0
   name: open_delay
   uncheckmin: true
@@ -386,6 +416,7 @@ attrs:
   keep: true
   addr: 33
   width: 4
+  onebyte: false
   scaled_min: 0
   name: close_delay
   uncheckmin: true

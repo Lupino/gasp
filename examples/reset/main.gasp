@@ -3,85 +3,68 @@ app reset {
   token: "14b61d617a9c428a95542dbd097d7a0e"
 }
 
-init do
+init {
 #define GL_SERIAL Serial
 #define DEBUG_SERIAL Serial
-done
+}
 
-setup do
+setup {
     GL_SERIAL.begin(115200);
     while (!GL_SERIAL) {;}
-done
+}
 
-init do
+init {
 int blink_state = LOW;
-done
+}
 
-setup do
+setup {
     pinMode(LED_BUILTIN, OUTPUT);
-done
+}
 
-func toggle_blink do
+func toggle_blink {
     if (blink_state == LOW) {
         blink_state = HIGH;
     } else {
         blink_state = LOW;
     }
     digitalWrite(LED_BUILTIN, blink_state);
-done
+}
 
 every toggle_blink 1000
 
-init do
+init {
 #include <avr/wdt.h>
 bool want_reboot = false;
 #define PING_FAILED_CB reset
-done
+}
 
-setup do
+setup {
     // wdt init
     MCUSR = 0;
     wdt_disable();
     wdt_enable(WDTO_8S);
     // end wdt init
-done
+}
 
-loop do
+loop {
     wdt_reset();
     if (want_reboot) {
         reset();
     }
-done
+}
 
-func reset do
+func reset {
     wdt_disable();
     wdt_enable(WDTO_15MS);
     for (;;) {
 
     }
-done
+}
 
-func reset_system do
+func reset_system {
     want_reboot = true;
-done
+}
 
 command reset_system {
-    fn: reset_system,
-    doc: do
-@Command:
-
-```
-{
-    "method": "reset_system"
-}
-```
-
-@Return:
-
-```
-{
-    "result": "OK"
-}
-```
-done
+    fn: reset_system
 }

@@ -38,10 +38,10 @@ METRIC_DELAY_MS = attr_delay
 // METRIC_DELAY_MS = 1800000
 // DEBOUNCE_DELAY_MS = 50
 
-setup do
+setup {
     GL_SERIAL.begin(115200);
     while (!GL_SERIAL) {;}
-done
+}
 
 attr delay {
   type: "unsigned long",
@@ -59,12 +59,12 @@ metric temperature {
   prec: 2
 }
 
-func read_dht do
+func read_dht {
     metric_temperature += 0.1;
     if (metric_temperature > 100) {
          metric_temperature = 0;
     }
-done
+}
 
 every read_dht 6000
 
@@ -77,12 +77,12 @@ attr relay_state {
   keep: false
 }
 
-func try_set_attr_relay_state do
+func try_set_attr_relay_state {
     if (attr_relay_mode == 1) {
         return set_attr_relay_state(json, tokens, num_tokens, retval);
     }
     return RET_ERR;
-done
+}
 
 command set_relay_state {
     fn: try_set_attr_relay_state,
@@ -90,15 +90,26 @@ command set_relay_state {
     docs: {
         name: "Edit attribute relay_state",
         command: {
-            docs: ["data is between [0, 1]"],
-            payload: {"method": "set_relay_state", "data": 0}
+            docs: [
+                 - data is between [0, 1]
+             ],
+            payload: {
+                method: set_relay_state,
+                data: 0
+            }
         },
         return: {
-            docs: ["relay_state is between [0, 1]"],
-            payload: {"relay_state": 0}
+            docs: [
+                 - relay_state is between [0, 1]
+             ],
+            payload: {
+                relay_state: 0
+            }
         },
         error: {
-            payload: {"err": "data must between: [0, 1]"}
+            payload: {
+                err: data must between [0, 1]
+            }
         }
     }
 }
@@ -112,11 +123,11 @@ attr relay_mode {
   max: 1
 }
 
-func try_toggle_gpio_relay do
+func try_toggle_gpio_relay {
     if (attr_relay_mode == 1) {
         toggle_gpio_relay();
     }
-done
+}
 
 gpio relay_mode LED_BUILTIN -> link relay_mode
 gpio relay 12 -> link relay_state
@@ -152,60 +163,66 @@ attr close_delay {
   max: 3600,
   scale: 1000
 }
-rule metric_temperature < attr_high_temperature && metric_temperature > attr_low_temperature do later attr_open_delay open_gpio_relay else later attr_close_delay close_gpio_relay on attr_relay_mode == 0
+rule metric_temperature < attr_high_temperature && metric_temperature > attr_low_temperature
+    do later attr_open_delay open_gpio_relay
+    else later attr_close_delay close_gpio_relay
+    on attr_relay_mode == 0
 
-init do
+init {
 #include <avr/wdt.h>
 bool want_reboot = false;
-done
+}
 
-setup do
+setup {
     MCUSR = 0;
     wdt_disable();
     wdt_enable(WDTO_8S);
-done
+}
 
-loop do
+loop {
     wdt_reset();
     if (want_reboot) {
         reset();
     }
-done
+}
 
-func reset do
+func reset {
     wdt_disable();
     wdt_enable(WDTO_15MS);
     for (;;) {
 
     }
-done
+}
 
-func reset_system do
+func reset_system {
     want_reboot = true;
-done
+}
 
 command reset_system {
     fn: reset_system
 }
 
-init do
+init {
 bool can_emit_givelink_unauth = false;
-done
+}
 
-func emit_givelink_unauth do
+func emit_givelink_unauth {
     if (can_emit_givelink_unauth) {
         can_emit_givelink_unauth = false;
         givelink_context_set_auth(false);
     }
-done
+}
 
-func allow_emit_givelink_unauth do
+func allow_emit_givelink_unauth {
     can_emit_givelink_unauth = true;
-done
+}
 
 gpio auth 9 LOW -> click noop
 
-rule gpio_auth_state == HIGH do later 2000 emit_givelink_unauth else allow_emit_givelink_unauth on givelink_context_authed()
+rule gpio_auth_state == HIGH
+    do later 2000 emit_givelink_unauth
+    else allow_emit_givelink_unauth
+    on givelink_context_authed()
 ```
 
 - compiled syntax see <doc.md> Template Special.
