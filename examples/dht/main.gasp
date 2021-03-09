@@ -3,27 +3,26 @@ app dht {
   token: "14b61d617a9c428a95542dbd097d7a0e"
 }
 
-init {
-#define GL_SERIAL Serial
-#define DEBUG_SERIAL Serial
-#define METRIC_DELAY_MS attr_delay
-}
+GL_SERIAL = Serial
+DEBUG_SERIAL = Serial
+METRIC_DELAY_MS = attr_delay
 
 setup {
     GL_SERIAL.begin(115200);
     while (!GL_SERIAL) {;}
 }
 
-init {
-#define DHTPIN 9     // what digital pin we're connected to
-// Uncomment whatever type you're using!
-#define DHTTYPE DHT11   // DHT 11
-// #define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
-// #define DHTTYPE DHT21   // DHT 21 (AM2301)
 
+DHTPIN = 9     // what digital pin we're connected to
+// Uncomment whatever type you're using!
+DHTTYPE = DHT11   // DHT 11
+// DHTTYPE = DHT22   // DHT 22  (AM2302), AM2321
+// DHTTYPE = DHT21   // DHT 21 (AM2301)
+
+
+init {
 // https://github.com/adafruit/DHT-sensor-library.git
 #include <DHT.h>
-
 DHT dht(DHTPIN, DHTTYPE);
 }
 

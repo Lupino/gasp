@@ -3,15 +3,13 @@ app stm8 {
   token: "14b61d617a9c428a95542dbd097d7a0e"
 }
 
-init {
-#define GL_SERIAL Serial
-#define GL_SERIAL_begin Serial_begin
-#define GL_SERIAL_read Serial_read
-#define GL_SERIAL_available Serial_available
-#define GL_SERIAL_write Serial_write
-#define METRIC_DELAY_MS attr_delay
-#define PING_FAILED_CB noop
-}
+GL_SERIAL = Serial
+GL_SERIAL_begin = Serial_begin
+GL_SERIAL_read = Serial_read
+GL_SERIAL_available = Serial_available
+GL_SERIAL_write = Serial_write
+METRIC_DELAY_MS = attr_delay
+PING_FAILED_CB = noop
 
 setup {
     GL_SERIAL_begin(115200);

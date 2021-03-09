@@ -3,11 +3,9 @@ app ds18b20 {
   token: "14b61d617a9c428a95542dbd097d7a0e"
 }
 
-init {
-#define GL_SERIAL Serial
-#define DEBUG_SERIAL Serial
-#define METRIC_DELAY_MS attr_delay
-}
+GL_SERIAL = Serial
+DEBUG_SERIAL = Serial
+METRIC_DELAY_MS = attr_delay
 
 setup {
     GL_SERIAL.begin(115200);
@@ -24,8 +22,10 @@ attr delay {
 
 // Init DS18B20 code
 
+
+ONE_WIRE_BUS = 9
+
 init {
-#define ONE_WIRE_BUS 9
 #include <Wire.h>
 // https://github.com/PaulStoffregen/OneWire.git
 #include <OneWire.h>
@@ -44,22 +44,22 @@ DeviceAddress insideThermometer;
 
 setup {
     sensors.begin();
-    #ifdef DEBUG
+    #ifdef DEBUG_SERIAL
     DEBUG_SERIAL.print("Found ");
     DEBUG_SERIAL.print(sensors.getDeviceCount(), DEC);
     DEBUG_SERIAL.println(" devices.");
     #endif
 
     // report parasite power requirements
-    #ifdef DEBUG
+    #ifdef DEBUG_SERIAL
     DEBUG_SERIAL.print("Parasite power is: ");
     #endif
     if (sensors.isParasitePowerMode()) {
-        #ifdef DEBUG
+        #ifdef DEBUG_SERIAL
         DEBUG_SERIAL.println("ON");
         #endif
     } else {
-        #ifdef DEBUG
+        #ifdef DEBUG_SERIAL
         DEBUG_SERIAL.println("OFF");
         #endif
     }
@@ -77,7 +77,7 @@ setup {
     // use those addresses and manually assign them (see above) once you know
     // the devices on your bus (and assuming they don't change).
     if (!sensors.getAddress(insideThermometer, 0)) {
-        #ifdef DEBUG
+        #ifdef DEBUG_SERIAL
         DEBUG_SERIAL.print("Unable to find address for Device 0");
         #endif
         delay(10000);
@@ -115,11 +115,11 @@ metric temperature {
 func read_ds18b20 {
     // call sensors.requestTemperatures() to issue a global temperature
     // request to all devices on the bus
-    #ifdef DEBUG
+    #ifdef DEBUG_SERIAL
     DEBUG_SERIAL.print("Requesting temperatures...");
     #endif
     sensors.requestTemperatures(); // Send the command to get temperatures
-    #ifdef DEBUG
+    #ifdef DEBUG_SERIAL
     DEBUG_SERIAL.println("DONE");
     #endif
     // method 1 - slower
@@ -130,7 +130,7 @@ func read_ds18b20 {
 
     // method 2 - faster
     metric_temperature = sensors.getTempC(insideThermometer);
-    #ifdef DEBUG
+    #ifdef DEBUG_SERIAL
     DEBUG_SERIAL.print("Temp C: ");
     DEBUG_SERIAL.print(metric_temperature);
     DEBUG_SERIAL.print(" Temp F: ");
@@ -138,7 +138,7 @@ func read_ds18b20 {
     #endif
 
     // Check if any reads failed and exit early (to try again).
-    #ifdef DEBUG
+    #ifdef DEBUG_SERIAL
     if (isnan(metric_temperature)) {
         DEBUG_SERIAL.println(F("Failed to read from DS18B20 sensor!"));
     }

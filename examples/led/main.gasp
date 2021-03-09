@@ -3,10 +3,8 @@ app led {
   token: "14b61d617a9c428a95542dbd097d7a0e"
 }
 
-init {
-#define GL_SERIAL Serial
-#define DEBUG_SERIAL Serial
-}
+GL_SERIAL = Serial
+DEBUG_SERIAL = Serial
 
 setup {
     GL_SERIAL.begin(115200);
