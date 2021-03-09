@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bab8fbe1ac86ebad2f86556ac288f8f8bbc7c2751ccb5c3b2059529c201aced1
+-- hash: 68eb075492e405887e6cafcab485bd3ef9615c9ed1386d9cab24221e66c62f73
 
 name:           gasp
 version:        0.1.0.0
@@ -35,6 +35,7 @@ library
       CompileOptions
       ExternalCode
       Gasp
+      Gasp.AGpio
       Gasp.App
       Gasp.Attr
       Gasp.Command
@@ -62,6 +63,7 @@ library
       Lexer
       Lib
       Parser
+      Parser.AGpio
       Parser.App
       Parser.Attr
       Parser.Command

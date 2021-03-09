@@ -25,6 +25,7 @@ import           Data.ByteString.Char8 as BC (pack)
 import           Data.HexString        (hexString, toBytes)
 import           Data.Maybe            (isJust)
 import qualified ExternalCode
+import           Gasp.AGpio
 import           Gasp.App
 import           Gasp.Attr
 import           Gasp.Command
@@ -60,6 +61,7 @@ data Expr
     | ExprMetric !Metric
     | ExprEvery !Every
     | ExprGpio !Gpio
+    | ExprAGpio !AGpio
     | ExprRule !Rule
     | ExprConst !Constant
     deriving (Show, Eq)
@@ -190,6 +192,11 @@ hasInput (x:xs)
   | null (gpioFunc x) = hasInput xs
   | otherwise = True
 
+
+-- * AGpios
+
+getAGpios :: Gasp -> [AGpio]
+getAGpios gasp = [agpio | (ExprAGpio agpio) <- gaspExprs gasp]
 -- * Flags
 
 getFlags:: Gasp -> [Flag]
@@ -301,6 +308,7 @@ instance ToJSON Gasp where
         , "max_gl_len"  .= (contextLen + bufLen + 1)
         , "actions"     .= getEverys gasp
         , "gpios"       .= gpios
+        , "agpios"      .= agpios
         , "rules"       .= rules
         , "has_gpio"    .= not (null gpios)
         , "has_func"    .= (hasFunc || useEeprom)
@@ -318,6 +326,7 @@ instance ToJSON Gasp where
               attrs = getAttrs gasp
               metrics = getMetrics gasp
               gpios = getGpios gasp
+              agpios = getAGpios gasp
               cmds = getCmds gasp
               funcs = getFunctions gasp
               hasFunc = not (null funcs)

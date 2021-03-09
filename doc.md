@@ -50,6 +50,12 @@ gpio gpioName pinName [LOW|HIGH [LOW|HIGH]] [-> link attrName [false|true]]
 gpio gpioName pinName [LOW|HIGH] [-> click funcName [LOW|HIGH]]
 ```
 
+## agpio
+
+```
+agpio agpioName pinName [-> link attrName]
+```
+
 ## func
 
 ```

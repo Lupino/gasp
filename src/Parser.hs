@@ -4,6 +4,7 @@ module Parser
 
 import qualified Gasp
 import           Lexer
+import           Parser.AGpio       (agpio)
 import           Parser.App         (app)
 import           Parser.Attr        (attr)
 import           Parser.Command     (command)
@@ -32,6 +33,7 @@ expr
     <|> exprMetric
     <|> exprEvery
     <|> exprGpio
+    <|> exprAGpio
     <|> exprRule
     <|> exprConst
 
@@ -64,6 +66,9 @@ exprEvery = Gasp.ExprEvery <$> every
 
 exprGpio :: Parser Gasp.Expr
 exprGpio = Gasp.ExprGpio <$> gpio
+
+exprAGpio :: Parser Gasp.Expr
+exprAGpio = Gasp.ExprAGpio <$> agpio
 
 exprRule :: Parser Gasp.Expr
 exprRule = Gasp.ExprRule <$> rule
