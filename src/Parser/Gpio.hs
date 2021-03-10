@@ -7,21 +7,30 @@ import           Lexer
 import           Text.Parsec        (option, (<|>))
 import           Text.Parsec.String (Parser)
 
+bindClick :: State -> Parser GpioBind
+bindClick emit = do
+  _ <- symbol "click"
+  n <- FuncName <$> identifier
+  v <- State <$> option (unState emit) identifier
+  return $ CallFn n v
+
+bindLink :: Parser GpioBind
+bindLink = do
+  _ <- symbol "link"
+  n <- AttrName <$> identifier
+  v <- option False bool
+  return $ LinkAttr n v
+
+bindPwm :: Parser GpioBind
+bindPwm = do
+  _ <- symbol "pwm"
+  n <- AttrName <$> identifier
+  return $ PwmAttr n
+
 bindParser :: State -> Parser GpioBind
 bindParser emit = do
   _ <- symbol "->"
-  sym <- symbol "click" <|> symbol "link" <|> symbol "pwm"
-  n <- identifier
-
-  case sym of
-    "link" -> do
-      v <- option False bool
-      return $ LinkAttr (AttrName n) v
-    "click" -> do
-      v <- option (unState emit) identifier
-      return $ CallFn (FuncName n) (State v)
-    "pwm" -> return $ PwmAttr (AttrName n)
-    _ -> fail $ "no such symbol " ++ sym
+  bindLink <|> bindClick emit <|> bindPwm
 
 --                       default   open                          reverse
 -- gpio gpioName pinName [LOW|HIGH [LOW|HIGH]] [-> link attrName [false|true]]
