@@ -154,7 +154,6 @@ uint8_t gpio_reading = 0;
 {=/ has_input =}
 {=# has_gpio =}
 {=# gpios =}
-uint8_t gpio_{= name =}_pin = {= pin =};
 uint8_t gpio_{= name =}_state = {= state =};
 {=# has_fn =}
 unsigned long last_gpio_{= name =}_debounce_time_ms = 0;
@@ -164,9 +163,7 @@ uint8_t last_gpio_{= name =}_state = {= state =};
 {=/ gpios =}
 {=/ has_gpio =}
 {=# agpios =}
-uint16_t agpio_{= name =}_pin = {= pin =};
 uint16_t agpio_{= name =}_state = 0;
-
 {=/ agpios =}
 // defined
 unsigned long get_current_time_ms();
@@ -319,10 +316,10 @@ void setup() {
     {=# has_gpio =}
     {=# gpios =}
     {=# has_fn =}
-    pinMode(gpio_{= name =}_pin, INPUT);
+    pinMode({= pin =}, INPUT);
     {=/ has_fn =}
     {=^ has_fn =}
-    pinMode(gpio_{= name =}_pin, OUTPUT);
+    pinMode({= pin =}, OUTPUT);
     {=/ has_fn =}
 
     {=/ gpios =}
@@ -497,7 +494,7 @@ void loop() {
     {=# has_gpio =}
     {=# gpios =}
     {=# has_fn =}
-    gpio_reading = digitalRead(gpio_{= name =}_pin);
+    gpio_reading = digitalRead({= pin =});
     if (gpio_reading != last_gpio_{= name =}_state) {
         last_gpio_{= name =}_debounce_time_ms = get_current_time_ms();
     }
@@ -535,7 +532,7 @@ void loop() {
     {=/ gpios =}
     {=/ has_gpio =}
     {=# agpios =}
-    agpio_{= name =}_state = analogRead(agpio_{= name =}_pin);
+    agpio_{= name =}_state = analogRead({= pin =});
     {=# has_link =}
     metric_{= link =} = agpio_{= name =}_state;
     {=/ has_link =}
@@ -823,12 +820,12 @@ int get_metric_{= name =}(char *retval) {
 {=# has_link =}
 void open_gpio_{= name =}_raw() {
     gpio_{= name =}_state = {= open =};
-    digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
+    digitalWrite({= pin =}, gpio_{= name =}_state);
 }
 
 void close_gpio_{= name =}_raw() {
     gpio_{= name =}_state = {= close =};
-    digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
+    digitalWrite({= pin =}, gpio_{= name =}_state);
 }
 
 void open_gpio_{= name =}() {
@@ -852,12 +849,12 @@ void close_gpio_{= name =}() {
 {=^ has_link =}
 void open_gpio_{= name =}() {
     gpio_{= name =}_state = {= open =};
-    digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
+    digitalWrite({= pin =}, gpio_{= name =}_state);
 }
 
 void close_gpio_{= name =}() {
     gpio_{= name =}_state = {= close =};
-    digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
+    digitalWrite({= pin =}, gpio_{= name =}_state);
 }
 {=/ has_link =}
 
