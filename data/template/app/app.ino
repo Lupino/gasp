@@ -166,6 +166,9 @@ uint8_t last_gpio_{= name =}_state = {= state =};
 {=# is_no_bind =}
 uint8_t gpio_{= name =}_state = {= state =};
 {=/ is_no_bind =}
+{=# is_pwm =}
+uint8_t gpio_{= name =}_state = {= state =};
+{=/ is_pwm =}
 {=/ bind =}
 {=/ gpios =}
 {=/ has_gpio =}
@@ -566,6 +569,12 @@ void loop() {
     {=/ reverse =}
 
     {=/ is_link =}
+    {=# is_pwm =}
+    if (attr_{= link =} != gpio_{= name =}_state) {
+      gpio_{= name =}_state = attr_{= link =};
+      analogWrite({= pin =}, gpio_{= name =}_state);
+    }
+    {=/ is_pwm =}
     {=/ bind =}
     {=/ gpios =}
     {=/ has_gpio =}

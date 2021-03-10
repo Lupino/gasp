@@ -10,7 +10,7 @@ import           Text.Parsec.String (Parser)
 bindParser :: State -> Parser GpioBind
 bindParser emit = do
   _ <- symbol "->"
-  sym <- symbol "click" <|> symbol "link"
+  sym <- symbol "click" <|> symbol "link" <|> symbol "pwm"
   n <- identifier
 
   case sym of
@@ -20,12 +20,15 @@ bindParser emit = do
     "click" -> do
       v <- option (unState emit) identifier
       return $ CallFn (FuncName n) (State v)
+    "pwm" -> return $ PwmAttr (AttrName n)
     _ -> fail $ "no such symbol " ++ sym
 
 --                       default   open                          reverse
 -- gpio gpioName pinName [LOW|HIGH [LOW|HIGH]] [-> link attrName [false|true]]
 --                       default                       emit
 -- gpio gpioName pinName [LOW|HIGH] [-> click funcName [LOW|HIGH]]
+--                       default
+-- gpio gpioName pinName [LOW|HIGH|NUM] [-> pwm attrName]
 
 -- | Top level parser, parses Gpio.
 gpio :: Parser Gpio

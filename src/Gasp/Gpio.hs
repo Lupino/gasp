@@ -22,14 +22,19 @@ newtype State = State {unState :: String}
 data GpioBind
   = LinkAttr AttrName Bool
   | CallFn FuncName State
+  | PwmAttr AttrName
   | NoBind
   deriving (Show, Eq)
 
 instance ToJSON GpioBind where
     toJSON (LinkAttr (AttrName link) rev) = object
-        [ "link"     .= link
-        , "reverse"  .= rev
-        , "is_link"  .= True
+        [ "link"    .= link
+        , "reverse" .= rev
+        , "is_link" .= True
+        ]
+    toJSON (PwmAttr (AttrName link)) = object
+        [ "link"    .= link
+        , "is_pwm" .= True
         ]
     toJSON (CallFn (FuncName fn) (State emit)) = object
         [ "fn"    .= fn
@@ -43,6 +48,7 @@ instance ToJSON GpioBind where
 isInput :: GpioBind -> Bool
 isInput (LinkAttr _ _) = False
 isInput (CallFn _ _)   = True
+isInput (PwmAttr _)    = False
 isInput NoBind         = False
 
 data Gpio = Gpio
@@ -56,10 +62,10 @@ data Gpio = Gpio
 
 instance ToJSON Gpio where
     toJSON gpio = object
-        [ "name"     .= gpioName  gpio
-        , "pin"      .= gpioPin   gpio
-        , "bind"     .= gpioBind  gpio
-        , "state"    .= unState (gpioState gpio)
-        , "open"     .= unState (gpioOpen  gpio)
-        , "close"    .= unState (gpioClose gpio)
+        [ "name"  .= gpioName  gpio
+        , "pin"   .= gpioPin   gpio
+        , "bind"  .= gpioBind  gpio
+        , "state" .= unState (gpioState gpio)
+        , "open"  .= unState (gpioOpen  gpio)
+        , "close" .= unState (gpioClose gpio)
         ]
