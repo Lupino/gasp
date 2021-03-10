@@ -196,8 +196,10 @@ int get_attr_{= name =}(char *retval);
 
 {=/ attrs =}
 {=# metrics =}
+{=# auto =}
 int set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
 int get_metric_{= name =}_threshold(char *retval);
+{=/ auto =}
 bool check_metric_{= name =}();
 int invalid_metric_{= name =}_error(char *retval);
 int get_metric_{= name =}(char *retval);
@@ -306,6 +308,7 @@ void setup() {
     {=/ attrs =}
     {=# has_app =}
     {=# metrics =}
+    {=# auto =}
     {=# onebyte =}
     metric_{= name =}_threshold = EEPROM.read({= addr =});
     {=/ onebyte =}
@@ -326,6 +329,7 @@ void setup() {
         metric_{= name =}_threshold = {= threshold =};
     }
 
+    {=/ auto =}
     {=/ metrics =}
     {=/ has_app =}
 
@@ -793,6 +797,7 @@ int get_attr_{= name =}(char *retval) {
 
 {=/ attrs =}
 {=# metrics =}
+{=# auto =}
 int set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
         {=# is_float =}
@@ -834,6 +839,7 @@ int get_metric_{= name =}_threshold(char *retval) {
     return RET_SUCC;
 }
 
+{=/ auto =}
 bool check_metric_{= name =}() {
     return is_valid_float(metric_{= name =}, {= min =}, {= max =});
 }
@@ -1019,6 +1025,7 @@ int processRequest(const char *json, int length, char *retval) {
         }
         {=/ attrs =}
         {=# metrics =}
+        {=# auto =}
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_{= name =}_threshold")))) {
             int r = set_metric_{= name =}_threshold(json, requestJsmnTokens, num_tokens, retval);
             if (r > RET_ERR) {
@@ -1037,6 +1044,7 @@ int processRequest(const char *json, int length, char *retval) {
                 return RET_ERR;
             }
         }
+        {=/ auto =}
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}")))) {
             int r = get_metric_{= name =}(retval);
             if (r > RET_ERR) {
@@ -1060,6 +1068,7 @@ bool reportMetric(bool force) {
     total_length += 1;
 
     {=# metrics =}
+    {=# auto =}
     if ((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || force) {
         tempSendData[0] = '\0';
         if (get_metric_{= name =}(tempSendData) > RET_ERR) {
@@ -1069,6 +1078,7 @@ bool reportMetric(bool force) {
         }
     }
 
+    {=/ auto =}
     {=/ metrics =}
     if (wantSend) {
         wantSendData[total_length-1] = '}';
@@ -1100,6 +1110,7 @@ bool reportAttribute(bool force) {
 
     {=/ attrs =}
     {=# metrics =}
+    {=# auto =}
     if (last_metric_{= name =}_threshold != metric_{= name =}_threshold || force) {
         tempSendData[0] = '\0';
         if (get_metric_{= name =}_threshold(tempSendData) > RET_ERR) {
@@ -1109,6 +1120,7 @@ bool reportAttribute(bool force) {
         }
     }
 
+    {=/ auto =}
     {=/ metrics =}
     if (wantSend) {
         wantSendData[total_length-1] = '}';
@@ -1126,6 +1138,7 @@ bool reportAttribute(bool force) {
 bool reportMetric(bool force) {
     bool sended = false;
     {=# metrics =}
+    {=# auto =}
     if ((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || force) {
         wantSendData[0] = '\0';
         if (get_metric_{= name =}(wantSendData) > RET_ERR) {
@@ -1135,6 +1148,7 @@ bool reportMetric(bool force) {
         }
     }
 
+    {=/ auto =}
     {=/ metrics =}
     return sended;
 }
@@ -1155,6 +1169,7 @@ bool reportAttribute(bool force) {
 
     {=/ attrs =}
     {=# metrics =}
+    {=# auto =}
     if (last_metric_{= name =}_threshold != metric_{= name =}_threshold || force) {
         wantSendData[0] = '\0';
         if (get_metric_{= name =}_threshold(wantSendData) > RET_ERR) {
@@ -1164,6 +1179,7 @@ bool reportAttribute(bool force) {
         }
     }
 
+    {=/ auto =}
     {=/ metrics =}
     return sended;
 }

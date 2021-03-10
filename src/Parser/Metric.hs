@@ -60,6 +60,14 @@ getMetricThreshold def ps = fromMaybe def . listToMaybe $ [t | Threshold t <- ps
 getMetricPrec :: Integer -> [MetricProperty] -> Integer
 getMetricPrec def ps = fromMaybe def . listToMaybe $ [t | Prec t <- ps]
 
+
+isAuto :: [MetricProperty] -> Bool
+isAuto []                 = False
+isAuto (Threshold _:_)    = True
+isAuto (MaxThreshold _:_) = True
+isAuto (MinThreshold _:_) = True
+isAuto (_:xs)             = isAuto xs
+
 -- | Top level parser, parses Metric.
 metric :: Parser Metric.Metric
 metric = do
@@ -80,4 +88,5 @@ metric = do
         , Metric.metricThreshold    = getMetricThreshold mint metricProps
         , Metric.metricPrec         = fromIntegral $ getMetricPrec 2 metricProps
         , Metric.metricAddr         = 0
+        , Metric.metricAuto         = isAuto metricProps
         }

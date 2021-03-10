@@ -21,6 +21,7 @@ data Metric = Metric
     , metricMaxThreshold :: !Double
     , metricThreshold    :: !Double
     , metricPrec         :: !Int
+    , metricAuto         :: !Bool
     } deriving (Show, Eq)
 
 calcMetricWidth :: Metric -> Int
@@ -46,6 +47,7 @@ instance ToJSON Metric where
         , "is_float"        .= isFloatMetric metric
         , "uncheckmin"      .= (isUnsigned (metricType metric) && metricMin metric <= 0)
         , "onebyte"         .= (getMetricDataLength metric == 1)
+        , "auto"            .= metricAuto metric
         ]
 
 -- {"method": "set_name_threshold", "data": vv.vv}

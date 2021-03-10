@@ -267,7 +267,9 @@ prepareGasp sAddr flags gasp = setGaspExprs gasp . go 1 sAddr $ gaspExprs gasp
         go ri addr (ExprAttr x:xs)
           | attrKeep x = ExprAttr x {attrAddr = addr} : go ri (addr + getAttrDataLength x) xs
           | otherwise  = ExprAttr x : go ri addr xs
-        go ri addr (ExprMetric x:xs) = ExprMetric x {metricAddr = addr} : go ri (addr + getMetricDataLength x) xs
+        go ri addr (ExprMetric x:xs)
+          | metricAuto x = ExprMetric x {metricAddr = addr} : go ri (addr + getMetricDataLength x) xs
+          | otherwise  = ExprMetric x : go ri addr xs
         go ri addr (ExprCmd x:xs) = ExprCmd (setCommandFlag flags x) : go ri addr xs
         go ri addr (ExprFunction x:xs) = ExprFunction (setFunctionFlag flags x) : go ri addr xs
         go ri addr (ExprRule x:xs) = ExprRule x {ruleIndex=ri} : go (ri + 1) addr xs
@@ -356,7 +358,10 @@ putExpr (ExprAttr x)
   | attrKeep x && isFloatAttr x = putFloatle . realToFrac $ attrDef x * attrScale x
   | attrKeep x = putInt32le . floor $ attrDef x * attrScale x
   | otherwise  = return ()
-putExpr (ExprMetric x) = putFloatle . realToFrac $ metricThreshold x
+putExpr (ExprMetric x)
+  | metricAuto x && isFloatMetric x = putFloatle . realToFrac $ metricThreshold x
+  | metricAuto x = putInt32le . floor $ metricThreshold x
+  | otherwise  = return ()
 putExpr _ = return ()
 
 instance Binary Gasp where
