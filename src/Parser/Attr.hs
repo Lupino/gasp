@@ -6,6 +6,7 @@ import           Text.Parsec.String (Parser)
 
 import           Data.Maybe         (fromMaybe, listToMaybe)
 import qualified Gasp.Attr          as Attr
+import           Gasp.Common        (maxValue, minValue)
 import           Lexer
 import           Parser.Common
 
@@ -70,12 +71,14 @@ attr :: Parser Attr.Attr
 attr = do
     (attrName, attrProps) <- gaspElementNameAndClosureContent reservedNameAttr attrProperties
 
+    let tp = getAttrType "int" attrProps
+
     return Attr.Attr
         { Attr.attrName   = attrName
         , Attr.attrAddr   = 0
-        , Attr.attrType   = getAttrType   "int" attrProps
-        , Attr.attrMax    = getAttrMax    100 attrProps
-        , Attr.attrMin    = getAttrMin    0 attrProps
+        , Attr.attrType   = tp
+        , Attr.attrMax    = getAttrMax    (maxValue tp) attrProps
+        , Attr.attrMin    = getAttrMin    (minValue tp) attrProps
         , Attr.attrDef    = getAttrDef    0 attrProps
         , Attr.attrGenSet = getAttrGenSet attrProps
         , Attr.attrKeep   = getAttrKeep   attrProps

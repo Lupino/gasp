@@ -5,6 +5,7 @@ module Parser.Metric
 import           Text.Parsec.String (Parser)
 
 import           Data.Maybe         (fromMaybe, listToMaybe)
+import           Gasp.Common        (maxValue, minValue)
 import qualified Gasp.Metric        as Metric
 import           Lexer
 import           Parser.Common
@@ -73,14 +74,15 @@ metric :: Parser Metric.Metric
 metric = do
     (metricName, metricProps) <- gaspElementNameAndClosureContent reservedNameMetric metricProperties
 
-    let maxv = getMetricMax 100 metricProps
-        minv = getMetricMin 0 metricProps
+    let tp = getMetricType "float" metricProps
+        maxv = getMetricMax (maxValue tp) metricProps
+        minv = getMetricMin (minValue tp) metricProps
         maxt = (maxv - minv) / 2
         mint = maxt / 50
 
     return Metric.Metric
         { Metric.metricName         = metricName
-        , Metric.metricType         = getMetricType "float" metricProps
+        , Metric.metricType         = tp
         , Metric.metricMax          = maxv
         , Metric.metricMin          = minv
         , Metric.metricMaxThreshold = getMetricMaxThreshold maxt metricProps
