@@ -306,8 +306,23 @@ void setup() {
     {=/ attrs =}
     {=# has_app =}
     {=# metrics =}
+    {=# onebyte =}
+    metric_{= name =}_threshold = EEPROM.read({= addr =});
+    {=/ onebyte =}
+    {=^ onebyte =}
     EEPROM.get({= addr =}, metric_{= name =}_threshold);
+    {=/ onebyte =}
+    {=# is_float =}
     if (!is_valid_float(metric_{= name =}_threshold, {= min_threshold =}, {= max_threshold =})) {
+    {=/ is_float =}
+    {=^ is_float =}
+    {=# uncheckmin =}
+    if (metric_{= name =}_threshold > {= max_threshold =}) {
+    {=/ uncheckmin =}
+    {=^ uncheckmin =}
+    if (metric_{= name =}_threshold < {= min_threshold =} || metric_{= name =}_threshold > {= max_threshold =}) {
+    {=/ uncheckmin =}
+    {=/ is_float =}
         metric_{= name =}_threshold = {= threshold =};
     }
 
@@ -780,21 +795,42 @@ int get_attr_{= name =}(char *retval) {
 {=# metrics =}
 int set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
+        {=# is_float =}
         {= type =} tmp = atof(requestValue);
         if (!is_valid_float(tmp, {= min_threshold =}, {= max_threshold =})) {
+        {=/ is_float =}
+        {=^ is_float =}
+        {= type =} tmp = atoi(requestValue);
+        {=# uncheckmin =}
+        if (tmp > {= max_threshold =}) {
+        {=/ uncheckmin =}
+        {=^ uncheckmin =}
+        if (tmp < {= min_threshold =} || tmp > {= max_threshold =}) {
+        {=/ uncheckmin =}
+        {=/ is_float =}
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min_threshold =}, {= max_threshold =}]\"}")));
           return RET_ERR;
         }
         metric_{= name =}_threshold = tmp;
+        {=# onebyte =}
+        EEPROM.write({= addr =}, metric_{= name =}_threshold);
+        {=/ onebyte =}
+        {=^ onebyte =}
         EEPROM.put({= addr =}, metric_{= name =}_threshold);
+        {=/ onebyte =}
     }
     get_metric_{= name =}_threshold(retval);
     return RET_SUCC;
 }
 
 int get_metric_{= name =}_threshold(char *retval) {
-    dtostrf(metric_{= name =}_threshold, {= threshold_width =}, {= prec =}, requestValue);
+    {=^ is_float =}
+    sprintf(retval, FC(F("{\"{= name =}_threshold\": %d}")), metric_{= name =}_threshold);
+    {=/ is_float =}
+    {=# is_float =}
+    dtostrf(metric_{= name =}_threshold, {= width =}, {= prec =}, requestValue);
     sprintf(retval, FC(F("{\"{= name =}_threshold\": %s}")), ltrim(requestValue));
+    {=/ is_float =}
     return RET_SUCC;
 }
 
@@ -811,8 +847,13 @@ int get_metric_{= name =}(char *retval) {
     if (!check_metric_{= name =}()) {
         return invalid_metric_{= name =}_error(retval);
     }
+    {=^ is_float =}
+    sprintf(retval, FC(F("{\"{= name =}\": %d}")), metric_{= name =});
+    {=/ is_float =}
+    {=# is_float =}
     dtostrf(metric_{= name =}, {= width =}, {= prec =}, requestValue);
     sprintf(retval, FC(F("{\"{= name =}\": %s}")), ltrim(requestValue));
+    {=/ is_float =}
     return RET_SUCC;
 }
 

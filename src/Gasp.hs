@@ -166,6 +166,13 @@ hasFloatAttr (x:xs)
 getMetrics:: Gasp -> [Metric]
 getMetrics gasp = [metric | (ExprMetric metric) <- gaspExprs gasp]
 
+
+hasFloatMetric :: [Metric] -> Bool
+hasFloatMetric [] = False
+hasFloatMetric (x:xs)
+  | isFloatMetric x = True
+  | otherwise     = hasFloatMetric xs
+
 -- * Everys
 
 getEverys:: Gasp -> [Every]
@@ -260,7 +267,7 @@ prepareGasp sAddr flags gasp = setGaspExprs gasp . go 1 sAddr $ gaspExprs gasp
         go ri addr (ExprAttr x:xs)
           | attrKeep x = ExprAttr x {attrAddr = addr} : go ri (addr + getAttrDataLength x) xs
           | otherwise  = ExprAttr x : go ri addr xs
-        go ri addr (ExprMetric x:xs) = ExprMetric x {metricAddr = addr} : go ri (addr + 4) xs
+        go ri addr (ExprMetric x:xs) = ExprMetric x {metricAddr = addr} : go ri (addr + getMetricDataLength x) xs
         go ri addr (ExprCmd x:xs) = ExprCmd (setCommandFlag flags x) : go ri addr xs
         go ri addr (ExprFunction x:xs) = ExprFunction (setFunctionFlag flags x) : go ri addr xs
         go ri addr (ExprRule x:xs) = ExprRule x {ruleIndex=ri} : go (ri + 1) addr xs
@@ -315,7 +322,7 @@ instance ToJSON Gasp where
         , "has_input"   .= hasInput gpios
         , "has_debug"   .= constDebug consts
         , "has_rule"    .= not (null rules)
-        , "has_float"   .= (hasFloatAttr attrs || hasMetric)
+        , "has_float"   .= (hasFloatAttr attrs || hasFloatMetric metrics)
         , "low_memory"  .= getLowMemory gasp
         , "consts"      .= consts
         , "ctrl_mode"   .= ctrlMode

@@ -4,10 +4,12 @@ module Gasp.Metric
     , setMetricThresholdLength
     , getMetricValueLength
     , getMetricThresholdRspLength
+    , isFloatMetric
+    , getMetricDataLength
     ) where
 
-import           Data.Aeson (ToJSON (..), object, (.=))
-import           Gasp.Attr  (calcWidth)
+import           Data.Aeson  (ToJSON (..), object, (.=))
+import           Gasp.Common
 
 data Metric = Metric
     { metricName         :: !String -- Identifier
@@ -41,6 +43,9 @@ instance ToJSON Metric where
         , "width"           .= calcMetricWidth metric
         , "prec"            .= metricPrec metric
         , "addr"            .= metricAddr metric
+        , "is_float"        .= isFloatMetric metric
+        , "uncheckmin"      .= (isUnsigned (metricType metric) && metricMin metric <= 0)
+        , "onebyte"         .= (getMetricDataLength metric == 1)
         ]
 
 -- {"method": "set_name_threshold", "data": vv.vv}
@@ -62,3 +67,9 @@ getMetricValueLength metric = calcMetricWidth metric + 1 + metricPrec metric
 
 getMetricThresholdValueLength :: Metric -> Int
 getMetricThresholdValueLength metric = calcMetricThresholdWidth metric + 1 + metricPrec metric
+
+isFloatMetric :: Metric -> Bool
+isFloatMetric = isFloat . metricType
+
+getMetricDataLength :: Metric -> Int
+getMetricDataLength = dataLength . metricType
