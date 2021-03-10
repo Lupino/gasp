@@ -49,7 +49,7 @@ gpio gpioName pinName [LOW|HIGH [LOW|HIGH]] [-> link attrName [false|true]]
 //                    default                       emit
 gpio gpioName pinName [LOW|HIGH] [-> click funcName [LOW|HIGH]]
 //                     default
-gpio gpioName pinName [LOW|HIGH|NUM] [-> pwm attrName]
+gpio gpioName pinName [NUM] [-> pwm attrName]
 ```
 
 ## agpio

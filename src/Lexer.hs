@@ -19,6 +19,7 @@ module Lexer
   , reserved
   , identifier
   , integer
+  , decimal
   , float
   , stringLiteral
   , whiteSpace
@@ -163,6 +164,9 @@ stringLiteral = Token.stringLiteral gaspLexer
 
 integer :: Parser Integer
 integer = Token.integer gaspLexer
+
+decimal :: Parser Integer
+decimal = Token.decimal gaspLexer
 
 naturalOrFloat :: Parser(Either Integer Double)
 naturalOrFloat = Token.naturalOrFloat gaspLexer

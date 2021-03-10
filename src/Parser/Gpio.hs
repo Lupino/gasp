@@ -4,14 +4,14 @@ module Parser.Gpio
 
 import           Gasp.Gpio
 import           Lexer
-import           Text.Parsec        (option, (<|>))
+import           Text.Parsec        (option, spaces, (<|>))
 import           Text.Parsec.String (Parser)
 
 bindClick :: State -> Parser GpioBind
 bindClick emit = do
   _ <- symbol "click"
   n <- FuncName <$> identifier
-  v <- State <$> option (unState emit) identifier
+  v <- State <$> option (unState emit) (stateLow <|> stateHigh)
   return $ CallFn n v
 
 bindLink :: Parser GpioBind
@@ -37,7 +37,20 @@ bindParser emit = do
 --                       default                       emit
 -- gpio gpioName pinName [LOW|HIGH] [-> click funcName [LOW|HIGH]]
 --                       default
--- gpio gpioName pinName [LOW|HIGH|NUM] [-> pwm attrName]
+-- gpio gpioName pinName [NUM] [-> pwm attrName]
+
+stateLow :: Parser String
+stateLow = symbol "LOW"
+
+stateHigh :: Parser String
+stateHigh = symbol "HIGH"
+
+stateNum :: Parser String
+stateNum = do
+  v <- show <$> decimal
+  spaces
+  return v
+
 
 -- | Top level parser, parses Gpio.
 gpio :: Parser Gpio
@@ -45,9 +58,9 @@ gpio = do
   reserved reservedNameGpio
   name <- identifier
   pin <- stringLiteral <|> (show <$> integer) <|> identifier
-  state <- option "LOW" identifier
+  state <- option "LOW" (stateLow <|> stateHigh <|> stateNum)
   let revertState = if state == "LOW" then "HIGH" else "LOW"
-  open <- option revertState identifier
+  open <- option revertState (stateLow <|> stateHigh)
   let close = if open == "LOW" then "HIGH" else "LOW"
   b <- option NoBind (bindParser (State revertState))
 
