@@ -155,10 +155,10 @@ uint8_t gpio_reading = 0;
 {=# has_gpio =}
 {=# gpios =}
 uint8_t gpio_{= name =}_state = {= state =};
-{=# has_fn =}
+{=# is_input =}
 unsigned long last_gpio_{= name =}_debounce_time_ms = 0;
 uint8_t last_gpio_{= name =}_state = {= state =};
-{=/ has_fn =}
+{=/ is_input =}
 
 {=/ gpios =}
 {=/ has_gpio =}
@@ -207,7 +207,7 @@ int get_metric_{= name =}(char *retval);
 {=/ metrics =}
 {=/ has_app =}
 {=# gpios =}
-{=^ has_fn =}
+{=^ is_input =}
 {=# has_link =}
 void open_gpio_{= name =}_raw();
 void close_gpio_{= name =}_raw();
@@ -219,7 +219,7 @@ void open_gpio_{= name =}();
 void close_gpio_{= name =}();
 {=/ has_link =}
 void toggle_gpio_{= name =}();
-{=/ has_fn =}
+{=/ is_input =}
 {=/ gpios =}
 {=# functions =}
 {=# has_argv =}
@@ -336,12 +336,12 @@ void setup() {
     {=/ use_eeprom =}
     {=# has_gpio =}
     {=# gpios =}
-    {=# has_fn =}
+    {=# is_input =}
     pinMode({= pin =}, INPUT);
-    {=/ has_fn =}
-    {=^ has_fn =}
+    {=/ is_input =}
+    {=^ is_input =}
     pinMode({= pin =}, OUTPUT);
-    {=/ has_fn =}
+    {=/ is_input =}
 
     {=/ gpios =}
     {=/ has_gpio =}
@@ -514,7 +514,7 @@ void loop() {
     {=/ actions =}
     {=# has_gpio =}
     {=# gpios =}
-    {=# has_fn =}
+    {=# is_input =}
     gpio_reading = digitalRead({= pin =});
     if (gpio_reading != last_gpio_{= name =}_state) {
         last_gpio_{= name =}_debounce_time_ms = get_current_time_ms();
@@ -528,7 +528,7 @@ void loop() {
         }
     }
     last_gpio_{= name =}_state = gpio_reading;
-    {=/ has_fn =}
+    {=/ is_input =}
     {=# has_link =}
     {=# reverse =}
     if (attr_{= link =} == gpio_{= name =}_state) {
@@ -866,7 +866,7 @@ int get_metric_{= name =}(char *retval) {
 {=/ metrics =}
 {=/ has_app =}
 {=# gpios =}
-{=^ has_fn =}
+{=^ is_input =}
 {=# has_link =}
 void open_gpio_{= name =}_raw() {
     gpio_{= name =}_state = {= open =};
@@ -925,7 +925,7 @@ void toggle_gpio_{= name =}() {
     {=/ has_link =}
 }
 
-{=/ has_fn =}
+{=/ is_input =}
 {=/ gpios =}
 {=# functions =}
 {=# has_argv =}

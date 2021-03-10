@@ -28,5 +28,5 @@ instance ToJSON Gpio where
         , "close"    .= gpioClose gpio
         , "reverse"  .= gpioReverse gpio
         , "has_link" .= not (null $ gpioLink gpio)
-        , "has_fn"   .= not (null $ gpioFunc gpio)
+        , "is_input" .= not (null $ gpioFunc gpio)
         ]
