@@ -196,8 +196,8 @@ getGpios gasp = [gpio | (ExprGpio gpio) <- gaspExprs gasp]
 hasInput :: [Gpio] -> Bool
 hasInput [] = False
 hasInput (x:xs)
-  | null (gpioFunc x) = hasInput xs
-  | otherwise = True
+  | isInput (gpioBind x) = True
+  | otherwise = hasInput xs
 
 
 -- * AGpios

@@ -1,14 +1,14 @@
 module Parser.Gpio
-    ( gpio
-    ) where
+  ( gpio
+  ) where
 
 import           Gasp.Gpio
 import           Lexer
 import           Text.Parsec        (option, (<|>))
 import           Text.Parsec.String (Parser)
 
-bindParser :: Gpio -> Parser Gpio
-bindParser g = do
+bindParser :: State -> Parser GpioBind
+bindParser emit = do
   _ <- symbol "->"
   sym <- symbol "click" <|> symbol "link"
   n <- identifier
@@ -16,17 +16,10 @@ bindParser g = do
   case sym of
     "link" -> do
       v <- option False bool
-      return g
-        { gpioLink = n
-        , gpioReverse = v
-        }
+      return $ LinkAttr (AttrName n) v
     "click" -> do
-      v <- option (gpioEmit g) identifier
-      return g
-        { gpioFunc = n
-        , gpioEmit = v
-        }
-
+      v <- option (unState emit) identifier
+      return $ CallFn (FuncName n) (State v)
     _ -> fail $ "no such symbol " ++ sym
 
 --                       default   open                          reverse
@@ -44,17 +37,13 @@ gpio = do
   let revertState = if state == "LOW" then "HIGH" else "LOW"
   open <- option revertState identifier
   let close = if open == "LOW" then "HIGH" else "LOW"
+  b <- option NoBind (bindParser (State revertState))
 
-  let g = Gpio
-        { gpioName    = name
-        , gpioPin     = pin
-        , gpioLink    = ""
-        , gpioReverse = False
-        , gpioFunc    = ""
-        , gpioEmit    = revertState
-        , gpioState   = state
-        , gpioOpen    = open
-        , gpioClose   = close
-        }
-
-  option g $ bindParser g
+  return Gpio
+    { gpioName  = name
+    , gpioPin   = pin
+    , gpioState = State state
+    , gpioOpen  = State open
+    , gpioClose = State close
+    , gpioBind  = b
+    }

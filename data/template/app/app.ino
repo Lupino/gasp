@@ -154,12 +154,19 @@ uint8_t gpio_reading = 0;
 {=/ has_input =}
 {=# has_gpio =}
 {=# gpios =}
+{=# bind =}
+{=# is_link =}
 uint8_t gpio_{= name =}_state = {= state =};
-{=# is_input =}
+{=/ is_link =}
+{=# is_fn =}
+uint8_t gpio_{= name =}_state = {= state =};
 unsigned long last_gpio_{= name =}_debounce_time_ms = 0;
 uint8_t last_gpio_{= name =}_state = {= state =};
-{=/ is_input =}
-
+{=/ is_fn =}
+{=# is_no_bind =}
+uint8_t gpio_{= name =}_state = {= state =};
+{=/ is_no_bind =}
+{=/ bind =}
 {=/ gpios =}
 {=/ has_gpio =}
 {=# agpios =}
@@ -207,19 +214,22 @@ int get_metric_{= name =}(char *retval);
 {=/ metrics =}
 {=/ has_app =}
 {=# gpios =}
-{=^ is_input =}
-{=# has_link =}
+{=# bind =}
+{=# is_link =}
 void open_gpio_{= name =}_raw();
 void close_gpio_{= name =}_raw();
 void open_gpio_{= name =}();
 void close_gpio_{= name =}();
-{=/ has_link =}
-{=^ has_link =}
+void toggle_gpio_{= name =}();
+
+{=/ is_link =}
+{=# is_no_bind =}
 void open_gpio_{= name =}();
 void close_gpio_{= name =}();
-{=/ has_link =}
 void toggle_gpio_{= name =}();
-{=/ is_input =}
+
+{=/ is_no_bind =}
+{=/ bind =}
 {=/ gpios =}
 {=# functions =}
 {=# has_argv =}
@@ -336,13 +346,17 @@ void setup() {
     {=/ use_eeprom =}
     {=# has_gpio =}
     {=# gpios =}
-    {=# is_input =}
-    pinMode({= pin =}, INPUT);
-    {=/ is_input =}
-    {=^ is_input =}
+    {=# bind =}
+    {=# is_link =}
     pinMode({= pin =}, OUTPUT);
-    {=/ is_input =}
-
+    {=/ is_link =}
+    {=# is_fn =}
+    pinMode({= pin =}, INPUT);
+    {=/ is_fn =}
+    {=# is_no_bind =}
+    pinMode({= pin =}, OUTPUT);
+    {=/ is_no_bind =}
+    {=/ bind =}
     {=/ gpios =}
     {=/ has_gpio =}
     {=# setups =}
@@ -514,7 +528,8 @@ void loop() {
     {=/ actions =}
     {=# has_gpio =}
     {=# gpios =}
-    {=# is_input =}
+    {=# bind =}
+    {=# is_fn =}
     gpio_reading = digitalRead({= pin =});
     if (gpio_reading != last_gpio_{= name =}_state) {
         last_gpio_{= name =}_debounce_time_ms = get_current_time_ms();
@@ -528,8 +543,9 @@ void loop() {
         }
     }
     last_gpio_{= name =}_state = gpio_reading;
-    {=/ is_input =}
-    {=# has_link =}
+
+    {=/ is_fn =}
+    {=# is_link =}
     {=# reverse =}
     if (attr_{= link =} == gpio_{= name =}_state) {
         if (attr_{= link =} == {= open =}) {
@@ -548,8 +564,9 @@ void loop() {
         }
     }
     {=/ reverse =}
-    {=/ has_link =}
 
+    {=/ is_link =}
+    {=/ bind =}
     {=/ gpios =}
     {=/ has_gpio =}
     {=# agpios =}
@@ -866,8 +883,8 @@ int get_metric_{= name =}(char *retval) {
 {=/ metrics =}
 {=/ has_app =}
 {=# gpios =}
-{=^ is_input =}
-{=# has_link =}
+{=# bind =}
+{=# is_link =}
 void open_gpio_{= name =}_raw() {
     gpio_{= name =}_state = {= open =};
     digitalWrite({= pin =}, gpio_{= name =}_state);
@@ -895,8 +912,17 @@ void close_gpio_{= name =}() {
     set_attr_{= link =}_raw({= close =});
     {=/ reverse =}
 }
-{=/ has_link =}
-{=^ has_link =}
+
+void toggle_gpio_{= name =}() {
+    if (attr_{= link =} == {= open =}) {
+        set_attr_{= link =}_raw({= close =});
+    } else {
+        set_attr_{= link =}_raw({= open =});
+    }
+}
+
+{=/ is_link =}
+{=# is_no_bind =}
 void open_gpio_{= name =}() {
     gpio_{= name =}_state = {= open =};
     digitalWrite({= pin =}, gpio_{= name =}_state);
@@ -906,26 +932,17 @@ void close_gpio_{= name =}() {
     gpio_{= name =}_state = {= close =};
     digitalWrite({= pin =}, gpio_{= name =}_state);
 }
-{=/ has_link =}
 
 void toggle_gpio_{= name =}() {
-    {=# has_link =}
-    if (attr_{= link =} == {= open =}) {
-        set_attr_{= link =}_raw({= close =});
-    } else {
-        set_attr_{= link =}_raw({= open =});
-    }
-    {=/ has_link =}
-    {=^ has_link =}
     if (gpio_{= name =}_state == {= open =}) {
         close_gpio_{= name =}();
     } else {
         open_gpio_{= name =}();
     }
-    {=/ has_link =}
 }
 
-{=/ is_input =}
+{=/ is_no_bind =}
+{=/ bind =}
 {=/ gpios =}
 {=# functions =}
 {=# has_argv =}
