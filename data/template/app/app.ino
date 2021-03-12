@@ -615,8 +615,9 @@ void loop() {
     {=# uarts =}
     while (uart_{= name =}.available() > 0) {
         {=# readers =}
-        if ({= reader =}(uart_read_{= rname =}_buffer, &uart_read_{= rname =}_buffer_len) > RET_ERR) {
+        if ({= reader =}(uart_{= name =}.read(), uart_read_{= rname =}_buffer, &uart_read_{= rname =}_buffer_len) > RET_ERR) {
             {= parser =}(uart_read_{= rname =}_buffer, uart_read_{= rname =}_buffer_len);
+            uart_read_{= rname =}_buffer_len = 0;
         }
         {=/ readers =}
     }
@@ -1025,7 +1026,7 @@ int {= name =}() {
 void uart_write_{= wname =}() {
     is_uart_write_{= wname =} = true;
     {=# bytes =}
-    uart_{= name =}.write(0x{= . =});
+    uart_{= name =}.write((uint8_t)0x{= . =});
     {=/ bytes =}
 }
 
