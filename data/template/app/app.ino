@@ -368,12 +368,17 @@ void setup() {
     {=# bind =}
     {=# is_link =}
     pinMode({= pin =}, OUTPUT);
+    digitalWrite({= pin =}, gpio_{= name =}_state);
     {=/ is_link =}
     {=# is_fn =}
     pinMode({= pin =}, INPUT);
     {=/ is_fn =}
+    {=# is_pwm =}
+    analogWrite({= pin =}, gpio_{= name =}_state);
+    {=/ is_pwm =}
     {=# is_no_bind =}
     pinMode({= pin =}, OUTPUT);
+    digitalWrite({= pin =}, gpio_{= name =}_state);
     {=/ is_no_bind =}
     {=/ bind =}
     {=/ gpios =}
