@@ -173,9 +173,11 @@ uint8_t gpio_{= name =}_state = {= state =};
 {=/ gpios =}
 {=/ has_gpio =}
 {=# agpios =}
-{=^ has_link =}
+{=# bind =}
+{=^ is_no_bind =}
 uint16_t agpio_{= name =}_value = 0;
-{=/ has_link =}
+{=/ is_no_bind =}
+{=/ bind =}
 {=/ agpios =}
 // defined
 unsigned long get_current_time_ms();
@@ -579,12 +581,14 @@ void loop() {
     {=/ gpios =}
     {=/ has_gpio =}
     {=# agpios =}
-    {=^ has_link =}
-    agpio_{= name =}_value = analogRead({= pin =});
-    {=/ has_link =}
-    {=# has_link =}
+    {=# bind =}
+    {=# is_link =}
     metric_{= link =} = analogRead({= pin =});
-    {=/ has_link =}
+    {=/ is_link =}
+    {=# is_no_bind =}
+    agpio_{= name =}_value = analogRead({= pin =});
+    {=/ is_no_bind =}
+    {=/ bind =}
     {=/ agpios =}
 }
 
