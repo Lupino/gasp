@@ -35,21 +35,33 @@ data GpioBind
 
 instance ToJSON GpioBind where
     toJSON (LinkAttr link rev) = object
-        [ "link"    .= link
-        , "reverse" .= rev
-        , "is_link" .= True
+        [ "link"       .= link
+        , "reverse"    .= rev
+        , "is_link"    .= True
+        , "is_pwm"     .= False
+        , "is_fn"      .= False
+        , "is_no_bind" .= False
         ]
     toJSON (PwmAttr link) = object
-        [ "link"    .= link
-        , "is_pwm" .= True
+        [ "link"       .= link
+        , "is_pwm"     .= True
+        , "is_link"    .= False
+        , "is_fn"      .= False
+        , "is_no_bind" .= False
         ]
     toJSON (CallFn fn emit) = object
-        [ "fn"    .= fn
-        , "emit"  .= emit
-        , "is_fn" .= True
+        [ "fn"         .= fn
+        , "emit"       .= emit
+        , "is_fn"      .= True
+        , "is_link"    .= False
+        , "is_pwm"     .= False
+        , "is_no_bind" .= False
         ]
     toJSON NoBind = object
         [ "is_no_bind" .= True
+        , "is_link"    .= False
+        , "is_pwm"     .= False
+        , "is_fn"      .= False
         ]
 
 isInput :: GpioBind -> Bool

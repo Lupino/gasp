@@ -18,6 +18,7 @@ import           Parser.Loop        (loop)
 import           Parser.Metric      (metric)
 import           Parser.Rule        (rule)
 import           Parser.Setup       (setup)
+import           Parser.Uart        (uart)
 import           Text.Parsec        (ParseError, eof, many1, (<|>))
 import           Text.Parsec.String (Parser)
 
@@ -34,6 +35,7 @@ expr
     <|> exprEvery
     <|> exprGpio
     <|> exprAGpio
+    <|> exprUart
     <|> exprRule
     <|> exprConst
 
@@ -69,6 +71,9 @@ exprGpio = Gasp.ExprGpio <$> gpio
 
 exprAGpio :: Parser Gasp.Expr
 exprAGpio = Gasp.ExprAGpio <$> agpio
+
+exprUart :: Parser Gasp.Expr
+exprUart = Gasp.ExprUart <$> uart
 
 exprRule :: Parser Gasp.Expr
 exprRule = Gasp.ExprRule <$> rule

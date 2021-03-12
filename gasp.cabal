@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bf16b96f17fe4e91ed826cd03f406bd7c2455f9d57b8ac389d510113118db3ab
+-- hash: 64814c45203a5e962331503b9ff24f249d96d343f74c70bb52decc7320e811f3
 
 name:           gasp
 version:        0.1.0.0
@@ -50,6 +50,7 @@ library
       Gasp.Metric
       Gasp.Rule
       Gasp.Setup
+      Gasp.Uart
       Generator
       Generator.AppGenerator
       Generator.AppGenerator.Common
@@ -78,6 +79,7 @@ library
       Parser.Metric
       Parser.Rule
       Parser.Setup
+      Parser.Uart
       StrongPath
       StrongPath.Internal
       Util.IO

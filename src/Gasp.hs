@@ -39,6 +39,7 @@ import           Gasp.Loop
 import           Gasp.Metric
 import           Gasp.Rule
 import           Gasp.Setup
+import           Gasp.Uart
 
 
 -- * Gasp
@@ -64,6 +65,7 @@ data Expr
     | ExprAGpio !AGpio
     | ExprRule !Rule
     | ExprConst !Constant
+    | ExprUart !Uart
     deriving (Show, Eq)
 
 fromGaspExprs :: [Expr] -> Gasp
@@ -204,6 +206,14 @@ hasInput (x:xs)
 
 getAGpios :: Gasp -> [AGpio]
 getAGpios gasp = [agpio | (ExprAGpio agpio) <- gaspExprs gasp]
+
+
+-- * Uarts
+
+getUarts :: Gasp -> [Uart]
+getUarts gasp = [uart | (ExprUart uart) <- gaspExprs gasp]
+
+
 -- * Flags
 
 getFlags:: Gasp -> [Flag]
@@ -327,6 +337,8 @@ instance ToJSON Gasp where
         , "has_float"   .= (hasFloatAttr attrs || hasFloatMetric metrics)
         , "low_memory"  .= getLowMemory gasp
         , "consts"      .= consts
+        , "uarts"       .= uarts
+        , "has_uart"    .= not (null uarts)
         , "ctrl_mode"   .= ctrlMode
         , "production"  .= prod
         ]
@@ -336,6 +348,7 @@ instance ToJSON Gasp where
               metrics = getMetrics gasp
               gpios = getGpios gasp
               agpios = getAGpios gasp
+              uarts = getUarts gasp
               cmds = getCmds gasp
               funcs = getFunctions gasp
               hasFunc = not (null funcs)

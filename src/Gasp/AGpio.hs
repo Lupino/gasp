@@ -15,11 +15,13 @@ data AGpioBind
 
 instance ToJSON AGpioBind where
     toJSON (LinkMetric link) = object
-        [ "link"    .= link
-        , "is_link" .= True
+        [ "link"       .= link
+        , "is_link"    .= True
+        , "is_no_bind" .= False
         ]
     toJSON NoBind = object
         [ "is_no_bind" .= True
+        , "is_link"    .= False
         ]
 
 data AGpio = AGpio

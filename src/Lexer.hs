@@ -12,6 +12,9 @@ module Lexer
   , reservedNameGpio
   , reservedNameAGpio
   , reservedNameRule
+  , reservedNameUart
+  , reservedNameUartRead
+  , reservedNameUartWrite
   , braces
   , brackets
   , symbol
@@ -90,6 +93,15 @@ reservedNameAGpio = "agpio"
 reservedNameRule :: String
 reservedNameRule = "rule"
 
+reservedNameUart :: String
+reservedNameUart = "uart"
+
+reservedNameUartRead :: String
+reservedNameUartRead = "read"
+
+reservedNameUartWrite :: String
+reservedNameUartWrite = "write"
+
 -- * Data types.
 
 reservedNameBooleanTrue :: String
@@ -114,6 +126,9 @@ reservedNames =
     , reservedNameGpio
     , reservedNameAGpio
     , reservedNameRule
+    , reservedNameUart
+    , reservedNameUartRead
+    , reservedNameUartWrite
     -- * Data types
     , reservedNameBooleanTrue
     , reservedNameBooleanFalse

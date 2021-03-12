@@ -8,6 +8,10 @@
 #include <EEPROM.h>
 
 {=/ use_eeprom =}
+{=# has_uart =}
+#include <SoftwareSerial.h>
+
+{=/ has_uart =}
 {=# has_func =}
 #define RET_ERR -1
 #define RET_SUCC 0
@@ -179,6 +183,16 @@ uint16_t agpio_{= name =}_value = 0;
 {=/ is_no_bind =}
 {=/ bind =}
 {=/ agpios =}
+{=# uarts =}
+SoftwareSerial uart_{= name =}({= rx =}, {= tx =});
+{=# readers =}
+uint8_t uart_read_{= rname =}_buffer[{= buf_len =}];
+int uart_read_{= rname =}_buffer_len = 0;
+{=/ readers =}
+{=# writers =}
+bool is_uart_write_{= wname =} = false;
+{=/ writers =}
+{=/ uarts =}
 // defined
 unsigned long get_current_time_ms();
 
@@ -271,6 +285,11 @@ bool reportMetric(bool force);
 bool reportAttribute(bool force);
 {=/ use_eeprom =}
 {=/ has_app =}
+{=# uarts =}
+{=# writers =}
+void uart_write_{= wname =}();
+{=/ writers =}
+{=/ uarts =}
 // end defined
 void setup() {
     {=# has_app =}
@@ -368,6 +387,9 @@ void setup() {
     {=& code =}
 
     {=/ setups =}
+    {=# uarts =}
+    uart_{= name =}.begin({= speed =});
+    {=/ uarts =}
     {=# has_app =}
     {=# has_debug =}
     #ifdef DEBUG_SERIAL
@@ -384,7 +406,7 @@ void loop() {
     {=# rules =}
     rule_depends_checked = true;
     {=# depends =}
-    if (!check_metric_{= name =}()) {
+    if (!check_metric_{= . =}()) {
         rule_depends_checked = false;
     }
     {=/ depends =}
@@ -590,6 +612,16 @@ void loop() {
     {=/ is_no_bind =}
     {=/ bind =}
     {=/ agpios =}
+    {=# uarts =}
+    while (uart_{= name =}.available() > 0) {
+        {=# readers =}
+        if ({= reader =}(uart_read_{= rname =}_buffer, &uart_read_{= rname =}_buffer_len) > RET_ERR) {
+            {= parser =}(uart_read_{= rname =}_buffer, uart_read_{= rname =}_buffer_len);
+        }
+        {=/ readers =}
+    }
+
+    {=/ uarts =}
 }
 
 unsigned long get_current_time_ms() {
@@ -988,6 +1020,17 @@ int {= name =}() {
 }
 
 {=/ functions =}
+{=# uarts =}
+{=# writers =}
+void uart_write_{= wname =}() {
+    is_uart_write_{= wname =} = true;
+    {=# bytes =}
+    uart_{= name =}.write(0x{= . =});
+    {=/ bytes =}
+}
+
+{=/ writers =}
+{=/ uarts =}
 {=# has_app =}
 int processRequest(const char *json, int length, char *retval) {
     /* Prepare parser */
