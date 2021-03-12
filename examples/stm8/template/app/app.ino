@@ -9,14 +9,13 @@
 #include <EEPROM.h>
 
 {=/ use_eeprom =}
-{=# has_func =}
-#define RET_ERR -1
-#define RET_SUCC 0
+{=# has_uart =}
+#include <SoftwareSerial.h>
+
+{=/ has_uart =}
 {=# consts =}
 #define {= name =} {= value =}
 {=/ consts =}
-
-{=/ has_func =}
 {=# inits =}
 {=& code =}
 
@@ -154,15 +153,41 @@ uint8_t gpio_reading = 0;
 {=/ has_input =}
 {=# has_gpio =}
 {=# gpios =}
-uint8_t gpio_{= name =}_pin = {= pin =};
+{=# bind =}
+{=# is_link =}
 uint8_t gpio_{= name =}_state = {= state =};
-{=# has_fn =}
+{=/ is_link =}
+{=# is_fn =}
+uint8_t gpio_{= name =}_state = {= state =};
 unsigned long last_gpio_{= name =}_debounce_time_ms = 0;
 uint8_t last_gpio_{= name =}_state = {= state =};
-{=/ has_fn =}
-
+{=/ is_fn =}
+{=# is_no_bind =}
+uint8_t gpio_{= name =}_state = {= state =};
+{=/ is_no_bind =}
+{=# is_pwm =}
+uint8_t gpio_{= name =}_state = {= state =};
+{=/ is_pwm =}
+{=/ bind =}
 {=/ gpios =}
 {=/ has_gpio =}
+{=# agpios =}
+{=# bind =}
+{=# is_no_bind =}
+uint16_t agpio_{= name =}_value = 0;
+{=/ is_no_bind =}
+{=/ bind =}
+{=/ agpios =}
+{=# uarts =}
+SoftwareSerial uart_{= name =}({= rx =}, {= tx =});
+{=# readers =}
+uint8_t uart_read_{= rname =}_buffer[{= buf_len =}];
+int uart_read_{= rname =}_buffer_len = 0;
+{=/ readers =}
+{=# writers =}
+bool is_uart_write_{= wname =} = false;
+{=/ writers =}
+{=/ uarts =}
 // defined
 unsigned long get_current_time_ms();
 
@@ -186,54 +211,59 @@ bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char 
 void merge_json(char *dst, char *src, int *total_length);
 {=# attrs =}
 void set_attr_{= name =}_raw({= type =} unscaled_value);
-int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
-int get_attr_{= name =}(char *retval);
+bool set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
+bool get_attr_{= name =}(char *retval);
 
 {=/ attrs =}
 {=# metrics =}
-int set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
-int get_metric_{= name =}_threshold(char *retval);
+{=# auto =}
+bool set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
+bool get_metric_{= name =}_threshold(char *retval);
+{=/ auto =}
 bool check_metric_{= name =}();
-int invalid_metric_{= name =}_error(char *retval);
-int get_metric_{= name =}(char *retval);
+bool invalid_metric_{= name =}_error(char *retval);
+bool get_metric_{= name =}(char *retval);
 
 {=/ metrics =}
 {=/ has_app =}
 {=# gpios =}
-{=^ has_fn =}
-{=# has_link =}
+{=# bind =}
+{=# is_link =}
 void open_gpio_{= name =}_raw();
 void close_gpio_{= name =}_raw();
 void open_gpio_{= name =}();
 void close_gpio_{= name =}();
-{=/ has_link =}
-{=^ has_link =}
+void toggle_gpio_{= name =}();
+
+{=/ is_link =}
+{=# is_no_bind =}
 void open_gpio_{= name =}();
 void close_gpio_{= name =}();
-{=/ has_link =}
 void toggle_gpio_{= name =}();
-{=/ has_fn =}
+
+{=/ is_no_bind =}
+{=/ bind =}
 {=/ gpios =}
 {=# functions =}
 {=# has_argv =}
-int {= name =}({= argv =});
+bool {= name =}({= argv =});
 {=/ has_argv =}
 {=^ has_argv =}
 {=# flag =}
 {=# retval =}
 {=# json =}
-int {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
+bool {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
 {=/ json =}
 {=^ json =}
-int {= name =}(char *retval);
+bool {= name =}(char *retval);
 {=/ json =}
 {=/ retval =}
 {=^ retval =}
 {=# json =}
-int {= name =}(const char *json, jsmntok_t *tokens, int num_tokens);
+bool {= name =}(const char *json, jsmntok_t *tokens, int num_tokens);
 {=/ json =}
 {=^ json =}
-int {= name =}();
+bool {= name =}();
 {=/ json =}
 {=/ retval =}
 {=/ flag =}
@@ -241,7 +271,7 @@ int {= name =}();
 
 {=/ functions =}
 {=# has_app =}
-int processRequest(const char *json, int length, char *retval);
+bool processRequest(const char *json, int length, char *retval);
 {=# has_metric =}
 bool reportMetric(bool force);
 {=/ has_metric =}
@@ -249,6 +279,11 @@ bool reportMetric(bool force);
 bool reportAttribute(bool force);
 {=/ use_eeprom =}
 {=/ has_app =}
+{=# uarts =}
+{=# writers =}
+void uart_write_{= wname =}();
+{=/ writers =}
+{=/ uarts =}
 // end defined
 void setup() {
     {=# has_app =}
@@ -301,30 +336,54 @@ void setup() {
     {=/ attrs =}
     {=# has_app =}
     {=# metrics =}
+    {=# auto =}
+    {=# onebyte =}
+    metric_{= name =}_threshold = EEPROM_read({= addr =});
+    {=/ onebyte =}
+    {=^ onebyte =}
     EEPROM_get({= addr =}, metric_{= name =}_threshold);
+    {=/ onebyte =}
+    {=# is_float =}
     if (!is_valid_float(metric_{= name =}_threshold, {= min_threshold =}, {= max_threshold =})) {
+    {=/ is_float =}
+    {=^ is_float =}
+    {=# uncheckmin =}
+    if (metric_{= name =}_threshold > {= max_threshold =}) {
+    {=/ uncheckmin =}
+    {=^ uncheckmin =}
+    if (metric_{= name =}_threshold < {= min_threshold =} || metric_{= name =}_threshold > {= max_threshold =}) {
+    {=/ uncheckmin =}
+    {=/ is_float =}
         metric_{= name =}_threshold = {= threshold =};
     }
 
+    {=/ auto =}
     {=/ metrics =}
     {=/ has_app =}
 
     {=/ use_eeprom =}
     {=# has_gpio =}
     {=# gpios =}
-    {=# has_fn =}
-    pinMode(gpio_{= name =}_pin, INPUT);
-    {=/ has_fn =}
-    {=^ has_fn =}
-    pinMode(gpio_{= name =}_pin, OUTPUT);
-    {=/ has_fn =}
-
+    {=# bind =}
+    {=# is_link =}
+    pinMode({= pin =}, OUTPUT);
+    {=/ is_link =}
+    {=# is_fn =}
+    pinMode({= pin =}, INPUT);
+    {=/ is_fn =}
+    {=# is_no_bind =}
+    pinMode({= pin =}, OUTPUT);
+    {=/ is_no_bind =}
+    {=/ bind =}
     {=/ gpios =}
     {=/ has_gpio =}
     {=# setups =}
     {=& code =}
 
     {=/ setups =}
+    {=# uarts =}
+    uart_{= name =}.begin({= speed =});
+    {=/ uarts =}
     {=# has_app =}
     {=# has_debug =}
     #ifdef DEBUG_SERIAL
@@ -341,7 +400,7 @@ void loop() {
     {=# rules =}
     rule_depends_checked = true;
     {=# depends =}
-    if (!check_metric_{= name =}()) {
+    if (!check_metric_{= . =}()) {
         rule_depends_checked = false;
     }
     {=/ depends =}
@@ -428,9 +487,9 @@ void loop() {
                 }
                 if (obj.type == REQUEST) {
                     wantSendData[0] = '\0';
-                    int ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
+                    bool ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
                     if (wantSendData[0] == '\0') {
-                        if (ret > RET_ERR) {
+                        if (ret) {
                             sprintf(wantSendData, "{\"result\": \"OK\"}");
                         } else {
                             sprintf(wantSendData, "{\"err\": \"not support\"}");
@@ -490,8 +549,9 @@ void loop() {
     {=/ actions =}
     {=# has_gpio =}
     {=# gpios =}
-    {=# has_fn =}
-    gpio_reading = digitalRead(gpio_{= name =}_pin);
+    {=# bind =}
+    {=# is_fn =}
+    gpio_reading = digitalRead({= pin =});
     if (gpio_reading != last_gpio_{= name =}_state) {
         last_gpio_{= name =}_debounce_time_ms = get_current_time_ms();
     }
@@ -504,8 +564,9 @@ void loop() {
         }
     }
     last_gpio_{= name =}_state = gpio_reading;
-    {=/ has_fn =}
-    {=# has_link =}
+
+    {=/ is_fn =}
+    {=# is_link =}
     {=# reverse =}
     if (attr_{= link =} == gpio_{= name =}_state) {
         if (attr_{= link =} == {= open =}) {
@@ -524,10 +585,38 @@ void loop() {
         }
     }
     {=/ reverse =}
-    {=/ has_link =}
 
+    {=/ is_link =}
+    {=# is_pwm =}
+    if (attr_{= link =} != gpio_{= name =}_state) {
+      gpio_{= name =}_state = attr_{= link =};
+      analogWrite({= pin =}, gpio_{= name =}_state);
+    }
+    {=/ is_pwm =}
+    {=/ bind =}
     {=/ gpios =}
     {=/ has_gpio =}
+    {=# agpios =}
+    {=# bind =}
+    {=# is_link =}
+    metric_{= link =} = analogRead({= pin =});
+    {=/ is_link =}
+    {=# is_no_bind =}
+    agpio_{= name =}_value = analogRead({= pin =});
+    {=/ is_no_bind =}
+    {=/ bind =}
+    {=/ agpios =}
+    {=# uarts =}
+    while (uart_{= name =}.available() > 0) {
+        {=# readers =}
+        if ({= reader =}(uart_{= name =}.read(), uart_read_{= rname =}_buffer, &uart_read_{= rname =}_buffer_len)) {
+            {= parser =}(uart_read_{= rname =}_buffer, uart_read_{= rname =}_buffer_len);
+            uart_read_{= rname =}_buffer_len = 0;
+        }
+        {=/ readers =}
+    }
+
+    {=/ uarts =}
 }
 
 unsigned long get_current_time_ms() {
@@ -716,7 +805,7 @@ void set_attr_{= name =}_raw({= type =} unscaled_value) {
     {=/ keep =}
 }
 
-int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
+bool set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
         {=# is_float =}
         {= type =} tmp = atof(requestValue);
@@ -732,15 +821,15 @@ int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, cha
         {=/ uncheckmin =}
         {=/ is_float =}
           sprintf(retval, "{\"err\": \"data must between: [{= min =}, {= max =}]\"}");
-          return RET_ERR;
+          return false;
         }
         set_attr_{= name =}_raw(tmp);
     }
     get_attr_{= name =}(retval);
-    return RET_SUCC;
+    return true;
 }
 
-int get_attr_{= name =}(char *retval) {
+bool get_attr_{= name =}(char *retval) {
     {=^ is_float =}
     sprintf(retval, "{\"{= name =}\": %d}", ({= type =})attr_{= name =} / {= scale =});
     {=/ is_float =}
@@ -748,62 +837,90 @@ int get_attr_{= name =}(char *retval) {
     dtostrf(({= type =})attr_{= name =} / {= scale =}, {= width =}, {= prec =}, requestValue);
     sprintf(retval, "{\"{= name =}\": %s}", ltrim(requestValue));
     {=/ is_float =}
-    return RET_SUCC;
+    return true;
 }
 
 {=/ attrs =}
 {=# metrics =}
-int set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
+{=# auto =}
+bool set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
+        {=# is_float =}
         {= type =} tmp = atof(requestValue);
         if (!is_valid_float(tmp, {= min_threshold =}, {= max_threshold =})) {
+        {=/ is_float =}
+        {=^ is_float =}
+        {= type =} tmp = atoi(requestValue);
+        {=# uncheckmin =}
+        if (tmp > {= max_threshold =}) {
+        {=/ uncheckmin =}
+        {=^ uncheckmin =}
+        if (tmp < {= min_threshold =} || tmp > {= max_threshold =}) {
+        {=/ uncheckmin =}
+        {=/ is_float =}
           sprintf(retval, "{\"err\": \"data must between: [{= min_threshold =}, {= max_threshold =}]\"}");
-          return RET_ERR;
+          return false;
         }
         metric_{= name =}_threshold = tmp;
+        {=# onebyte =}
+        EEPROM_write({= addr =}, metric_{= name =}_threshold);
+        {=/ onebyte =}
+        {=^ onebyte =}
         EEPROM_put({= addr =}, metric_{= name =}_threshold);
+        {=/ onebyte =}
     }
     get_metric_{= name =}_threshold(retval);
-    return RET_SUCC;
+    return true;
 }
 
-int get_metric_{= name =}_threshold(char *retval) {
-    dtostrf(metric_{= name =}_threshold, {= threshold_width =}, {= prec =}, requestValue);
+bool get_metric_{= name =}_threshold(char *retval) {
+    {=^ is_float =}
+    sprintf(retval, "{\"{= name =}_threshold\": %d}", metric_{= name =}_threshold);
+    {=/ is_float =}
+    {=# is_float =}
+    dtostrf(metric_{= name =}_threshold, {= width =}, {= prec =}, requestValue);
     sprintf(retval, "{\"{= name =}_threshold\": %s}", ltrim(requestValue));
-    return RET_SUCC;
+    {=/ is_float =}
+    return true;
 }
 
+{=/ auto =}
 bool check_metric_{= name =}() {
     return is_valid_float(metric_{= name =}, {= min =}, {= max =});
 }
 
-int invalid_metric_{= name =}_error(char *retval) {
+bool invalid_metric_{= name =}_error(char *retval) {
     sprintf(retval, "{\"err\": \"{= name =} is invalid\"}");
-    return RET_ERR;
+    return false;
 }
 
-int get_metric_{= name =}(char *retval) {
+bool get_metric_{= name =}(char *retval) {
     if (!check_metric_{= name =}()) {
         return invalid_metric_{= name =}_error(retval);
     }
+    {=^ is_float =}
+    sprintf(retval, "{\"{= name =}\": %d}", metric_{= name =});
+    {=/ is_float =}
+    {=# is_float =}
     dtostrf(metric_{= name =}, {= width =}, {= prec =}, requestValue);
     sprintf(retval, "{\"{= name =}\": %s}", ltrim(requestValue));
-    return RET_SUCC;
+    {=/ is_float =}
+    return true;
 }
 
 {=/ metrics =}
 {=/ has_app =}
 {=# gpios =}
-{=^ has_fn =}
-{=# has_link =}
+{=# bind =}
+{=# is_link =}
 void open_gpio_{= name =}_raw() {
     gpio_{= name =}_state = {= open =};
-    digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
+    digitalWrite({= pin =}, gpio_{= name =}_state);
 }
 
 void close_gpio_{= name =}_raw() {
     gpio_{= name =}_state = {= close =};
-    digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
+    digitalWrite({= pin =}, gpio_{= name =}_state);
 }
 
 void open_gpio_{= name =}() {
@@ -823,78 +940,89 @@ void close_gpio_{= name =}() {
     set_attr_{= link =}_raw({= close =});
     {=/ reverse =}
 }
-{=/ has_link =}
-{=^ has_link =}
-void open_gpio_{= name =}() {
-    gpio_{= name =}_state = {= open =};
-    digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
-}
-
-void close_gpio_{= name =}() {
-    gpio_{= name =}_state = {= close =};
-    digitalWrite(gpio_{= name =}_pin, gpio_{= name =}_state);
-}
-{=/ has_link =}
 
 void toggle_gpio_{= name =}() {
-    {=# has_link =}
     if (attr_{= link =} == {= open =}) {
         set_attr_{= link =}_raw({= close =});
     } else {
         set_attr_{= link =}_raw({= open =});
     }
-    {=/ has_link =}
-    {=^ has_link =}
+}
+
+{=/ is_link =}
+{=# is_no_bind =}
+void open_gpio_{= name =}() {
+    gpio_{= name =}_state = {= open =};
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+}
+
+void close_gpio_{= name =}() {
+    gpio_{= name =}_state = {= close =};
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+}
+
+void toggle_gpio_{= name =}() {
     if (gpio_{= name =}_state == {= open =}) {
         close_gpio_{= name =}();
     } else {
         open_gpio_{= name =}();
     }
-    {=/ has_link =}
 }
 
-{=/ has_fn =}
+{=/ is_no_bind =}
+{=/ bind =}
 {=/ gpios =}
 {=# functions =}
 {=# has_argv =}
-int {= name =}({= argv =}) {
+bool {= name =}({= argv =}) {
 {=/ has_argv =}
 {=^ has_argv =}
 {=# flag =}
 {=# retval =}
 {=# json =}
-int {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
+bool {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
 {=/ json =}
 {=^ json =}
-int {= name =}(char *retval) {
+bool {= name =}(char *retval) {
 {=/ json =}
 {=/ retval =}
 {=^ retval =}
 {=# json =}
-int {= name =}(const char *json, jsmntok_t *tokens, int num_tokens) {
+bool {= name =}(const char *json, jsmntok_t *tokens, int num_tokens) {
 {=/ json =}
 {=^ json =}
-int {= name =}() {
+bool {= name =}() {
 {=/ json =}
 {=/ retval =}
 {=/ flag =}
 {=/ has_argv =}
     {=& code =}
     {=^ return =}
-    return RET_SUCC;
+    return true;
     {=/ return =}
 }
 
 {=/ functions =}
+{=# uarts =}
+{=# writers =}
+void uart_write_{= wname =}() {
+    is_uart_write_{= wname =} = true;
+    {=# bytes =}
+    uart_{= name =}.write((uint8_t)0x{= . =});
+    {=/ bytes =}
+}
+
+{=/ writers =}
+{=/ uarts =}
 {=# has_app =}
-int processRequest(const char *json, int length, char *retval) {
+bool processRequest(const char *json, int length, char *retval) {
     /* Prepare parser */
     jsmn_init(&requestJsmnParser);
     int num_tokens = jsmn_parse(&requestJsmnParser, json, length, requestJsmnTokens, MAX_NUM_TOKENS);
 
     if (num_tokens < 0) {
         sprintf(retval, "{\"err\": \"Failed to parse JSON: %d\"}", num_tokens);
-        return RET_ERR;
+        return false;
     }
 
     int token = jsonfind(json, requestJsmnTokens, num_tokens, "method");
@@ -905,27 +1033,26 @@ int processRequest(const char *json, int length, char *retval) {
             {=# flag =}
             {=# retval =}
             {=# json =}
-            int r = {= fn =}(json, requestJsmnTokens, num_tokens, retval);
+            if ({= fn =}(json, requestJsmnTokens, num_tokens, retval)) {
             {=/ json =}
             {=^ json =}
-            int r = {= fn =}(retval);
+            if ({= fn =}(retval)) {
             {=/ json =}
             {=/ retval =}
             {=^ retval =}
             {=# json =}
-            int r = {= fn =}(json, requestJsmnTokens, num_tokens);
+            if ({= fn =}(json, requestJsmnTokens, num_tokens)) {
             {=/ json =}
             {=^ json =}
-            int r = {= fn =}();
+            if ({= fn =}()) {
             {=/ json =}
             {=/ retval =}
-            if (r > RET_ERR) {
-                return r;
+                return true;
             } else {
                 {=# error =}
                 sprintf(retval, "{\"err\": \"{= error =}\"}");
                 {=/ error =}
-                return RET_ERR;
+                return false;
             }
             {=/ flag =}
         }
@@ -933,56 +1060,53 @@ int processRequest(const char *json, int length, char *retval) {
         {=# attrs =}
         {=# gen_set =}
         if (jsoneq(json, &requestJsmnTokens[token], "set_{= name =}")) {
-            int r = set_attr_{= name =}(json, requestJsmnTokens, num_tokens, retval);
-            if (r > RET_ERR) {
-                return r;
+            if (set_attr_{= name =}(json, requestJsmnTokens, num_tokens, retval)) {
+                return true;
             } else {
                 sprintf(retval, "{\"err\": \"set_{= name =} error\"}");
-                return RET_ERR;
+                return false;
             }
         }
         {=/ gen_set =}
         if (jsoneq(json, &requestJsmnTokens[token], "get_{= name =}")) {
-            int r = get_attr_{= name =}(retval);
-            if (r > RET_ERR) {
-                return r;
+            if (get_attr_{= name =}(retval)) {
+                return true;
             } else {
                 sprintf(retval, "{\"err\": \"get_{= name =} error\"}");
-                return RET_ERR;
+                return false;
             }
         }
         {=/ attrs =}
         {=# metrics =}
+        {=# auto =}
         if (jsoneq(json, &requestJsmnTokens[token], "set_{= name =}_threshold")) {
-            int r = set_metric_{= name =}_threshold(json, requestJsmnTokens, num_tokens, retval);
-            if (r > RET_ERR) {
-                return r;
+            if (set_metric_{= name =}_threshold(json, requestJsmnTokens, num_tokens, retval)) {
+                return true;
             } else {
                 sprintf(retval, "{\"err\": \"set_{= name =}_threshold error\"}");
-                return RET_ERR;
+                return false;
             }
         }
         if (jsoneq(json, &requestJsmnTokens[token], "get_{= name =}_threshold")) {
-            int r = get_metric_{= name =}_threshold(retval);
-            if (r > RET_ERR) {
-                return r;
+            if (get_metric_{= name =}_threshold(retval)) {
+                return true;
             } else {
                 sprintf(retval, "{\"err\": \"get_{= name =}_threshold error\"}");
-                return RET_ERR;
+                return false;
             }
         }
+        {=/ auto =}
         if (jsoneq(json, &requestJsmnTokens[token], "get_{= name =}")) {
-            int r = get_metric_{= name =}(retval);
-            if (r > RET_ERR) {
-                return r;
+            if (get_metric_{= name =}(retval)) {
+                return true;
             } else {
                 sprintf(retval, "{\"err\": \"get_{= name =} error\"}");
-                return RET_ERR;
+                return false;
             }
         }
         {=/ metrics =}
     }
-    return RET_ERR;
+    return false;
 }
 
 {=^ low_memory =}
@@ -994,15 +1118,17 @@ bool reportMetric(bool force) {
     total_length += 1;
 
     {=# metrics =}
+    {=# auto =}
     if ((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || force) {
         tempSendData[0] = '\0';
-        if (get_metric_{= name =}(tempSendData) > RET_ERR) {
+        if (get_metric_{= name =}(tempSendData)) {
             merge_json(wantSendData, tempSendData, &total_length);
             wantSend = true;
             last_metric_{= name =} = metric_{= name =};
         }
     }
 
+    {=/ auto =}
     {=/ metrics =}
     if (wantSend) {
         wantSendData[total_length-1] = '}';
@@ -1025,7 +1151,7 @@ bool reportAttribute(bool force) {
     {=# attrs =}
     if (last_attr_{= name =} != attr_{= name =} || force) {
         tempSendData[0] = '\0';
-        if (get_attr_{= name =}(tempSendData) > RET_ERR) {
+        if (get_attr_{= name =}(tempSendData)) {
             merge_json(wantSendData, tempSendData, &total_length);
             wantSend = true;
             last_attr_{= name =} = attr_{= name =};
@@ -1034,15 +1160,17 @@ bool reportAttribute(bool force) {
 
     {=/ attrs =}
     {=# metrics =}
+    {=# auto =}
     if (last_metric_{= name =}_threshold != metric_{= name =}_threshold || force) {
         tempSendData[0] = '\0';
-        if (get_metric_{= name =}_threshold(tempSendData) > RET_ERR) {
+        if (get_metric_{= name =}_threshold(tempSendData)) {
             merge_json(wantSendData, tempSendData, &total_length);
             wantSend = true;
             last_metric_{= name =}_threshold = metric_{= name =}_threshold;
         }
     }
 
+    {=/ auto =}
     {=/ metrics =}
     if (wantSend) {
         wantSendData[total_length-1] = '}';
@@ -1060,15 +1188,17 @@ bool reportAttribute(bool force) {
 bool reportMetric(bool force) {
     bool sended = false;
     {=# metrics =}
+    {=# auto =}
     if ((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || force) {
         wantSendData[0] = '\0';
-        if (get_metric_{= name =}(wantSendData) > RET_ERR) {
+        if (get_metric_{= name =}(wantSendData)) {
             last_metric_{= name =} = metric_{= name =};
             send_packet_1(TELEMETRY, wantSendData);
             sended = true;
         }
     }
 
+    {=/ auto =}
     {=/ metrics =}
     return sended;
 }
@@ -1080,7 +1210,7 @@ bool reportAttribute(bool force) {
     {=# attrs =}
     if (last_attr_{= name =} != attr_{= name =} || force) {
         wantSendData[0] = '\0';
-        if (get_attr_{= name =}(wantSendData) > RET_ERR) {
+        if (get_attr_{= name =}(wantSendData)) {
             sended = true;
             last_attr_{= name =} = attr_{= name =};
             send_packet_1(ATTRIBUTE, wantSendData);
@@ -1089,15 +1219,17 @@ bool reportAttribute(bool force) {
 
     {=/ attrs =}
     {=# metrics =}
+    {=# auto =}
     if (last_metric_{= name =}_threshold != metric_{= name =}_threshold || force) {
         wantSendData[0] = '\0';
-        if (get_metric_{= name =}_threshold(wantSendData) > RET_ERR) {
+        if (get_metric_{= name =}_threshold(wantSendData)) {
             sended = true;
             last_metric_{= name =}_threshold = metric_{= name =}_threshold;
             send_packet_1(ATTRIBUTE, wantSendData);
         }
     }
 
+    {=/ auto =}
     {=/ metrics =}
     return sended;
 }
