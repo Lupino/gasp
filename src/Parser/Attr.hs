@@ -73,7 +73,7 @@ attr = do
     let tp = getAttrType (DataType "int") attrProps
 
     return Attr.Attr
-        { Attr.attrName   = attrName
+        { Attr.attrName   = Attr.AttrName attrName
         , Attr.attrAddr   = 0
         , Attr.attrType   = tp
         , Attr.attrMax    = getAttrMax    (maxValue tp) attrProps

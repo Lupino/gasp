@@ -3,6 +3,7 @@ module Gasp.Function
     , hasJson
     , hasRetval
     , hasToken
+    , FuncName (..)
     ) where
 
 import           Data.Aeson (ToJSON (..), object, (.=))
@@ -11,8 +12,14 @@ import qualified Data.Text  as T (breakOnEnd, dropEnd, length, lines, null,
                                   strip, take, takeEnd, takeWhileEnd, words)
 import           Gasp.Flag  (Flag)
 
+newtype FuncName = FuncName String
+  deriving (Show, Eq)
+
+instance ToJSON FuncName where
+  toJSON (FuncName n) = toJSON n
+
 data Function = Function
-    { funcName :: !String
+    { funcName :: !FuncName
     , funcCode :: !Text
     , funcFlag :: !Flag
     , funcArgv :: !String

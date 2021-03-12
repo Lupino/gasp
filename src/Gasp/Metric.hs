@@ -6,13 +6,21 @@ module Gasp.Metric
     , getMetricThresholdRspLength
     , isFloatMetric
     , getMetricDataLength
+
+    , MetricName (..)
     ) where
 
 import           Data.Aeson  (ToJSON (..), object, (.=))
 import           Gasp.Common
 
+newtype MetricName = MetricName String
+  deriving (Show, Eq)
+
+instance ToJSON MetricName where
+  toJSON (MetricName n) = toJSON n
+
 data Metric = Metric
-    { metricName         :: !String -- Identifier
+    { metricName         :: !MetricName -- Identifier
     , metricAddr         :: !Int
     , metricType         :: !DataType
     , metricMax          :: !Double
@@ -34,7 +42,7 @@ calcMetricThresholdWidth metric =
 instance ToJSON Metric where
     toJSON metric = object
         [ "name"            .= metricName metric
-        , "type"            .= unDataType (metricType metric)
+        , "type"            .= metricType metric
         , "max"             .= metricMax metric
         , "min"             .= metricMin metric
         , "min_threshold"   .= metricMinThreshold metric
@@ -50,15 +58,18 @@ instance ToJSON Metric where
         , "auto"            .= metricAuto metric
         ]
 
+metricNameLen :: Metric -> Int
+metricNameLen Metric { metricName = MetricName n } = length n
+
 -- {"method": "set_name_threshold", "data": vv.vv}
 setMetricThresholdLength :: Metric -> Int
 setMetricThresholdLength metric =
-  38 + length (metricName metric) + getMetricThresholdValueLength metric
+  38 + metricNameLen metric + getMetricThresholdValueLength metric
 
 -- {"name_threshold": vv.vv}
 getMetricThresholdRspLength :: Metric -> Int
 getMetricThresholdRspLength metric =
-  16 + length (metricName metric) + getMetricThresholdValueLength metric
+  16 + metricNameLen metric + getMetricThresholdValueLength metric
 
 getTotalMetricThresholdLength :: Int -> [Metric] -> Int
 getTotalMetricThresholdLength v [] = v

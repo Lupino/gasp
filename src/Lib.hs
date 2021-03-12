@@ -54,18 +54,18 @@ preprocessGasp gasp = setGaspExprs gasp <$> mapM mapFunc (getGaspExprs gasp)
   where mapFunc :: Expr -> IO Expr
         mapFunc (ExprAttr x)   = do
           unless (attrScale x > 0) $ gaspError $ concat
-            [ "[error] attr %s: " `printf` attrName x
+            [ "[error] attr %s: " `printf` show (attrName x)
             , "except scale > 0, but got "
             , "scale=%f ," `printf` attrScale x
             ]
           unless (attrMin x < attrMax x) $ gaspError $ concat
-            [ "[error] attr %s: " `printf` attrName x
+            [ "[error] attr %s: " `printf` show (attrName x)
             , "except min < max, but got "
             , "min=%f ," `printf` attrMin x
             , "max=%f ," `printf` attrMax x
             ]
           unless valid $ gaspWarn $ concat
-            [ "[warning] attr %s: " `printf` attrName x
+            [ "[warning] attr %s: " `printf` show (attrName x)
             , "default is %f " `printf` attrDef x
             , "not in [%f, " `printf` attrMin x
             , "%f], " `printf` attrMax x
@@ -75,34 +75,34 @@ preprocessGasp gasp = setGaspExprs gasp <$> mapM mapFunc (getGaspExprs gasp)
           where (valid, defv) = getCenterValue (attrMin x, attrMax x) (attrDef x)
         mapFunc (ExprMetric x) = do
           unless (metricPrec x > 0) $ gaspError $ concat
-            [ "[error] metric %s: " `printf` metricName x
+            [ "[error] metric %s: " `printf` show (metricName x)
             , "except prec > 0, but got "
             , "prec=%d ," `printf` metricPrec x
             ]
           unless (metricMin x < metricMax x) $ gaspError $ concat
-            [ "[error] metric %s: " `printf` metricName x
+            [ "[error] metric %s: " `printf` show (metricName x)
             , "except min < max, but got "
             , "min=%f ," `printf` metricMin x
             , "max=%f ," `printf` metricMax x
             ]
           unless (metricMinThreshold x < metricMaxThreshold x) $ gaspError $ concat
-            [ "[error] metric %s: " `printf` metricName x
+            [ "[error] metric %s: " `printf` show (metricName x)
             , "except min_threshold < max_threshold, but got "
             , "min_threshold=%f ," `printf` metricMinThreshold x
             , "max_threshold=%f ," `printf` metricMaxThreshold x
             ]
           unless (metricMinThreshold x > 0) $ gaspError $ concat
-            [ "[error] metric %s: " `printf` metricName x
+            [ "[error] metric %s: " `printf` show (metricName x)
             , "except min_threshold > 0, but got "
             , "min_threshold=%f ," `printf` metricMinThreshold x
             ]
           unless (metricMaxThreshold x > 0) $ gaspError $ concat
-            [ "[error] metric %s: " `printf` metricName x
+            [ "[error] metric %s: " `printf` show (metricName x)
             , "except max_threshold > 0, but got "
             , "max_threshold=%f ," `printf` metricMaxThreshold x
             ]
           unless valid $ gaspWarn $ concat
-            [ "[warning] metric %s: " `printf` metricName x
+            [ "[warning] metric %s: " `printf` show (metricName x)
             , "threshold is %f " `printf` metricThreshold x
             , "not in [%f, " `printf` metricMinThreshold x
             , "%f], " `printf` metricMaxThreshold x

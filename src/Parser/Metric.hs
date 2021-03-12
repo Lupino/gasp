@@ -81,7 +81,7 @@ metric = do
         mint = maxt / 50
 
     return Metric.Metric
-        { Metric.metricName         = metricName
+        { Metric.metricName         = Metric.MetricName metricName
         , Metric.metricType         = tp
         , Metric.metricMax          = maxv
         , Metric.metricMin          = minv

@@ -29,7 +29,7 @@ function = do
 
 
     return Function
-        { funcName = name
+        { funcName = FuncName name
         , funcCode = Text.pack code
         , funcArgv = argv
         , funcFlag = initFlag name

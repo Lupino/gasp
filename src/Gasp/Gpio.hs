@@ -1,23 +1,20 @@
 module Gasp.Gpio
     ( Gpio(..)
-    , FuncName (..)
-    , AttrName (..)
     , State (..)
     , GpioBind (..)
     , isInput
     ) where
 
 
-import           Data.Aeson (ToJSON (..), object, (.=))
+import           Data.Aeson    (ToJSON (..), object, (.=))
+import           Gasp.Attr     (AttrName)
+import           Gasp.Function (FuncName)
 
-newtype AttrName = AttrName String
+newtype State = State String
   deriving (Show, Eq)
 
-newtype FuncName = FuncName String
-  deriving (Show, Eq)
-
-newtype State = State {unState :: String}
-  deriving (Show, Eq)
+instance ToJSON State where
+  toJSON (State n) = toJSON n
 
 data GpioBind
   = LinkAttr AttrName Bool
@@ -27,16 +24,16 @@ data GpioBind
   deriving (Show, Eq)
 
 instance ToJSON GpioBind where
-    toJSON (LinkAttr (AttrName link) rev) = object
+    toJSON (LinkAttr link rev) = object
         [ "link"    .= link
         , "reverse" .= rev
         , "is_link" .= True
         ]
-    toJSON (PwmAttr (AttrName link)) = object
+    toJSON (PwmAttr link) = object
         [ "link"    .= link
         , "is_pwm" .= True
         ]
-    toJSON (CallFn (FuncName fn) (State emit)) = object
+    toJSON (CallFn fn emit) = object
         [ "fn"    .= fn
         , "emit"  .= emit
         , "is_fn" .= True
@@ -65,7 +62,7 @@ instance ToJSON Gpio where
         [ "name"  .= gpioName  gpio
         , "pin"   .= gpioPin   gpio
         , "bind"  .= gpioBind  gpio
-        , "state" .= unState (gpioState gpio)
-        , "open"  .= unState (gpioOpen  gpio)
-        , "close" .= unState (gpioClose gpio)
+        , "state" .= gpioState gpio
+        , "open"  .= gpioOpen  gpio
+        , "close" .= gpioClose gpio
         ]

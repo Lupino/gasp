@@ -8,8 +8,13 @@ module Gasp.Common
   , DataType (..)
   ) where
 
-newtype DataType = DataType {unDataType :: String}
+import           Data.Aeson (ToJSON (..))
+
+newtype DataType = DataType String
   deriving (Show, Eq)
+
+instance ToJSON DataType where
+  toJSON (DataType tp) = toJSON tp
 
 calcWidth :: Double -> Double -> Int
 calcWidth v0 v1 =

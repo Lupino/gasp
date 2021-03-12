@@ -7,11 +7,7 @@ import           Data.List   (nub)
 import           Lexer       (identifier)
 import           Text.Parsec (parse)
 
-newtype MetricName = MetricName String deriving (Show, Eq)
-instance ToJSON MetricName where
-    toJSON (MetricName n) = object
-      [ "name" .= n
-      ]
+import           Gasp.Metric (MetricName (..))
 
 
 data Rule = Rule

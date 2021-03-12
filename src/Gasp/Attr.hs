@@ -6,13 +6,21 @@ module Gasp.Attr
     , getAttrRspLength
     , isFloatAttr
     , getAttrDataLength
+
+    , AttrName (..)
     ) where
 
 import           Data.Aeson  (ToJSON (..), object, (.=))
 import           Gasp.Common
 
+newtype AttrName = AttrName String
+  deriving (Show, Eq)
+
+instance ToJSON AttrName where
+  toJSON (AttrName n) = toJSON n
+
 data Attr = Attr
-    { attrName   :: !String -- Identifier
+    { attrName   :: !AttrName -- Identifier
     , attrAddr   :: !Int
     , attrMax    :: !Double
     , attrMin    :: !Double
@@ -33,7 +41,7 @@ instance ToJSON Attr where
         , "scaled_max" .= (attrMax   attr * attrScale attr)
         , "scaled_min" .= (attrMin   attr * attrScale attr)
         , "scale"      .= attrScale  attr
-        , "type"       .= unDataType (attrType attr)
+        , "type"       .= attrType   attr
         , "is_float"   .= isFloatAttr attr
         , "uncheckmin" .= (isUnsigned (attrType attr) && attrMin attr <= 0)
         , "onebyte"    .= (getAttrDataLength attr == 1)
@@ -50,15 +58,20 @@ calcAttrWidth attr = calcWidth (attrMax attr) (attrMin attr)
 isFloatAttr :: Attr -> Bool
 isFloatAttr = isFloat . attrType
 
+attrNameLen :: Attr -> Int
+attrNameLen = length . t . attrName
+  where t :: AttrName -> String
+        t (AttrName n) = n
+
 -- {"name": vv.vv}
 -- {"name": vv}
 getAttrRspLength :: Attr -> Int
-getAttrRspLength attr = 6 + length (attrName attr) + getAttrValueLength attr
+getAttrRspLength attr = 6 + attrNameLen attr + getAttrValueLength attr
 
 -- {"method": "set_name", "data": vv.vv}
 -- {"method": "set_name", "data": vv}
 setAttrLength :: Attr -> Int
-setAttrLength attr = 28 + length (attrName attr) + getAttrValueLength attr
+setAttrLength attr = 28 + attrNameLen attr + getAttrValueLength attr
 
 getTotalAttrLength :: Int -> [Attr] -> Int
 getTotalAttrLength v []     = v

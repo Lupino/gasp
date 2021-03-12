@@ -2,6 +2,8 @@ module Parser.Gpio
   ( gpio
   ) where
 
+import           Gasp.Attr          (AttrName (..))
+import           Gasp.Function      (FuncName (..))
 import           Gasp.Gpio
 import           Lexer
 import           Text.Parsec        (option, spaces, (<|>))
@@ -11,7 +13,7 @@ bindClick :: State -> Parser GpioBind
 bindClick emit = do
   _ <- symbol "click"
   n <- FuncName <$> identifier
-  v <- State <$> option (unState emit) (stateLow <|> stateHigh)
+  v <- option emit (stateLow <|> stateHigh)
   return $ CallFn n v
 
 bindLink :: Parser GpioBind
@@ -39,18 +41,21 @@ bindParser emit = do
 --                       default
 -- gpio gpioName pinName [NUM] [-> pwm attrName]
 
-stateLow :: Parser String
-stateLow = symbol "LOW"
+stateLow :: Parser State
+stateLow = State <$> symbol "LOW"
 
-stateHigh :: Parser String
-stateHigh = symbol "HIGH"
+stateHigh :: Parser State
+stateHigh = State <$> symbol "HIGH"
 
-stateNum :: Parser String
+stateNum :: Parser State
 stateNum = do
   v <- show <$> decimal
   spaces
-  return v
+  return $ State v
 
+revertState :: State -> State
+revertState (State "LOW") = State "HIGH"
+revertState _             = State "LOW"
 
 -- | Top level parser, parses Gpio.
 gpio :: Parser Gpio
@@ -58,17 +63,15 @@ gpio = do
   reserved reservedNameGpio
   name <- identifier
   pin <- stringLiteral <|> (show <$> integer) <|> identifier
-  state <- option "LOW" (stateLow <|> stateHigh <|> stateNum)
-  let revertState = if state == "LOW" then "HIGH" else "LOW"
-  open <- option revertState (stateLow <|> stateHigh)
-  let close = if open == "LOW" then "HIGH" else "LOW"
-  b <- option NoBind (bindParser (State revertState))
+  state <- option (State "LOW") (stateLow <|> stateHigh <|> stateNum)
+  open <- option (revertState state) (stateLow <|> stateHigh)
+  b <- option NoBind (bindParser (revertState state))
 
   return Gpio
     { gpioName  = name
     , gpioPin   = pin
-    , gpioState = State state
-    , gpioOpen  = State open
-    , gpioClose = State close
+    , gpioState = state
+    , gpioOpen  = open
+    , gpioClose = revertState open
     , gpioBind  = b
     }
