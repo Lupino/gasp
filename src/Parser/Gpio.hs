@@ -1,5 +1,6 @@
 module Parser.Gpio
   ( gpio
+  , pin
   ) where
 
 import           Gasp.Attr          (AttrName (..))
@@ -8,6 +9,18 @@ import           Gasp.Gpio
 import           Lexer
 import           Text.Parsec        (option, spaces, (<|>))
 import           Text.Parsec.String (Parser)
+
+pinName :: Parser Pin
+pinName = PinName <$> identifier
+
+pinNum :: Parser Pin
+pinNum = do
+  v <- decimal
+  spaces
+  return $ PinNum v
+
+pin :: Parser Pin
+pin = pinNum <|> pinName
 
 bindClick :: State -> Parser GpioBind
 bindClick emit = do
@@ -62,14 +75,14 @@ gpio :: Parser Gpio
 gpio = do
   reserved reservedNameGpio
   name <- identifier
-  pin <- stringLiteral <|> (show <$> integer) <|> identifier
+  p <- pin
   state <- option (State "LOW") (stateLow <|> stateHigh <|> stateNum)
   open <- option (revertState state) (stateLow <|> stateHigh)
   b <- option NoBind (bindParser (revertState state))
 
   return Gpio
     { gpioName  = name
-    , gpioPin   = pin
+    , gpioPin   = p
     , gpioState = state
     , gpioOpen  = open
     , gpioClose = revertState open

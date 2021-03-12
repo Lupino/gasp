@@ -4,6 +4,7 @@ module Gasp.AGpio
     ) where
 
 import           Data.Aeson  (ToJSON (..), object, (.=))
+import           Gasp.Gpio   (Pin)
 import           Gasp.Metric (MetricName)
 
 
@@ -23,13 +24,13 @@ instance ToJSON AGpioBind where
 
 data AGpio = AGpio
     { agpioName :: !String -- Identifier
-    , agpioPin  :: !String
+    , agpioPin  :: !Pin
     , agpioBind :: !AGpioBind
     } deriving (Show, Eq)
 
 instance ToJSON AGpio where
     toJSON agpio = object
-        [ "name"     .= agpioName agpio
-        , "pin"      .= agpioPin  agpio
-        , "bind"     .= agpioBind agpio
+        [ "name" .= agpioName agpio
+        , "pin"  .= agpioPin  agpio
+        , "bind" .= agpioBind agpio
         ]

@@ -2,6 +2,7 @@ module Gasp.Gpio
     ( Gpio(..)
     , State (..)
     , GpioBind (..)
+    , Pin (..)
     , isInput
     ) where
 
@@ -9,6 +10,15 @@ module Gasp.Gpio
 import           Data.Aeson    (ToJSON (..), object, (.=))
 import           Gasp.Attr     (AttrName)
 import           Gasp.Function (FuncName)
+
+data Pin
+  = PinName String
+  | PinNum Integer
+  deriving (Show, Eq)
+
+instance ToJSON Pin where
+  toJSON (PinName n) = toJSON n
+  toJSON (PinNum n)  = toJSON n
 
 newtype State = State String
   deriving (Show, Eq)
@@ -50,7 +60,7 @@ isInput NoBind         = False
 
 data Gpio = Gpio
     { gpioName  :: !String -- Identifier
-    , gpioPin   :: !String
+    , gpioPin   :: !Pin
     , gpioBind  :: !GpioBind
     , gpioState :: !State
     , gpioOpen  :: !State

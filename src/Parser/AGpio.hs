@@ -5,7 +5,8 @@ module Parser.AGpio
 import           Gasp.AGpio
 import           Gasp.Metric        (MetricName (..))
 import           Lexer
-import           Text.Parsec        (option, (<|>))
+import           Parser.Gpio        (pin)
+import           Text.Parsec        (option)
 import           Text.Parsec.String (Parser)
 
 bindLink :: Parser AGpioBind
@@ -27,11 +28,11 @@ agpio :: Parser AGpio
 agpio = do
   reserved reservedNameAGpio
   name <- identifier
-  pin <- stringLiteral <|> (show <$> integer) <|> identifier
+  p <- pin
   b <- option NoBind bindParser
 
   return AGpio
         { agpioName    = name
-        , agpioPin     = pin
+        , agpioPin     = p
         , agpioBind    = b
         }
