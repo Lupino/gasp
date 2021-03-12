@@ -178,7 +178,7 @@ uint8_t gpio_{= name =}_state = {= state =};
 {=/ has_gpio =}
 {=# agpios =}
 {=# bind =}
-{=^ is_no_bind =}
+{=# is_no_bind =}
 uint16_t agpio_{= name =}_value = 0;
 {=/ is_no_bind =}
 {=/ bind =}
