@@ -12,7 +12,7 @@ setup {
 }
 
 attr led_state {
-  type: "int",
+  type: uint8_t,
   max: 1,
   min: 0,
   gen_set: false

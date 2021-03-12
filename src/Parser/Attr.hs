@@ -2,17 +2,16 @@ module Parser.Attr
     ( attr
     ) where
 
-import           Text.Parsec.String (Parser)
-
 import           Data.Maybe         (fromMaybe, listToMaybe)
 import qualified Gasp.Attr          as Attr
-import           Gasp.Common        (maxValue, minValue)
+import           Gasp.Common        (DataType (..), maxValue, minValue)
 import           Lexer
 import           Parser.Common
+import           Text.Parsec.String (Parser)
 
 -- | A type that describes supported app properties.
 data AttrProperty
-    = Type   !String
+    = Type   !DataType
     | Max    !Double
     | Min    !Double
     | Def    !Double
@@ -28,7 +27,7 @@ cusL = do
   key <- identifier
   _ <- colon
   case key of
-    "type"    -> Type <$> stringLiteral
+    "type"    -> Type <$> dataType
     "min"     -> Min <$> float
     "max"     -> Max <$> float
     "default" -> Def <$> float
@@ -42,7 +41,7 @@ cusL = do
 attrProperties :: Parser [AttrProperty]
 attrProperties = commaSep1 cusL
 
-getAttrType :: String -> [AttrProperty] -> String
+getAttrType :: DataType -> [AttrProperty] -> DataType
 getAttrType def ps = fromMaybe def . listToMaybe $ [t | Type t <- ps]
 
 getAttrMax :: Double -> [AttrProperty] -> Double
@@ -71,7 +70,7 @@ attr :: Parser Attr.Attr
 attr = do
     (attrName, attrProps) <- gaspElementNameAndClosureContent reservedNameAttr attrProperties
 
-    let tp = getAttrType "int" attrProps
+    let tp = getAttrType (DataType "int") attrProps
 
     return Attr.Attr
         { Attr.attrName   = attrName

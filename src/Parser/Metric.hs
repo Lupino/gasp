@@ -5,14 +5,14 @@ module Parser.Metric
 import           Text.Parsec.String (Parser)
 
 import           Data.Maybe         (fromMaybe, listToMaybe)
-import           Gasp.Common        (maxValue, minValue)
+import           Gasp.Common        (DataType (..), maxValue, minValue)
 import qualified Gasp.Metric        as Metric
 import           Lexer
 import           Parser.Common
 
 -- | A type that describes supported app properties.
 data MetricProperty
-    = Type         !String
+    = Type         !DataType
     | Max          !Double
     | Min          !Double
     | MinThreshold !Double
@@ -28,7 +28,7 @@ cusL = do
   _ <- colon
   case key of
     "prec"          -> Prec <$> integer
-    "type"          -> Type <$> stringLiteral
+    "type"          -> Type <$> dataType
     "threshold"     -> Threshold <$> float
     "min_threshold" -> MinThreshold <$> float
     "max_threshold" -> MaxThreshold <$> float
@@ -40,7 +40,7 @@ cusL = do
 metricProperties :: Parser [MetricProperty]
 metricProperties = commaSep1 cusL
 
-getMetricType :: String -> [MetricProperty] -> String
+getMetricType :: DataType -> [MetricProperty] -> DataType
 getMetricType def ps = fromMaybe def . listToMaybe $ [t | Type t <- ps]
 
 getMetricMax :: Double -> [MetricProperty] -> Double
@@ -74,7 +74,7 @@ metric :: Parser Metric.Metric
 metric = do
     (metricName, metricProps) <- gaspElementNameAndClosureContent reservedNameMetric metricProperties
 
-    let tp = getMetricType "float" metricProps
+    let tp = getMetricType (DataType "float") metricProps
         maxv = getMetricMax (maxValue tp) metricProps
         minv = getMetricMin (minValue tp) metricProps
         maxt = (maxv - minv) / 2

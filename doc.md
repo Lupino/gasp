@@ -115,7 +115,7 @@ command commandName {
 
 ```
 attr attrName {
-    type: "int",
+    type: int,
     min: 0,
     max: 100,
     default: 0,
@@ -130,7 +130,7 @@ attr attrName {
 
 ```
 metric metricName {
-    type: "float"
+    type: float
     min: 0,
     max: 100,
     min_threshold: 1,

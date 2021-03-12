@@ -13,13 +13,15 @@ module Parser.Common
   , gaspBlockClosure
   , gaspClosure
   , gaspList
+
+  , dataType
   ) where
 
 
-import           Text.Parsec        (ParseError, parse, try)
-import           Text.Parsec.String (Parser)
-
+import           Gasp.Common        (DataType (..))
 import qualified Lexer              as L
+import           Text.Parsec        (ParseError, parse, try, (<|>))
+import           Text.Parsec.String (Parser)
 
 
 -- | Runs given gasp parser on a specified input.
@@ -93,3 +95,22 @@ gaspBlockClosure = L.strip <$> L.blockC '{' '}'
 
 gaspList :: Parser a -> Parser [a]
 gaspList elementParser = L.brackets $ L.commaSep elementParser
+
+dataType :: Parser DataType
+dataType =
+ DataType <$> (try (L.symbol "boolean")
+          <|> try (L.symbol "bool")
+          <|> try (L.symbol "char")
+          <|> try (L.symbol "unsigned char")
+          <|> try (L.symbol "byte")
+          <|> try (L.symbol "int")
+          <|> try (L.symbol "unsigned int")
+          <|> try (L.symbol "word")
+          <|> try (L.symbol "long")
+          <|> try (L.symbol "unsigned long")
+          <|> try (L.symbol "short")
+          <|> try (L.symbol "float")
+          <|> try (L.symbol "double")
+          <|> try (L.symbol "uint8_t")
+          <|> try (L.symbol "uint16_t")
+          <|> try (L.symbol "uint32_t"))

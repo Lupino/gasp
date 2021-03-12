@@ -38,7 +38,7 @@ func read_temp {
 }
 
 attr delay {
-  type: "unsigned long",
+  type: unsigned long,
   default: 300,
   min: 60,
   max: 86400,
@@ -46,7 +46,7 @@ attr delay {
 }
 
 metric temperature {
-    type: "float",
+    type: float,
     max_threshold: 100,
     min_threshold: 5,
     max: 100,
@@ -56,7 +56,7 @@ metric temperature {
 }
 
 metric humidity {
-    type: "float",
+    type: float,
     max_threshold: 100,
     min_threshold: 5,
     max: 100,

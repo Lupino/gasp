@@ -5,89 +5,93 @@ module Gasp.Common
   , isUnsigned
   , maxValue
   , minValue
+  , DataType (..)
   ) where
+
+newtype DataType = DataType {unDataType :: String}
+  deriving (Show, Eq)
 
 calcWidth :: Double -> Double -> Int
 calcWidth v0 v1 =
   max (length $ show (floor v0 :: Int)) (length $ show (floor v1 :: Int))
 
-isFloat :: String -> Bool
-isFloat ""                      = False
-isFloat ('f':'l':'o':'a':'t':_) = True
-isFloat (_:xs)                  = isFloat xs
+isFloat :: DataType -> Bool
+isFloat (DataType "float")  = True
+isFloat (DataType "double") = True
+isFloat _                   = False
 
-dataLength :: String -> Int
-dataLength "boolean"       = 1
-dataLength "bool"          = 1
-dataLength "char"          = 1
-dataLength "unsigned char" = 1
-dataLength "byte"          = 1
-dataLength "int"           = 2
-dataLength "unsigned int"  = 2
-dataLength "word"          = 2
-dataLength "long"          = 4
-dataLength "unsigned long" = 4
-dataLength "short"         = 2
-dataLength "float"         = 4
-dataLength "double"        = 4
-dataLength "uint8_t"       = 1
-dataLength "uint16_t"      = 2
-dataLength "uint32_t"      = 4
-dataLength _               = 4
+dataLength :: DataType -> Int
+dataLength (DataType "boolean")       = 1
+dataLength (DataType "bool")          = 1
+dataLength (DataType "char")          = 1
+dataLength (DataType "unsigned char") = 1
+dataLength (DataType "byte")          = 1
+dataLength (DataType "int")           = 2
+dataLength (DataType "unsigned int")  = 2
+dataLength (DataType "word")          = 2
+dataLength (DataType "long")          = 4
+dataLength (DataType "unsigned long") = 4
+dataLength (DataType "short")         = 2
+dataLength (DataType "float")         = 4
+dataLength (DataType "double")        = 4
+dataLength (DataType "uint8_t")       = 1
+dataLength (DataType "uint16_t")      = 2
+dataLength (DataType "uint32_t")      = 4
+dataLength _                          = 4
 
-isUnsigned :: String -> Bool
-isUnsigned "boolean"       = True
-isUnsigned "bool"          = True
-isUnsigned "char"          = False
-isUnsigned "unsigned char" = True
-isUnsigned "byte"          = False
-isUnsigned "int"           = False
-isUnsigned "unsigned int"  = True
-isUnsigned "word"          = True
-isUnsigned "long"          = False
-isUnsigned "unsigned long" = True
-isUnsigned "short"         = False
-isUnsigned "float"         = False
-isUnsigned "double"        = False
-isUnsigned "uint8_t"       = True
-isUnsigned "uint16_t"      = True
-isUnsigned "uint32_t"      = True
-isUnsigned _               = False
+isUnsigned :: DataType -> Bool
+isUnsigned (DataType "boolean")       = True
+isUnsigned (DataType "bool")          = True
+isUnsigned (DataType "char")          = False
+isUnsigned (DataType "unsigned char") = True
+isUnsigned (DataType "byte")          = False
+isUnsigned (DataType "int")           = False
+isUnsigned (DataType "unsigned int")  = True
+isUnsigned (DataType "word")          = True
+isUnsigned (DataType "long")          = False
+isUnsigned (DataType "unsigned long") = True
+isUnsigned (DataType "short")         = False
+isUnsigned (DataType "float")         = False
+isUnsigned (DataType "double")        = False
+isUnsigned (DataType "uint8_t")       = True
+isUnsigned (DataType "uint16_t")      = True
+isUnsigned (DataType "uint32_t")      = True
+isUnsigned _                          = False
 
-maxValue :: String -> Double
-maxValue "boolean"       = 1
-maxValue "bool"          = 1
-maxValue "char"          = 127
-maxValue "unsigned char" = 255
-maxValue "byte"          = 255
-maxValue "int"           = 32767
-maxValue "unsigned int"  = 65535
-maxValue "word"          = 65535
-maxValue "long"          = 2147483647
-maxValue "unsigned long" = 2^32-1
-maxValue "short"         = 32767
-maxValue "float"         = 3.4028235E+38
-maxValue "double"        = 3.4028235E+38
-maxValue "uint8_t"       = 255
-maxValue "uint16_t"      = 65535
-maxValue "uint32_t"      = 2^32-1
-maxValue _               = 100
+maxValue :: DataType -> Double
+maxValue (DataType "boolean")       = 1
+maxValue (DataType "bool")          = 1
+maxValue (DataType "char")          = 127
+maxValue (DataType "unsigned char") = 255
+maxValue (DataType "byte")          = 255
+maxValue (DataType "int")           = 32767
+maxValue (DataType "unsigned int")  = 65535
+maxValue (DataType "word")          = 65535
+maxValue (DataType "long")          = 2147483647
+maxValue (DataType "unsigned long") = 4294967295
+maxValue (DataType "short")         = 32767
+maxValue (DataType "float")         = 3.4028235E+38
+maxValue (DataType "double")        = 3.4028235E+38
+maxValue (DataType "uint8_t")       = 255
+maxValue (DataType "uint16_t")      = 65535
+maxValue (DataType "uint32_t")      = 4294967295
+maxValue _                          = 100
 
-minValue :: String -> Double
-minValue "boolean"       = 0
-minValue "bool"          = 0
-minValue "char"          = -128
-minValue "unsigned char" = 0
-minValue "byte"          = 0
-minValue "int"           = -32768
-minValue "unsigned int"  = 0
-minValue "word"          = 0
-minValue "long"          = -2147483648
-minValue "unsigned long" = 0
-minValue "short"         = -32768
-minValue "float"         = -3.4028235E+38
-minValue "double"        = -3.4028235E+38
-minValue "uint8_t"       = 0
-minValue "uint16_t"      = 0
-minValue "uint32_t"      = 0
-minValue _               = 0
+minValue :: DataType -> Double
+minValue (DataType "boolean")       = 0
+minValue (DataType "bool")          = 0
+minValue (DataType "char")          = -128
+minValue (DataType "unsigned char") = 0
+minValue (DataType "byte")          = 0
+minValue (DataType "int")           = -32768
+minValue (DataType "unsigned int")  = 0
+minValue (DataType "word")          = 0
+minValue (DataType "long")          = -2147483648
+minValue (DataType "unsigned long") = 0
+minValue (DataType "short")         = -32768
+minValue (DataType "float")         = -3.4028235E+38
+minValue (DataType "double")        = -3.4028235E+38
+minValue (DataType "uint8_t")       = 0
+minValue (DataType "uint16_t")      = 0
+minValue (DataType "uint32_t")      = 0
+minValue _                          = 0

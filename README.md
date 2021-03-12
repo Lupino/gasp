@@ -44,7 +44,7 @@ setup {
 }
 
 attr delay {
-  type: "unsigned long",
+  type: unsigned long,
   default: 1800,
   min: 60,
   max: 86400,
@@ -52,7 +52,7 @@ attr delay {
 }
 
 metric temperature {
-  type: "float",
+  type: float,
   max: 100,
   min: 0,
   threshold: 1,
@@ -69,7 +69,7 @@ func read_dht {
 every read_dht 6000
 
 attr relay_state {
-  type: "uint8_t",
+  type: uint8_t,
   default: 0,
   min: 0,
   max: 1,
@@ -117,7 +117,7 @@ command set_relay_state {
 // relay_mode 1 manual mode
 //            0 auto mode
 attr relay_mode {
-  type: "uint8_t",
+  type: uint8_t,
   default: 0,
   min: 0,
   max: 1
@@ -135,21 +135,21 @@ gpio btn0 11 HIGH -> click try_toggle_gpio_relay
 gpio btn1 10 HIGH -> click toggle_gpio_relay_mode
 
 attr high_temperature {
-  type: "float",
+  type: float,
   default: 30,
   min: 0,
   max: 100
 }
 
 attr low_temperature {
-  type: "float",
+  type: float,
   default: 20,
   min: 0,
   max: 100
 }
 
 attr open_delay {
-  type: "unsigned long",
+  type: unsigned long,
   default: 5,
   min: 0,
   max: 3600,
@@ -157,7 +157,7 @@ attr open_delay {
 }
 
 attr close_delay {
-  type: "unsigned long",
+  type: unsigned long,
   default: 5,
   min: 0,
   max: 3600,

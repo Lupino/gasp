@@ -11,9 +11,7 @@ endif
 
 " Values
 syn match gaspIdentifier "\<\(attr\|metric\|gpio\)_[A-Za-z0-9_]*\>"
-syn match gaspColon ":" contained
-syn match gaspFlagKey "[A-Za-z0-9\_]*" contained
-syn match gaspEntry "^\s*[A-Za-z][a-zA-Z0-9\_]*:" contains=gaspFlagKey,gaspColon
+syn match gaspType "\<\(boolean\|bool\|char\|unsigned\|byte\|int\|word\|long\|short\|float\|double\|uint8_t\|uint16_t\|uint32_t\)\>"
 
 syn match gaspNumber "0[xX][0-9a-fA-F]\+\|0[oO][0-7]\|[0-9]\+"
 syn match gaspFloat "[0-9]\+\.[0-9]\+\([eE][-+]\=[0-9]\+\)\="
@@ -46,7 +44,7 @@ if version >= 508 || !exists("did_hs_syntax_inits")
 
   HiLink gaspIdentifier Identifier
 
-  HiLink gaspFlagKey Type
+  HiLink gaspType Type
 
   HiLink gaspBoolean Boolean
   HiLink gaspNumber Number

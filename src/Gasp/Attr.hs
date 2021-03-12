@@ -16,7 +16,7 @@ data Attr = Attr
     , attrAddr   :: !Int
     , attrMax    :: !Double
     , attrMin    :: !Double
-    , attrType   :: !String
+    , attrType   :: !DataType
     , attrDef    :: !Double
     , attrGenSet :: !Bool
     , attrScale  :: !Double
@@ -33,7 +33,7 @@ instance ToJSON Attr where
         , "scaled_max" .= (attrMax   attr * attrScale attr)
         , "scaled_min" .= (attrMin   attr * attrScale attr)
         , "scale"      .= attrScale  attr
-        , "type"       .= attrType   attr
+        , "type"       .= unDataType (attrType attr)
         , "is_float"   .= isFloatAttr attr
         , "uncheckmin" .= (isUnsigned (attrType attr) && attrMin attr <= 0)
         , "onebyte"    .= (getAttrDataLength attr == 1)

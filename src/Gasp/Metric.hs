@@ -14,7 +14,7 @@ import           Gasp.Common
 data Metric = Metric
     { metricName         :: !String -- Identifier
     , metricAddr         :: !Int
-    , metricType         :: !String
+    , metricType         :: !DataType
     , metricMax          :: !Double
     , metricMin          :: !Double
     , metricMinThreshold :: !Double
@@ -34,7 +34,7 @@ calcMetricThresholdWidth metric =
 instance ToJSON Metric where
     toJSON metric = object
         [ "name"            .= metricName metric
-        , "type"            .= metricType metric
+        , "type"            .= unDataType (metricType metric)
         , "max"             .= metricMax metric
         , "min"             .= metricMin metric
         , "min_threshold"   .= metricMinThreshold metric
