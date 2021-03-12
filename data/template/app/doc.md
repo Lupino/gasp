@@ -202,66 +202,134 @@
 {= type =} metric_{= name =} = 0;
 {=/ metrics =}
 
-unsigned long get_current_time_ms();
-{=# use_remote =}
-void reset();
+{=# gpios =}
+{=# bind =}
+{=# is_link =}
+uint8_t gpio_{= name =}_state = {= state =};
+{=/ is_link =}
+{=# is_fn =}
+uint8_t gpio_{= name =}_state = {= state =};
+{=/ is_fn =}
+{=# is_no_bind =}
+uint8_t gpio_{= name =}_state = {= state =};
+{=/ is_no_bind =}
+{=# is_pwm =}
+uint8_t gpio_{= name =}_state = {= state =};
+{=/ is_pwm =}
+{=/ bind =}
+{=/ gpios =}
+{=# agpios =}
+{=# bind =}
+{=# is_no_bind =}
+uint16_t agpio_{= name =}_value = 0;
+{=/ is_no_bind =}
+{=/ bind =}
+{=/ agpios =}
+{=# uarts =}
+SoftwareSerial uart_{= name =}({= rx =}, {= tx =});
+{=# readers =}
+uint8_t uart_read_{= rname =}_buffer[{= buf_len =}];
+int uart_read_{= rname =}_buffer_len = 0;
+{=/ readers =}
+{=# writers =}
+bool is_uart_write_{= wname =} = false;
+{=/ writers =}
+{=/ uarts =}
 
+unsigned long get_current_time_ms();
+
+{=# has_float =}
+bool is_valid_float(float number, float min, float max);
+{=/ has_float =}
+{=# has_app =}
+void mainAction();
+bool is_valid_addr();
+void noop();
+void send_packet();
 void send_packet_0(const uint8_t type);
 void send_packet_1(const uint8_t type, const char *data);
 void send_packet_rsp(const char *data);
-
+void next_packet(const uint8_t type);
+char * FC(const __FlashStringHelper *ifsh);
 char * ltrim(char *s);
 bool jsoneq(const char *json, jsmntok_t *token, const char *s);
 int jsonfind(const char *json, jsmntok_t *tokens, int num_tokens, const char *name);
+
 bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char *name, char *value);
 void merge_json(char *dst, char *src, int *total_length);
-
-{=/ use_remote =}
 {=# attrs =}
-{=# gen_set =}
 void set_attr_{= name =}_raw({= type =} unscaled_value);
-int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
-{=/ gen_set =}
-int get_attr_{= name =}(char *retval);
+bool set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
+bool get_attr_{= name =}(char *retval);
 
 {=/ attrs =}
 {=# metrics =}
-int set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
-int get_metric_{= name =}_threshold(char *retval);
-int get_metric_{= name =}(char *retval);
+{=# auto =}
+bool set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
+bool get_metric_{= name =}_threshold(char *retval);
+{=/ auto =}
+bool check_metric_{= name =}();
+bool invalid_metric_{= name =}_error(char *retval);
+bool get_metric_{= name =}(char *retval);
 
 {=/ metrics =}
+{=/ has_app =}
 {=# gpios =}
-{=^ has_fn =}
+{=# bind =}
+{=# is_link =}
+void open_gpio_{= name =}_raw();
+void close_gpio_{= name =}_raw();
 void open_gpio_{= name =}();
 void close_gpio_{= name =}();
 void toggle_gpio_{= name =}();
 
-{=/ has_fn =}
+{=/ is_link =}
+{=# is_no_bind =}
+void open_gpio_{= name =}();
+void close_gpio_{= name =}();
+void toggle_gpio_{= name =}();
+
+{=/ is_no_bind =}
+{=/ bind =}
 {=/ gpios =}
 {=# functions =}
 {=# has_argv =}
-int {= name =}({= argv =});
+bool {= name =}({= argv =});
 {=/ has_argv =}
 {=^ has_argv =}
 {=# flag =}
 {=# retval =}
 {=# json =}
-int {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
+bool {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
 {=/ json =}
 {=^ json =}
-int {= name =}(char *retval);
+bool {= name =}(char *retval);
 {=/ json =}
 {=/ retval =}
 {=^ retval =}
 {=# json =}
-int {= name =}(const char *json, jsmntok_t *tokens, int num_tokens);
+bool {= name =}(const char *json, jsmntok_t *tokens, int num_tokens);
 {=/ json =}
 {=^ json =}
-int {= name =}();
+bool {= name =}();
 {=/ json =}
 {=/ retval =}
 {=/ flag =}
 {=/ has_argv =}
+
 {=/ functions =}
+{=# has_app =}
+bool processRequest(const char *json, int length, char *retval);
+{=# has_metric =}
+bool reportMetric(bool force);
+{=/ has_metric =}
+{=# use_eeprom =}
+bool reportAttribute(bool force);
+{=/ use_eeprom =}
+{=/ has_app =}
+{=# uarts =}
+{=# writers =}
+void uart_write_{= wname =}();
+{=/ writers =}
+{=/ uarts =}
 ```
