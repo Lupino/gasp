@@ -107,7 +107,7 @@ createNewProject projectName = do
           , "    if (attr_relay_mode == 1) {"
           , "        return set_attr_relay_state(json, tokens, num_tokens, retval);"
           , "    }"
-          , "    return RET_ERR;"
+          , "    return false;"
           , "}"
           , ""
           , "command set_relay_state {"

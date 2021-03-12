@@ -330,7 +330,6 @@ instance ToJSON Gasp where
         , "agpios"      .= agpios
         , "rules"       .= rules
         , "has_gpio"    .= not (null gpios)
-        , "has_func"    .= (hasFunc || useEeprom)
         , "has_input"   .= hasInput gpios
         , "has_debug"   .= constDebug consts
         , "has_rule"    .= not (null rules)
@@ -351,7 +350,6 @@ instance ToJSON Gasp where
               uarts = getUarts gasp
               cmds = getCmds gasp
               funcs = getFunctions gasp
-              hasFunc = not (null funcs)
               inits = getInits gasp
               consts = getConstants gasp
               hasMetric = not (null metrics)

@@ -12,14 +12,9 @@
 #include <SoftwareSerial.h>
 
 {=/ has_uart =}
-{=# has_func =}
-#define RET_ERR -1
-#define RET_SUCC 0
 {=# consts =}
 #define {= name =} {= value =}
 {=/ consts =}
-
-{=/ has_func =}
 {=# inits =}
 {=& code =}
 
@@ -217,18 +212,18 @@ bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char 
 void merge_json(char *dst, char *src, int *total_length);
 {=# attrs =}
 void set_attr_{= name =}_raw({= type =} unscaled_value);
-int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
-int get_attr_{= name =}(char *retval);
+bool set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
+bool get_attr_{= name =}(char *retval);
 
 {=/ attrs =}
 {=# metrics =}
 {=# auto =}
-int set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
-int get_metric_{= name =}_threshold(char *retval);
+bool set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
+bool get_metric_{= name =}_threshold(char *retval);
 {=/ auto =}
 bool check_metric_{= name =}();
-int invalid_metric_{= name =}_error(char *retval);
-int get_metric_{= name =}(char *retval);
+bool invalid_metric_{= name =}_error(char *retval);
+bool get_metric_{= name =}(char *retval);
 
 {=/ metrics =}
 {=/ has_app =}
@@ -252,24 +247,24 @@ void toggle_gpio_{= name =}();
 {=/ gpios =}
 {=# functions =}
 {=# has_argv =}
-int {= name =}({= argv =});
+bool {= name =}({= argv =});
 {=/ has_argv =}
 {=^ has_argv =}
 {=# flag =}
 {=# retval =}
 {=# json =}
-int {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
+bool {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
 {=/ json =}
 {=^ json =}
-int {= name =}(char *retval);
+bool {= name =}(char *retval);
 {=/ json =}
 {=/ retval =}
 {=^ retval =}
 {=# json =}
-int {= name =}(const char *json, jsmntok_t *tokens, int num_tokens);
+bool {= name =}(const char *json, jsmntok_t *tokens, int num_tokens);
 {=/ json =}
 {=^ json =}
-int {= name =}();
+bool {= name =}();
 {=/ json =}
 {=/ retval =}
 {=/ flag =}
@@ -277,7 +272,7 @@ int {= name =}();
 
 {=/ functions =}
 {=# has_app =}
-int processRequest(const char *json, int length, char *retval);
+bool processRequest(const char *json, int length, char *retval);
 {=# has_metric =}
 bool reportMetric(bool force);
 {=/ has_metric =}
@@ -493,9 +488,9 @@ void loop() {
                 }
                 if (obj.type == REQUEST) {
                     wantSendData[0] = '\0';
-                    int ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
+                    bool ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
                     if (wantSendData[0] == '\0') {
-                        if (ret > RET_ERR) {
+                        if (ret) {
                             sprintf(wantSendData, FC(F("{\"result\": \"OK\"}")));
                         } else {
                             sprintf(wantSendData, FC(F("{\"err\": \"not support\"}")));
@@ -615,7 +610,7 @@ void loop() {
     {=# uarts =}
     while (uart_{= name =}.available() > 0) {
         {=# readers =}
-        if ({= reader =}(uart_{= name =}.read(), uart_read_{= rname =}_buffer, &uart_read_{= rname =}_buffer_len) > RET_ERR) {
+        if ({= reader =}(uart_{= name =}.read(), uart_read_{= rname =}_buffer, &uart_read_{= rname =}_buffer_len)) {
             {= parser =}(uart_read_{= rname =}_buffer, uart_read_{= rname =}_buffer_len);
             uart_read_{= rname =}_buffer_len = 0;
         }
@@ -823,7 +818,7 @@ void set_attr_{= name =}_raw({= type =} unscaled_value) {
     {=/ keep =}
 }
 
-int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
+bool set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
         {=# is_float =}
         {= type =} tmp = atof(requestValue);
@@ -839,15 +834,15 @@ int set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, cha
         {=/ uncheckmin =}
         {=/ is_float =}
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min =}, {= max =}]\"}")));
-          return RET_ERR;
+          return false;
         }
         set_attr_{= name =}_raw(tmp);
     }
     get_attr_{= name =}(retval);
-    return RET_SUCC;
+    return true;
 }
 
-int get_attr_{= name =}(char *retval) {
+bool get_attr_{= name =}(char *retval) {
     {=^ is_float =}
     sprintf(retval, FC(F("{\"{= name =}\": %d}")), ({= type =})attr_{= name =} / {= scale =});
     {=/ is_float =}
@@ -855,13 +850,13 @@ int get_attr_{= name =}(char *retval) {
     dtostrf(({= type =})attr_{= name =} / {= scale =}, {= width =}, {= prec =}, requestValue);
     sprintf(retval, FC(F("{\"{= name =}\": %s}")), ltrim(requestValue));
     {=/ is_float =}
-    return RET_SUCC;
+    return true;
 }
 
 {=/ attrs =}
 {=# metrics =}
 {=# auto =}
-int set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
+bool set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
         {=# is_float =}
         {= type =} tmp = atof(requestValue);
@@ -877,7 +872,7 @@ int set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num
         {=/ uncheckmin =}
         {=/ is_float =}
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min_threshold =}, {= max_threshold =}]\"}")));
-          return RET_ERR;
+          return false;
         }
         metric_{= name =}_threshold = tmp;
         {=# onebyte =}
@@ -888,10 +883,10 @@ int set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num
         {=/ onebyte =}
     }
     get_metric_{= name =}_threshold(retval);
-    return RET_SUCC;
+    return true;
 }
 
-int get_metric_{= name =}_threshold(char *retval) {
+bool get_metric_{= name =}_threshold(char *retval) {
     {=^ is_float =}
     sprintf(retval, FC(F("{\"{= name =}_threshold\": %d}")), metric_{= name =}_threshold);
     {=/ is_float =}
@@ -899,7 +894,7 @@ int get_metric_{= name =}_threshold(char *retval) {
     dtostrf(metric_{= name =}_threshold, {= width =}, {= prec =}, requestValue);
     sprintf(retval, FC(F("{\"{= name =}_threshold\": %s}")), ltrim(requestValue));
     {=/ is_float =}
-    return RET_SUCC;
+    return true;
 }
 
 {=/ auto =}
@@ -907,12 +902,12 @@ bool check_metric_{= name =}() {
     return is_valid_float(metric_{= name =}, {= min =}, {= max =});
 }
 
-int invalid_metric_{= name =}_error(char *retval) {
+bool invalid_metric_{= name =}_error(char *retval) {
     sprintf(retval, FC(F("{\"err\": \"{= name =} is invalid\"}")));
-    return RET_ERR;
+    return false;
 }
 
-int get_metric_{= name =}(char *retval) {
+bool get_metric_{= name =}(char *retval) {
     if (!check_metric_{= name =}()) {
         return invalid_metric_{= name =}_error(retval);
     }
@@ -923,7 +918,7 @@ int get_metric_{= name =}(char *retval) {
     dtostrf(metric_{= name =}, {= width =}, {= prec =}, requestValue);
     sprintf(retval, FC(F("{\"{= name =}\": %s}")), ltrim(requestValue));
     {=/ is_float =}
-    return RET_SUCC;
+    return true;
 }
 
 {=/ metrics =}
@@ -992,31 +987,31 @@ void toggle_gpio_{= name =}() {
 {=/ gpios =}
 {=# functions =}
 {=# has_argv =}
-int {= name =}({= argv =}) {
+bool {= name =}({= argv =}) {
 {=/ has_argv =}
 {=^ has_argv =}
 {=# flag =}
 {=# retval =}
 {=# json =}
-int {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
+bool {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
 {=/ json =}
 {=^ json =}
-int {= name =}(char *retval) {
+bool {= name =}(char *retval) {
 {=/ json =}
 {=/ retval =}
 {=^ retval =}
 {=# json =}
-int {= name =}(const char *json, jsmntok_t *tokens, int num_tokens) {
+bool {= name =}(const char *json, jsmntok_t *tokens, int num_tokens) {
 {=/ json =}
 {=^ json =}
-int {= name =}() {
+bool {= name =}() {
 {=/ json =}
 {=/ retval =}
 {=/ flag =}
 {=/ has_argv =}
     {=& code =}
     {=^ return =}
-    return RET_SUCC;
+    return true;
     {=/ return =}
 }
 
@@ -1033,14 +1028,14 @@ void uart_write_{= wname =}() {
 {=/ writers =}
 {=/ uarts =}
 {=# has_app =}
-int processRequest(const char *json, int length, char *retval) {
+bool processRequest(const char *json, int length, char *retval) {
     /* Prepare parser */
     jsmn_init(&requestJsmnParser);
     int num_tokens = jsmn_parse(&requestJsmnParser, json, length, requestJsmnTokens, MAX_NUM_TOKENS);
 
     if (num_tokens < 0) {
         sprintf(retval, FC(F("{\"err\": \"Failed to parse JSON: %d\"}")), num_tokens);
-        return RET_ERR;
+        return false;
     }
 
     int token = jsonfind(json, requestJsmnTokens, num_tokens, "method");
@@ -1051,27 +1046,26 @@ int processRequest(const char *json, int length, char *retval) {
             {=# flag =}
             {=# retval =}
             {=# json =}
-            int r = {= fn =}(json, requestJsmnTokens, num_tokens, retval);
+            if ({= fn =}(json, requestJsmnTokens, num_tokens, retval)) {
             {=/ json =}
             {=^ json =}
-            int r = {= fn =}(retval);
+            if ({= fn =}(retval)) {
             {=/ json =}
             {=/ retval =}
             {=^ retval =}
             {=# json =}
-            int r = {= fn =}(json, requestJsmnTokens, num_tokens);
+            if ({= fn =}(json, requestJsmnTokens, num_tokens)) {
             {=/ json =}
             {=^ json =}
-            int r = {= fn =}();
+            if ({= fn =}()) {
             {=/ json =}
             {=/ retval =}
-            if (r > RET_ERR) {
-                return r;
+                return true;
             } else {
                 {=# error =}
                 sprintf(retval, FC(F("{\"err\": \"{= error =}\"}")));
                 {=/ error =}
-                return RET_ERR;
+                return false;
             }
             {=/ flag =}
         }
@@ -1079,58 +1073,53 @@ int processRequest(const char *json, int length, char *retval) {
         {=# attrs =}
         {=# gen_set =}
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_{= name =}")))) {
-            int r = set_attr_{= name =}(json, requestJsmnTokens, num_tokens, retval);
-            if (r > RET_ERR) {
-                return r;
+            if (set_attr_{= name =}(json, requestJsmnTokens, num_tokens, retval)) {
+                return true;
             } else {
                 sprintf(retval, FC(F("{\"err\": \"set_{= name =} error\"}")));
-                return RET_ERR;
+                return false;
             }
         }
         {=/ gen_set =}
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}")))) {
-            int r = get_attr_{= name =}(retval);
-            if (r > RET_ERR) {
-                return r;
+            if (get_attr_{= name =}(retval)) {
+                return true;
             } else {
                 sprintf(retval, FC(F("{\"err\": \"get_{= name =} error\"}")));
-                return RET_ERR;
+                return false;
             }
         }
         {=/ attrs =}
         {=# metrics =}
         {=# auto =}
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_{= name =}_threshold")))) {
-            int r = set_metric_{= name =}_threshold(json, requestJsmnTokens, num_tokens, retval);
-            if (r > RET_ERR) {
-                return r;
+            if (set_metric_{= name =}_threshold(json, requestJsmnTokens, num_tokens, retval)) {
+                return true;
             } else {
                 sprintf(retval, FC(F("{\"err\": \"set_{= name =}_threshold error\"}")));
-                return RET_ERR;
+                return false;
             }
         }
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}_threshold")))) {
-            int r = get_metric_{= name =}_threshold(retval);
-            if (r > RET_ERR) {
-                return r;
+            if (get_metric_{= name =}_threshold(retval)) {
+                return true;
             } else {
                 sprintf(retval, FC(F("{\"err\": \"get_{= name =}_threshold error\"}")));
-                return RET_ERR;
+                return false;
             }
         }
         {=/ auto =}
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}")))) {
-            int r = get_metric_{= name =}(retval);
-            if (r > RET_ERR) {
-                return r;
+            if (get_metric_{= name =}(retval)) {
+                return true;
             } else {
                 sprintf(retval, FC(F("{\"err\": \"get_{= name =} error\"}")));
-                return RET_ERR;
+                return false;
             }
         }
         {=/ metrics =}
     }
-    return RET_ERR;
+    return false;
 }
 
 {=^ low_memory =}
@@ -1145,7 +1134,7 @@ bool reportMetric(bool force) {
     {=# auto =}
     if ((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || force) {
         tempSendData[0] = '\0';
-        if (get_metric_{= name =}(tempSendData) > RET_ERR) {
+        if (get_metric_{= name =}(tempSendData)) {
             merge_json(wantSendData, tempSendData, &total_length);
             wantSend = true;
             last_metric_{= name =} = metric_{= name =};
@@ -1175,7 +1164,7 @@ bool reportAttribute(bool force) {
     {=# attrs =}
     if (last_attr_{= name =} != attr_{= name =} || force) {
         tempSendData[0] = '\0';
-        if (get_attr_{= name =}(tempSendData) > RET_ERR) {
+        if (get_attr_{= name =}(tempSendData)) {
             merge_json(wantSendData, tempSendData, &total_length);
             wantSend = true;
             last_attr_{= name =} = attr_{= name =};
@@ -1187,7 +1176,7 @@ bool reportAttribute(bool force) {
     {=# auto =}
     if (last_metric_{= name =}_threshold != metric_{= name =}_threshold || force) {
         tempSendData[0] = '\0';
-        if (get_metric_{= name =}_threshold(tempSendData) > RET_ERR) {
+        if (get_metric_{= name =}_threshold(tempSendData)) {
             merge_json(wantSendData, tempSendData, &total_length);
             wantSend = true;
             last_metric_{= name =}_threshold = metric_{= name =}_threshold;
@@ -1215,7 +1204,7 @@ bool reportMetric(bool force) {
     {=# auto =}
     if ((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || force) {
         wantSendData[0] = '\0';
-        if (get_metric_{= name =}(wantSendData) > RET_ERR) {
+        if (get_metric_{= name =}(wantSendData)) {
             last_metric_{= name =} = metric_{= name =};
             send_packet_1(TELEMETRY, wantSendData);
             sended = true;
@@ -1234,7 +1223,7 @@ bool reportAttribute(bool force) {
     {=# attrs =}
     if (last_attr_{= name =} != attr_{= name =} || force) {
         wantSendData[0] = '\0';
-        if (get_attr_{= name =}(wantSendData) > RET_ERR) {
+        if (get_attr_{= name =}(wantSendData)) {
             sended = true;
             last_attr_{= name =} = attr_{= name =};
             send_packet_1(ATTRIBUTE, wantSendData);
@@ -1246,7 +1235,7 @@ bool reportAttribute(bool force) {
     {=# auto =}
     if (last_metric_{= name =}_threshold != metric_{= name =}_threshold || force) {
         wantSendData[0] = '\0';
-        if (get_metric_{= name =}_threshold(wantSendData) > RET_ERR) {
+        if (get_metric_{= name =}_threshold(wantSendData)) {
             sended = true;
             last_metric_{= name =}_threshold = metric_{= name =}_threshold;
             send_packet_1(ATTRIBUTE, wantSendData);
