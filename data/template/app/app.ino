@@ -83,6 +83,7 @@ uint8_t addr[{= addr_len =}] = {{= addr_hex_array =}};
 givelink_t obj;
 uint8_t obj_buff[MAX_BUFFER_LENGTH];
 
+bool crcFlag = false;
 uint16_t lastPayloadId = 0;
 uint16_t readedLen = 0;
 uint8_t  readedPayload[MAX_GL_PAYLOAD_LENGTH];
@@ -463,8 +464,7 @@ void loop() {
     {=/ rules =}
     {=# has_app =}
     while (GL_SERIAL.available() > 0) {
-        uint8_t outByte = GL_SERIAL.read();
-        if (givelink_recv(readedPayload, &readedLen, outByte)) {
+        if (givelink_recv(readedPayload, &readedLen, GL_SERIAL.read(), &crcFlag)) {
             if (givelink_from_binary(readedPayload, readedLen)) {
                 {=# has_debug =}
                 #ifdef DEBUG_SERIAL
@@ -482,7 +482,7 @@ void loop() {
                 #endif
 
                 {=/ has_debug =}
-                if (obj.type == AUTHRES) {
+                if (obj.type == AUTHRES && crcFlag) {
                     {=# production =}
                     {=# app =}
                     for (int i = 0; i < {= addr_len =}; i ++) {
@@ -491,7 +491,7 @@ void loop() {
                     {=/ app =}
                     {=/ production =}
                 }
-                if (obj.type == REQUEST) {
+                if (obj.type == REQUEST && crcFlag) {
                     wantSendData[0] = '\0';
                     bool ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
                     if (wantSendData[0] == '\0') {
