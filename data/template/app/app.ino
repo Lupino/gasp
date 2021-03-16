@@ -198,7 +198,6 @@ bool is_valid_float(float number, float min, float max);
 {=/ has_float =}
 {=# has_app =}
 void mainAction();
-bool is_valid_addr();
 void noop();
 void send_packet();
 void send_packet_0(const uint8_t type);
@@ -308,10 +307,8 @@ void setup() {
     for (int i = 0; i < {= addr_len =}; i ++) {
         addr[i] = EEPROM.read({= addr_addr =} + i);
     }
-    if (is_valid_addr()) {
-        givelink_context_set_addr(addr, {= addr_len =});
-        givelink_context_set_auth(true);
-    }
+    givelink_context_set_addr(addr, {= addr_len =});
+    givelink_context_set_auth(true);
     {=/ production =}
     givelink_init(&obj, obj_buff);
     {=/ app =}
@@ -729,17 +726,6 @@ void mainAction() {
             }
         }
     }
-}
-
-bool is_valid_addr() {
-    {=# app =}
-    for (int i = 0; i < {= addr_len =}; i ++) {
-        if (addr[i] != '\0') {
-            return true;
-        }
-    }
-    return false;
-    {=/ app =}
 }
 
 void noop() {}

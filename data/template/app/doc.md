@@ -243,7 +243,6 @@ bool is_valid_float(float number, float min, float max);
 {=/ has_float =}
 {=# has_app =}
 void mainAction();
-bool is_valid_addr();
 void noop();
 void send_packet();
 void send_packet_0(const uint8_t type);
