@@ -31,7 +31,7 @@ writer = do
   reserved reservedNameUartWrite
   n <- identifier
   cmd <- stringLiteral
-  return $ UartWriter n cmd
+  return $ UartWriter n cmd 0
 
 data ReadWrite
   = Read UartReader
@@ -40,6 +40,10 @@ data ReadWrite
 
 readWrite :: Parser ReadWrite
 readWrite = (Read <$> reader) <|> (Write <$> writer)
+
+fillId :: Int -> [UartWriter] -> [UartWriter]
+fillId _ []       = []
+fillId idx (x:xs) = x {uartWId = idx} : fillId (idx + 1) xs
 
 uart :: Parser Uart
 uart = do
@@ -56,6 +60,6 @@ uart = do
     , uartTxPin = tx
     , uartRxPin = rx
     , uartReaders = [x | Read x <- rws]
-    , uartWriters = [x | Write x <- rws]
+    , uartWriters = fillId 0 [x | Write x <- rws]
     , uartSpeed = speed
     }

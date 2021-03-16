@@ -228,11 +228,11 @@ uint16_t agpio_{= name =}_value = 0;
 {=# uarts =}
 SoftwareSerial uart_{= name =}({= rx =}, {= tx =});
 {=# readers =}
-uint8_t uart_read_{= rname =}_buffer[{= buf_len =}];
-int uart_read_{= rname =}_buffer_len = 0;
+uint8_t uart_{= name =}_read_{= rname =}_buffer[{= buf_len =}];
+int uart_{= name =}_read_{= rname =}_buffer_len = 0;
 {=/ readers =}
 {=# writers =}
-bool is_uart_write_{= wname =} = false;
+bool is_uart_{= name =}_write_{= wname =} = false;
 {=/ writers =}
 {=/ uarts =}
 
@@ -329,7 +329,8 @@ bool reportAttribute(bool force);
 {=/ has_app =}
 {=# uarts =}
 {=# writers =}
-void uart_write_{= wname =}();
+void uart_{= name =}_write_{= wname =}();
 {=/ writers =}
+void uart_{= name =}_write();
 {=/ uarts =}
 ```

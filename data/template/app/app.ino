@@ -182,12 +182,13 @@ uint16_t agpio_{= name =}_value = 0;
 {=# uarts =}
 SoftwareSerial uart_{= name =}({= rx =}, {= tx =});
 {=# readers =}
-uint8_t uart_read_{= rname =}_buffer[{= buf_len =}];
-int uart_read_{= rname =}_buffer_len = 0;
+uint8_t uart_{= name =}_read_{= rname =}_buffer[{= buf_len =}];
+int uart_{= name =}_read_{= rname =}_buffer_len = 0;
 {=/ readers =}
 {=# writers =}
-bool is_uart_write_{= wname =} = false;
+bool is_uart_{= name =}_write_{= wname =} = false;
 {=/ writers =}
+bool uart_{= name =}_write_index = 0;
 {=/ uarts =}
 // defined
 unsigned long get_current_time_ms();
@@ -283,8 +284,9 @@ bool reportAttribute(bool force);
 {=/ has_app =}
 {=# uarts =}
 {=# writers =}
-void uart_write_{= wname =}();
+void uart_{= name =}_write_{= wname =}();
 {=/ writers =}
+void uart_{= name =}_write();
 {=/ uarts =}
 // end defined
 void setup() {
@@ -615,9 +617,9 @@ void loop() {
     {=# uarts =}
     while (uart_{= name =}.available() > 0) {
         {=# readers =}
-        if ({= reader =}(uart_{= name =}.read(), uart_read_{= rname =}_buffer, &uart_read_{= rname =}_buffer_len)) {
-            {= parser =}(uart_read_{= rname =}_buffer, uart_read_{= rname =}_buffer_len);
-            uart_read_{= rname =}_buffer_len = 0;
+        if ({= reader =}(uart_{= name =}.read(), uart_{= name =}_read_{= rname =}_buffer, &uart_{= name =}_read_{= rname =}_buffer_len)) {
+            {= parser =}(uart_{= name =}_read_{= rname =}_buffer, uart_{= name =}_read_{= rname =}_buffer_len);
+            uart_{= name =}_read_{= rname =}_buffer_len = 0;
         }
         {=/ readers =}
     }
@@ -1023,14 +1025,28 @@ bool {= name =}() {
 {=/ functions =}
 {=# uarts =}
 {=# writers =}
-void uart_write_{= wname =}() {
-    is_uart_write_{= wname =} = true;
+void uart_{= name =}_write_{= wname =}() {
+    is_uart_{= name =}_write_{= wname =} = true;
     {=# bytes =}
     uart_{= name =}.write((uint8_t)0x{= . =});
     {=/ bytes =}
 }
 
 {=/ writers =}
+void uart_{= name =}_write() {
+    {=# writers =}
+    is_uart_{= name =}_write_{= wname =} = false;
+    {=/ writers =}
+    {=# writers =}
+    if (uart_{= name =}_write_index == {= index =}) {
+        uart_{= name =}_write_{= wname =}();
+    }
+    {=/ writers =}
+    uart_{= name =}_write_index += 1;
+    if (uart_{= name =}_write_index >= {= wcount =}) {
+        uart_{= name =}_write_index = 0;
+    }
+}
 {=/ uarts =}
 {=# has_app =}
 bool processRequest(const char *json, int length, char *retval) {

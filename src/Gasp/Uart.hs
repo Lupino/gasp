@@ -33,17 +33,20 @@ instance ToJSON Uart where
         , "speed"   .= uartSpeed uart
         , "readers" .= uartReaders uart
         , "writers" .= uartWriters uart
+        , "wcount"  .= length (uartWriters uart)
         ]
 
 data UartWriter = UartWriter
   { uartWName :: String
   , uartWCmd  :: String
+  , uartWId   :: Int
   } deriving (Show, Eq)
 
 instance ToJSON UartWriter where
     toJSON uw = object
         [ "wname" .= uartWName uw
         , "bytes" .= toHex (uartWCmd uw)
+        , "index" .= uartWId uw
         ]
 
 
