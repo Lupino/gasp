@@ -1189,49 +1189,24 @@ bool processRequest(const char *json, int length, char *retval) {
         {=# attrs =}
         {=# gen_set =}
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_{= name =}")))) {
-            if (set_attr_{= name =}(json, requestJsmnTokens, num_tokens, retval)) {
-                return true;
-            } else {
-                sprintf(retval, FC(F("{\"err\": \"set_{= name =} error\"}")));
-                return false;
-            }
+            return set_attr_{= name =}(json, requestJsmnTokens, num_tokens, retval);
         }
         {=/ gen_set =}
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}")))) {
-            if (get_attr_{= name =}(retval)) {
-                return true;
-            } else {
-                sprintf(retval, FC(F("{\"err\": \"get_{= name =} error\"}")));
-                return false;
-            }
+            return get_attr_{= name =}(retval);
         }
         {=/ attrs =}
         {=# metrics =}
         {=# auto =}
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_{= name =}_threshold")))) {
-            if (set_metric_{= name =}_threshold(json, requestJsmnTokens, num_tokens, retval)) {
-                return true;
-            } else {
-                sprintf(retval, FC(F("{\"err\": \"set_{= name =}_threshold error\"}")));
-                return false;
-            }
+            return set_metric_{= name =}_threshold(json, requestJsmnTokens, num_tokens, retval);
         }
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}_threshold")))) {
-            if (get_metric_{= name =}_threshold(retval)) {
-                return true;
-            } else {
-                sprintf(retval, FC(F("{\"err\": \"get_{= name =}_threshold error\"}")));
-                return false;
-            }
+            return get_metric_{= name =}_threshold(retval);
         }
         {=/ auto =}
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}")))) {
-            if (get_metric_{= name =}(retval)) {
-                return true;
-            } else {
-                sprintf(retval, FC(F("{\"err\": \"get_{= name =} error\"}")));
-                return false;
-            }
+            return get_metric_{= name =}(retval);
         }
         {=/ metrics =}
     }
