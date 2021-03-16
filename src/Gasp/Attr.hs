@@ -36,10 +36,10 @@ instance ToJSON Attr where
     toJSON attr = object
         [ "name"       .= attrName   attr
         , "addr"       .= attrAddr   attr
-        , "max"        .= attrMax    attr
-        , "min"        .= attrMin    attr
-        , "scaled_max" .= (attrMax   attr * attrScale attr)
-        , "scaled_min" .= (attrMin   attr * attrScale attr)
+        , "max"        .= min unScaledMax (attrMax attr)
+        , "min"        .= max unScaledMin (attrMin attr)
+        , "scaled_max" .= min tpMax (attrMax attr * attrScale attr)
+        , "scaled_min" .= max tpMin (attrMin attr * attrScale attr)
         , "scale"      .= attrScale  attr
         , "type"       .= attrType   attr
         , "is_float"   .= isFloatAttr attr
@@ -51,6 +51,10 @@ instance ToJSON Attr where
         , "prec"       .= attrPrec   attr
         , "keep"       .= attrKeep   attr
         ]
+          where tpMax = maxValue (attrType attr)
+                tpMin = minValue (attrType attr)
+                unScaledMax = tpMax / attrScale attr
+                unScaledMin = tpMin / attrScale attr
 
 calcAttrWidth :: Attr -> Int
 calcAttrWidth attr = calcWidth (attrMax attr) (attrMin attr)
