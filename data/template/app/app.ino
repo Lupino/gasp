@@ -288,6 +288,10 @@ void uart_{= name =}_write_{= wname =}();
 {=/ writers =}
 void uart_{= name =}_write();
 {=/ uarts =}
+// -1 non num
+//  0 int
+//  1 float
+int isnum(const char *buf);
 // end defined
 void setup() {
     {=# has_app =}
@@ -636,6 +640,48 @@ unsigned long get_current_time_ms() {
     return millis();
 }
 
+// -1 non num
+//  0 int
+//  1 float
+int isnum(const char *buf) {
+    int length = strlen(buf);
+
+    if (length == 0) {
+        return -1;
+    }
+
+    if (!isdigit(buf[0])) {
+        if (length == 1) {
+            return -1;
+        }
+        if (buf[0] != '-') {
+            return -1;
+        }
+    }
+
+    if (buf[0] != '-' && !isdigit(buf[0])) {
+        return -1;
+    }
+
+    int f = 0;
+
+    for (int i = 1; i < length; i++) {
+        if (!isdigit(buf[i])) {
+            if (buf[i] == '.') {
+                if (f == 1) {
+                    return -1;
+                } else {
+                    f = 1;
+                }
+            } else {
+                return -1;
+            }
+        }
+    }
+
+    return f;
+}
+
 {=# has_float =}
 bool is_valid_float(float number, float min, float max) {
     if (isnan(number)) return false;
@@ -832,12 +878,41 @@ void set_attr_{= name =}_raw({= type =} unscaled_value) {
 
 bool set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
+        int tp = isnum(requestValue);
+        if (tp == -1) {
+            sprintf(retval, FC(F("{\"err\": \"data only support number\"}")));
+            return false;
+        }
         {=# is_float =}
-        {= type =} tmp = atof(requestValue);
+        float tmp;
+        if (tp == 0) {
+            tmp = (float)atoi(requestValue);
+        } else {
+            tmp = (float)atof(requestValue);
+        }
         if (!is_valid_float(tmp, {= min =}, {= max =})) {
         {=/ is_float =}
         {=^ is_float =}
-        {= type =} tmp = atoi(requestValue);
+        {=# unsigned =}
+        if (requestValue[0] == '-') {
+            sprintf(retval, FC(F("{\"err\": \"data must between: [{= min =}, {= max =}]\"}")));
+            return false;
+        }
+        unsigned long tmp;
+        if (tp == 0) {
+            tmp = (unsigned long)atoi(requestValue);
+        } else {
+            tmp = (unsigned long)atof(requestValue);
+        }
+        {=/ unsigned =}
+        {=^ unsigned =}
+        long tmp;
+        if (tp == 0) {
+            tmp = (long)atoi(requestValue);
+        } else {
+            tmp = (long)atof(requestValue);
+        }
+        {=/ unsigned =}
         {=# uncheckmin =}
         if (tmp > {= max =}) {
         {=/ uncheckmin =}
@@ -848,7 +923,7 @@ bool set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, ch
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min =}, {= max =}]\"}")));
           return false;
         }
-        set_attr_{= name =}_raw(tmp);
+        set_attr_{= name =}_raw(({= type =})tmp);
     }
     get_attr_{= name =}(retval);
     return true;
@@ -870,12 +945,41 @@ bool get_attr_{= name =}(char *retval) {
 {=# auto =}
 bool set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
+        int tp = isnum(requestValue);
+        if (tp == -1) {
+            sprintf(retval, FC(F("{\"err\": \"data only support number\"}")));
+            return false;
+        }
         {=# is_float =}
-        {= type =} tmp = atof(requestValue);
+        float tmp;
+        if (tp == 0) {
+            tmp = (float)atoi(requestValue);
+        } else {
+            tmp = (float)atof(requestValue);
+        }
         if (!is_valid_float(tmp, {= min_threshold =}, {= max_threshold =})) {
         {=/ is_float =}
         {=^ is_float =}
-        {= type =} tmp = atoi(requestValue);
+        {=# unsigned =}
+        if (requestValue[0] == '-') {
+            sprintf(retval, FC(F("{\"err\": \"data must between: [{= min_threshold =}, {= max_threshold =}]\"}")));
+            return false;
+        }
+        unsigned long tmp;
+        if (tp == 0) {
+            tmp = (unsigned long)atoi(requestValue);
+        } else {
+            tmp = (unsigned long)atof(requestValue);
+        }
+        {=/ unsigned =}
+        {=^ unsigned =}
+        long tmp;
+        if (tp == 0) {
+            tmp = (long)atoi(requestValue);
+        } else {
+            tmp = (long)atof(requestValue);
+        }
+        {=/ unsigned =}
         {=# uncheckmin =}
         if (tmp > {= max_threshold =}) {
         {=/ uncheckmin =}
@@ -886,7 +990,7 @@ bool set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int nu
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min_threshold =}, {= max_threshold =}]\"}")));
           return false;
         }
-        metric_{= name =}_threshold = tmp;
+        metric_{= name =}_threshold = ({= type =})tmp;
         {=# onebyte =}
         EEPROM.write({= addr =}, metric_{= name =}_threshold);
         {=/ onebyte =}
