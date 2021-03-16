@@ -69,7 +69,7 @@ func funcName [(argv)] {
 ## every
 
 ```
-every funcName delay_ms
+every funcName delay_ms [on condition]
 ```
 
 ## command
@@ -144,6 +144,15 @@ metric metricName {
 
 ```
 rule condition do [later do_later_ms ]action [else [later do_later_ms ]elseAction] [on onCondition]
+```
+
+## uart
+
+```
+uart uartName rx tx speed {
+    write writeName "1234"  // hex command
+    read readName bufLen fnReadName fnParseName
+}
 ```
 
 # Template Special

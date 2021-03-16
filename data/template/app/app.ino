@@ -550,7 +550,12 @@ void loop() {
 
     {=/ has_app =}
     {=# actions =}
+    {=# has_on =}
+    if ({= on =} && {= fn =}_timer_ms + {= delay_ms =} < get_current_time_ms()) {
+    {=/ has_on =}
+    {=^ has_on =}
     if ({= fn =}_timer_ms + {= delay_ms =} < get_current_time_ms()) {
+    {=/ has_on =}
         {= fn =}();
         {= fn =}_timer_ms = get_current_time_ms();
     }
