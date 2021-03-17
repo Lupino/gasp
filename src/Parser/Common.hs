@@ -20,18 +20,13 @@ module Parser.Common
 
 import           Gasp.Common        (DataType (..))
 import qualified Lexer              as L
-import           Text.Parsec        (ParseError, parse, try, (<|>))
-import           Text.Parsec.String (Parser)
+import           Text.Parsec        (ParseError, try, (<|>))
+import           Text.Parsec.String (Parser, parseFromFile)
 
 
 -- | Runs given gasp parser on a specified input.
-runGaspParser :: Parser a -> String -> Either ParseError a
-runGaspParser gaspParser = parse gaspParser sourceName
-  where
-    -- NOTE(matija): this is used by Parsec only when reporting errors, but we currently
-    -- don't provide source name (e.g. .gasp file name) to this method so leaving it empty
-    -- for now.
-    sourceName = ""
+runGaspParser :: Parser a -> FilePath -> IO (Either ParseError a)
+runGaspParser = parseFromFile
 
 -- TODO(matija): rename to just "gaspElement"?
 -- | Parses declaration of a gasp element (e.g. App or Page) and the closure content.

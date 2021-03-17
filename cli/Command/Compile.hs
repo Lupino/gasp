@@ -13,7 +13,7 @@ import           CompileOptions         (CompileOptions (..), CompileType,
 import           Control.Monad          (when)
 import           Control.Monad.Except   (throwError)
 import           Control.Monad.IO.Class (liftIO)
-import           Data.List              (find, isSuffixOf)
+import           Data.List              (isSuffixOf)
 import           Data.Maybe             (fromJust)
 import qualified Lib
 import           Path                   (Abs, Dir, File, Path, Rel, parseAbsDir,
@@ -34,15 +34,15 @@ compile ctp argv = do
 --   in given outDir directory.
 compileIO :: Path Abs Dir -> CompileOptions -> IO (Either String ())
 compileIO gaspProjectDir options = do
-    maybeGaspFile <- findGaspFile gaspProjectDir
-    case maybeGaspFile of
-        Nothing -> return $ Left "No *.gasp file present in the root of Gasp project."
-        Just gaspFile -> Lib.compile gaspFile options
+    gaspFiles <- findGaspFile gaspProjectDir
+    case gaspFiles of
+      [] -> return $ Left "No *.gasp file present in the root of Gasp project."
+      _  -> Lib.compile gaspFiles options
   where
-    findGaspFile :: Path Abs Dir -> IO (Maybe (Path Abs File))
+    findGaspFile :: Path Abs Dir -> IO [Path Abs File]
     findGaspFile dir = do
         (files, _) <- liftIO $ Util.IO.listDirectory dir
-        return $ (dir </>) <$> find isGaspFile files
+        return $ map (dir </>) $ filter isGaspFile files
 
     isGaspFile :: Path Rel File -> Bool
     isGaspFile path = ".gasp" `isSuffixOf` toFilePath path

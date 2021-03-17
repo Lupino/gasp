@@ -155,6 +155,12 @@ uart uartName rx tx speed {
 }
 ```
 
+## require
+
+```
+require "path to part gasp file"
+```
+
 # Template Special
 
 README sample compiled syntax.

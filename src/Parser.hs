@@ -16,6 +16,7 @@ import           Parser.Gpio        (gpio)
 import           Parser.Init        (initP)
 import           Parser.Loop        (loop)
 import           Parser.Metric      (metric)
+import           Parser.Require     (require)
 import           Parser.Rule        (rule)
 import           Parser.Setup       (setup)
 import           Parser.Uart        (uart)
@@ -38,6 +39,7 @@ expr
     <|> exprUart
     <|> exprRule
     <|> exprConst
+    <|> exprRequire
 
 exprApp :: Parser Gasp.Expr
 exprApp = Gasp.ExprApp <$> app
@@ -81,6 +83,9 @@ exprRule = Gasp.ExprRule <$> rule
 exprConst :: Parser Gasp.Expr
 exprConst = Gasp.ExprConst <$> constant
 
+exprRequire :: Parser Gasp.Expr
+exprRequire = Gasp.ExprRequire <$> require
+
 -- | Top level parser, produces Gasp.
 gaspParser :: Parser Gasp.Gasp
 gaspParser = do
@@ -100,5 +105,5 @@ gaspParser = do
     return $ Gasp.fromGaspExprs exprs
 
 -- | Top level parser executor.
-parseGasp :: String -> Either ParseError Gasp.Gasp
+parseGasp :: FilePath -> IO (Either ParseError Gasp.Gasp)
 parseGasp = runGaspParser gaspParser

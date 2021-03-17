@@ -8,10 +8,12 @@ module Gasp
     , getLowMemory
     , setProd
     , getProd
+    , getRequires
 
     , module Gasp.App
     , module Gasp.Attr
     , module Gasp.Metric
+    , module Gasp.Require
 
     , setExternalCodeFiles
     , getExternalCodeFiles
@@ -37,6 +39,7 @@ import           Gasp.Gpio
 import           Gasp.Init
 import           Gasp.Loop
 import           Gasp.Metric
+import           Gasp.Require
 import           Gasp.Rule
 import           Gasp.Setup
 import           Gasp.Uart
@@ -66,6 +69,7 @@ data Expr
     | ExprRule !Rule
     | ExprConst !Constant
     | ExprUart !Uart
+    | ExprRequire !Require
     deriving (Show, Eq)
 
 fromGaspExprs :: [Expr] -> Gasp
@@ -212,6 +216,12 @@ getAGpios gasp = [agpio | (ExprAGpio agpio) <- gaspExprs gasp]
 
 getUarts :: Gasp -> [Uart]
 getUarts gasp = [uart | (ExprUart uart) <- gaspExprs gasp]
+
+
+-- * Requires
+
+getRequires :: Gasp -> [Require]
+getRequires gasp = [r | (ExprRequire r) <- gaspExprs gasp]
 
 
 -- * Flags

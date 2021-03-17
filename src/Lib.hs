@@ -13,27 +13,56 @@ import           Data.UUID.V4               (nextRandom)
 import           Data.Yaml                  (encode)
 import qualified ExternalCode
 import           Gasp                       (App (..), Attr (..), Expr (..),
-                                             Gasp, Metric (..), getGaspExprs,
-                                             setExternalCodeFiles, setGaspExprs,
-                                             setLowMemory, setProd)
+                                             Gasp, Metric (..), Require (..),
+                                             fromGaspExprs, getGaspExprs,
+                                             getRequires, setExternalCodeFiles,
+                                             setGaspExprs, setLowMemory,
+                                             setProd)
 import           Generator                  (writeAppCode)
 import           Parser                     (parseGasp)
-import           Path                       (Abs, File, Path, toFilePath)
+import           Path                       (Abs, Dir, File, Path,
+                                             SomeBase (..), parent,
+                                             parseSomeFile, toFilePath, (</>))
 import           Text.Printf                (printf)
 import qualified Util.Terminal              as Term
+
+
+parseRequirePath :: Path Abs Dir -> Require -> IO (Path Abs File)
+parseRequirePath rootDir (Require path) = do
+  r <- parseSomeFile path
+  case r of
+    Abs p -> return p
+    Rel p -> return $ rootDir </> p
+
+
+parseGaspList :: [Path Abs File] -> [Path Abs File] -> IO (Either CompileError Gasp)
+parseGaspList [] _ = return . Right $ fromGaspExprs []
+parseGaspList (x:xs) parsed
+  | x `elem` parsed = parseGaspList xs parsed
+  | otherwise = do
+    r <- parseGasp $ toFilePath x
+    case r of
+      Left err -> return $ Left (show err)
+      Right gasp0 -> do
+        nFiles <- mapM (parseRequirePath (parent x)) $ getRequires gasp0
+        rr <- parseGaspList (nFiles ++ xs) (x:parsed)
+        case rr of
+          Left err    -> return $ Left err
+          Right gasp1 ->
+            return $ Right $ fromGaspExprs $ getGaspExprs gasp0 ++ getGaspExprs gasp1
 
 
 type CompileError = String
 
 compile
-  :: Path Abs File
+  :: [Path Abs File]
   -> CompileOptions
   -> IO (Either CompileError ())
-compile gaspFile options = do
-    gaspStr <- readFile (toFilePath gaspFile)
+compile gaspFiles options = do
+    r <- parseGaspList gaspFiles []
 
-    case parseGasp gaspStr of
-        Left err    -> return $ Left (show err)
+    case r of
+        Left err    -> return $ Left err
         Right gasp ->
           enrichGaspASTBasedOnCompileOptions gasp options
             >>= preprocessGasp >>= generateCode (CompileOptions.compileType options)

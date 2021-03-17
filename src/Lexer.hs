@@ -15,6 +15,7 @@ module Lexer
   , reservedNameUart
   , reservedNameUartRead
   , reservedNameUartWrite
+  , reservedNameRequire
   , braces
   , brackets
   , symbol
@@ -101,6 +102,9 @@ reservedNameUartRead = "read"
 reservedNameUartWrite :: String
 reservedNameUartWrite = "write"
 
+reservedNameRequire :: String
+reservedNameRequire = "require"
+
 -- * Data types.
 
 reservedNameBooleanTrue :: String
@@ -128,6 +132,7 @@ reservedNames =
     , reservedNameUart
     , reservedNameUartRead
     , reservedNameUartWrite
+    , reservedNameRequire
     -- * Data types
     , reservedNameBooleanTrue
     , reservedNameBooleanFalse
