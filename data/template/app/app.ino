@@ -119,6 +119,7 @@ bool requireReportMetric = true;
 {= type =} attr_{= name =} = {= default =};
 {=# has_app =}
 {= type =} last_attr_{= name =} = {= default =};
+bool attr_{= name =}_force = true;
 {=/ has_app =}
 
 {=/ attrs =}
@@ -128,6 +129,7 @@ bool requireReportMetric = true;
 {= type =} last_metric_{= name =} = 0;
 {= type =} metric_{= name =}_threshold = {= threshold =};
 {= type =} last_metric_{= name =}_threshold = {= threshold =};
+bool metric_{= name =}_threshold_force = true;
 {=/ has_app =}
 
 {=/ metrics =}
@@ -851,6 +853,7 @@ void merge_json(char *dst, char *src, int *total_length) {
 
 {=# attrs =}
 void set_attr_{= name =}_raw({= type =} unscaled_value) {
+    attr_{= name =}_force = true;
     attr_{= name =} = unscaled_value * {= scale =};
     {=# keep =}
     {=# onebyte =}
@@ -977,6 +980,7 @@ bool set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int nu
           return false;
         }
         metric_{= name =}_threshold = ({= type =})tmp;
+        metric_{= name =}_threshold_force = true;
         {=# onebyte =}
         EEPROM.write({= addr =}, metric_{= name =}_threshold);
         {=/ onebyte =}
@@ -1253,24 +1257,26 @@ bool reportAttribute(bool force) {
     total_length += 1;
 
     {=# attrs =}
-    if (last_attr_{= name =} != attr_{= name =} || force) {
+    if (last_attr_{= name =} != attr_{= name =} || force || attr_{= name =}_force) {
         tempSendData[0] = '\0';
         if (get_attr_{= name =}(tempSendData)) {
             merge_json(wantSendData, tempSendData, &total_length);
             wantSend = true;
             last_attr_{= name =} = attr_{= name =};
+            attr_{= name =}_force = false;
         }
     }
 
     {=/ attrs =}
     {=# metrics =}
     {=# auto =}
-    if (last_metric_{= name =}_threshold != metric_{= name =}_threshold || force) {
+    if (last_metric_{= name =}_threshold != metric_{= name =}_threshold || force || metric_{= name =}_threshold_force) {
         tempSendData[0] = '\0';
         if (get_metric_{= name =}_threshold(tempSendData)) {
             merge_json(wantSendData, tempSendData, &total_length);
             wantSend = true;
             last_metric_{= name =}_threshold = metric_{= name =}_threshold;
+            metric_{= name =}_threshold_force = false;
         }
     }
 
