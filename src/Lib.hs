@@ -20,20 +20,15 @@ import           Gasp                       (App (..), Attr (..), Expr (..),
                                              setProd)
 import           Generator                  (writeAppCode)
 import           Parser                     (parseGasp)
-import           Path                       (Abs, Dir, File, Path,
-                                             SomeBase (..), parent,
-                                             parseSomeFile, toFilePath, (</>))
+import           Path                       (Abs, Dir, File, Path, parent,
+                                             toFilePath)
+import           Path.IO                    (resolveFile)
 import           Text.Printf                (printf)
 import qualified Util.Terminal              as Term
 
 
 parseRequirePath :: Path Abs Dir -> Require -> IO (Path Abs File)
-parseRequirePath rootDir (Require path) = do
-  r <- parseSomeFile path
-  case r of
-    Abs p -> return p
-    Rel p -> return $ rootDir </> p
-
+parseRequirePath rootDir (Require path) = resolveFile rootDir path
 
 parseGaspList :: [Path Abs File] -> [Path Abs File] -> IO (Either CompileError Gasp)
 parseGaspList [] _ = return . Right $ fromGaspExprs []

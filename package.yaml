@@ -51,6 +51,7 @@ library:
     - split
     - unordered-containers
     - path
+    - path-io
     - time
     - exceptions
     - process
