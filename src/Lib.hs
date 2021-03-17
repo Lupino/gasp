@@ -1,7 +1,5 @@
 module Lib
     ( compile
-    , ProjectRootDir
-    , TemplateDir
     ) where
 
 import           CompileOptions             (CompileOptions, CompileType (..))
@@ -19,10 +17,8 @@ import           Gasp                       (App (..), Attr (..), Expr (..),
                                              setExternalCodeFiles, setGaspExprs,
                                              setLowMemory, setProd)
 import           Generator                  (writeAppCode)
-import           Generator.Common           (ProjectRootDir)
-import           Generator.Template         (TemplateDir)
 import           Parser                     (parseGasp)
-import           StrongPath                 (Abs, File, Path, toFilePath)
+import           Path                       (Abs, File, Path, toFilePath)
 import           Text.Printf                (printf)
 import qualified Util.Terminal              as Term
 

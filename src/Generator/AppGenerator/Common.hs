@@ -4,33 +4,27 @@ module Generator.AppGenerator.Common
     ) where
 
 import qualified Data.Aeson          as Aeson
-import           Data.Functor        ((<&>))
 import           Gasp                (Gasp)
-import           Generator.Common    (ProjectRootDir)
 import           Generator.FileDraft (FileDraft, createTemplateFileDraft)
-import           Generator.Template  (TemplateDir)
-import           StrongPath          (Abs, Dir, File, Path, Rel)
-import qualified StrongPath          as SP
-import qualified Util.IO
+import           Path                (Abs, Dir, File, Path, Rel)
+import           Util.IO             (listDirectoryDeep)
 
 -- * Template
 
 makeSimpleTemplateFD
-  :: Path (Rel TemplateDir) File
-  -> Path Abs (Dir TemplateDir)
+  :: Path Rel File
+  -> Path Abs Dir
   -> Gasp -> FileDraft
-makeSimpleTemplateFD srcPath tmplPath gasp = makeTemplateFD srcPath tmplPath dstPath (Just $ Aeson.toJSON gasp)
-    where dstPath = SP.castRel srcPath :: Path (Rel ProjectRootDir) File
+makeSimpleTemplateFD srcPath tmplPath gasp = makeTemplateFD srcPath tmplPath srcPath (Just $ Aeson.toJSON gasp)
 
-makeTemplateFD :: Path (Rel TemplateDir) File
-               -> Path Abs (Dir TemplateDir)
-               -> Path (Rel ProjectRootDir) File
+makeTemplateFD :: Path Rel File
+               -> Path Abs Dir
+               -> Path Rel File
                -> Maybe Aeson.Value
                -> FileDraft
 makeTemplateFD relSrcPath tmplPath relDstPath =
     createTemplateFileDraft relDstPath tmplPath relSrcPath
 
 -- | Returns all files contained in the specified external code dir, recursively.
-readTemplateFiles :: Path Abs (Dir TemplateDir) -> IO [Path (Rel TemplateDir) File]
-readTemplateFiles templateDir =
-  Util.IO.listDirectoryDeep (SP.toPathAbsDir templateDir) <&> map SP.fromPathRelFile
+readTemplateFiles :: Path Abs Dir -> IO [Path Rel File]
+readTemplateFiles = listDirectoryDeep

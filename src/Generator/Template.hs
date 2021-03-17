@@ -1,8 +1,7 @@
 module Generator.Template
-       ( getTemplateFileAbsPath
-       , compileAndRenderTemplate
-       , TemplateDir
-       ) where
+  ( getTemplateFileAbsPath
+  , compileAndRenderTemplate
+  ) where
 
 import qualified Data.Aeson           as Aeson
 import           Data.Text            (Text)
@@ -10,23 +9,18 @@ import qualified Text.Mustache        as Mustache
 import           Text.Mustache.Render (SubstitutionError (..))
 import           Text.Printf          (printf)
 
-import           StrongPath           (Abs, Dir, File, Path, Rel, (</>))
-import qualified StrongPath           as SP
-
--- TODO: Write tests for this file! But first we need to decouple logic from IO
---   so that we can mock it.
-
-data TemplateDir
+import           Path                 (Abs, Dir, File, Path, Rel, toFilePath,
+                                       (</>))
 
 -- | Takes template file path relative to template root directory and returns
 --   its absolute path.
-getTemplateFileAbsPath :: Path Abs (Dir TemplateDir) -> Path (Rel TemplateDir) File -> Path Abs File
+getTemplateFileAbsPath :: Path Abs Dir -> Path Rel File -> Path Abs File
 getTemplateFileAbsPath tmplDir tmplFilePathInTemplateDir =
   tmplDir </> tmplFilePathInTemplateDir
 
 compileAndRenderTemplate
-    :: Path Abs (Dir TemplateDir)
-    -> Path (Rel TemplateDir) File  -- ^ Path to the template file.
+    :: Path Abs Dir
+    -> Path Rel File  -- ^ Path to the template file.
     -> Aeson.Value  -- ^ JSON to be provided as template data.
     -> IO Text
 compileAndRenderTemplate tmplDir relTmplPath tmplData = do
@@ -34,12 +28,12 @@ compileAndRenderTemplate tmplDir relTmplPath tmplData = do
     renderMustacheTemplate mustacheTemplate tmplData
 
 compileMustacheTemplate
-    :: Path Abs (Dir TemplateDir)
-    -> Path (Rel TemplateDir) File  -- ^ Path to the template file.
+    :: Path Abs Dir
+    -> Path Rel File  -- ^ Path to the template file.
     -> IO Mustache.Template
 compileMustacheTemplate tmplDir relTmplPath = do
-    eitherTemplate <- Mustache.automaticCompile [SP.toFilePath templateDirAbsPath]
-                                                (SP.toFilePath absTmplPath)
+    eitherTemplate <- Mustache.automaticCompile [toFilePath templateDirAbsPath]
+                                                (toFilePath absTmplPath)
     return $ either raiseCompileError id eitherTemplate
   where
     raiseCompileError err = error $  -- TODO: Handle these errors better?

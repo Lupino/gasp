@@ -16,9 +16,8 @@ import           Control.Monad.IO.Class (liftIO)
 import           Data.List              (find, isSuffixOf)
 import           Data.Maybe             (fromJust)
 import qualified Lib
-import qualified Path                   as P
-import           StrongPath             (Abs, Dir, Path, (</>))
-import qualified StrongPath             as SP
+import           Path                   (Abs, Dir, File, Path, Rel, parseAbsDir,
+                                         toFilePath, (</>))
 import qualified Util.IO
 
 
@@ -33,23 +32,23 @@ compile ctp argv = do
 
 -- | Compiles Gasp source code in gaspProjectDir directory and generates a project
 --   in given outDir directory.
-compileIO :: Path Abs (Dir Common.GaspProjectDir) -> CompileOptions -> IO (Either String ())
+compileIO :: Path Abs Dir -> CompileOptions -> IO (Either String ())
 compileIO gaspProjectDir options = do
     maybeGaspFile <- findGaspFile gaspProjectDir
     case maybeGaspFile of
         Nothing -> return $ Left "No *.gasp file present in the root of Gasp project."
         Just gaspFile -> Lib.compile gaspFile options
   where
-    findGaspFile :: Path Abs (Dir d) -> IO (Maybe (Path Abs SP.File))
+    findGaspFile :: Path Abs Dir -> IO (Maybe (Path Abs File))
     findGaspFile dir = do
-        (files, _) <- liftIO $ Util.IO.listDirectory (SP.toPathAbsDir dir)
-        return $ (dir SP.</>) . SP.fromPathRelFile <$> find isGaspFile files
+        (files, _) <- liftIO $ Util.IO.listDirectory dir
+        return $ (dir </>) <$> find isGaspFile files
 
-    isGaspFile :: P.Path P.Rel P.File -> Bool
-    isGaspFile path = ".gasp" `isSuffixOf` P.toFilePath path
-                      && (length (P.toFilePath path) > length (".gasp" :: String))
+    isGaspFile :: Path Rel File -> Bool
+    isGaspFile path = ".gasp" `isSuffixOf` toFilePath path
+                      && (length (toFilePath path) > length (".gasp" :: String))
 
-compileOptions :: CompileType -> [String] -> Command (Path Abs (Dir Common.GaspProjectDir), CompileOptions)
+compileOptions :: CompileType -> [String] -> Command (Path Abs Dir, CompileOptions)
 compileOptions ctp argv = do
   gaspProjectDir <- findGaspProjectRootDirFromCwd
   gaspTemplateDir <- findGaspTemplateDir gaspProjectDir
@@ -65,6 +64,6 @@ compileOptions ctp argv = do
 parseCompileOptions :: CompileOptions -> [String] -> CompileOptions
 parseCompileOptions opts []                   = opts
 parseCompileOptions opts ("--low-memory":xs)   = parseCompileOptions opts {lowMemory = True} xs
-parseCompileOptions opts ("--template":v:xs) = parseCompileOptions opts {templateDir = fromJust $ SP.parseAbsDir v} xs
+parseCompileOptions opts ("--template":v:xs) = parseCompileOptions opts {templateDir = fromJust $ parseAbsDir v} xs
 parseCompileOptions opts ("--production":xs) = parseCompileOptions opts {isProd = True} xs
 parseCompileOptions opts (_:xs) = parseCompileOptions opts xs

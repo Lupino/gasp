@@ -10,12 +10,12 @@ import           System.IO              (hFlush, stdout)
 import           Command                (Command)
 import           Command.Common         (findGaspProjectRootDirFromCwd)
 import qualified Common
-import qualified StrongPath             as SP
+import           Path                   (toFilePath, (</>))
 
 clean :: Command ()
 clean = do
     gaspProjectDir <- findGaspProjectRootDirFromCwd
-    let buildGaspDirFp = SP.toFilePath $ gaspProjectDir SP.</> Common.buildGaspDirInGaspProjectDir
+    let buildGaspDirFp = toFilePath $ gaspProjectDir </> Common.buildGaspDirInGaspProjectDir
     liftIO $ putStrLn "Deleting build/ directory..." >> hFlush stdout
     doesDotGaspDirExist <- liftIO $ doesDirectoryExist buildGaspDirFp
     if doesDotGaspDirExist

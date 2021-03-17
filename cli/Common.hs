@@ -1,31 +1,21 @@
 module Common
-    ( GaspProjectDir
-    , buildGaspDirInGaspProjectDir
+    ( buildGaspDirInGaspProjectDir
     , buildGaspRootFileInGaspProjectDir
     , extCodeDirInGaspProjectDir
     , gaspSays
     ) where
 
-import qualified Path             as P
+import           Path          (Dir, File, Path, Rel, reldir, relfile)
+import qualified Util.Terminal as Term
 
-import qualified Generator.Common
-import           StrongPath       (Dir, File, Path, Rel)
-import qualified StrongPath       as SP
-import qualified Util.Terminal    as Term
-import           ExternalCode (SourceExternalCodeDir)
+buildGaspDirInGaspProjectDir :: Path Rel Dir
+buildGaspDirInGaspProjectDir = [reldir|build|]
 
-
-data GaspProjectDir -- Root dir of Gasp project, containing source files.
-
--- TODO: SHould this be renamed to include word "root"?
-buildGaspDirInGaspProjectDir :: Path (Rel GaspProjectDir) (Dir Generator.Common.ProjectRootDir)
-buildGaspDirInGaspProjectDir = SP.fromPathRelDir [P.reldir|build|]
-
-buildGaspRootFileInGaspProjectDir :: Path (Rel GaspProjectDir) File
-buildGaspRootFileInGaspProjectDir = SP.fromPathRelFile [P.relfile|.gasproot|]
+buildGaspRootFileInGaspProjectDir :: Path Rel File
+buildGaspRootFileInGaspProjectDir = [relfile|.gasproot|]
 
 gaspSays :: String -> IO ()
 gaspSays what = putStrLn $ Term.applyStyles [Term.Yellow] what
 
-extCodeDirInGaspProjectDir :: Path (Rel GaspProjectDir) (Dir SourceExternalCodeDir)
-extCodeDirInGaspProjectDir = SP.fromPathRelDir [P.reldir|src|]
+extCodeDirInGaspProjectDir :: Path Rel Dir
+extCodeDirInGaspProjectDir = [reldir|src|]

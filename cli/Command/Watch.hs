@@ -13,11 +13,9 @@ import qualified System.FilePath         as FP
 
 import           Command.Compile         (compile, compileIO, compileOptions)
 import           Common                  (gaspSays)
-import qualified Common
 import           CompileOptions          (CompileType (..))
 import           Control.Monad.IO.Class  (liftIO)
-import           StrongPath              (Abs, Dir, Path)
-import qualified StrongPath              as SP
+import           Path                    (Abs, Dir, Path, toFilePath)
 
 
 compileAndWatch :: [String] -> Command ()
@@ -41,13 +39,13 @@ compileAndWatch argv = do
 -- | Forever listens for any file changes in gaspProjectDir, and if there is a change,
 --   compiles Gasp source files in gaspProjectDir and regenerates files in outDir.
 watch
-  :: Path Abs (Dir Common.GaspProjectDir)
+  :: Path Abs Dir
   -> CompileOptions
   -> IO ()
 watch gaspProjectDir options = FSN.withManager $ \mgr -> do
     currentTime <- getCurrentTime
     chan <- newChan
-    _ <- FSN.watchDirChan mgr (SP.toFilePath gaspProjectDir) eventFilter chan
+    _ <- FSN.watchDirChan mgr (toFilePath gaspProjectDir) eventFilter chan
     listenForEvents chan currentTime
   where
       listenForEvents :: Chan FSN.Event -> UTCTime -> IO ()

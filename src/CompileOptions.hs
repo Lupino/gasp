@@ -4,10 +4,7 @@ module CompileOptions
     , isCompile
     ) where
 
-import           ExternalCode       (SourceExternalCodeDir)
-import           Generator.Common   (ProjectRootDir)
-import           Generator.Template (TemplateDir)
-import           StrongPath         (Abs, Dir, Path)
+import           Path (Abs, Dir, Path)
 
 data CompileType = Syntax | Compile | Eeprom
 
@@ -20,10 +17,10 @@ isCompile _       = False
 --   It would be easier to pass around if it is part of Wasp data. But is it semantically correct?
 --   Maybe it is, even more than this!
 data CompileOptions = CompileOptions
-    { externalCodeDirPath :: !(Path Abs (Dir SourceExternalCodeDir))
+    { externalCodeDirPath :: !(Path Abs Dir)
     , compileType         :: !CompileType
-    , projectRootDir      :: !(Path Abs (Dir ProjectRootDir))
-    , templateDir         :: !(Path Abs (Dir TemplateDir))
+    , projectRootDir      :: !(Path Abs Dir)
+    , templateDir         :: !(Path Abs Dir)
     , lowMemory           :: !Bool
     , isProd              :: !Bool
     }

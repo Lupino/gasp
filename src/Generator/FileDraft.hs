@@ -6,12 +6,10 @@ module Generator.FileDraft
        ) where
 
 import qualified Data.Aeson                            as Aeson
-import           Generator.Common                      (ProjectRootDir)
 import qualified Generator.FileDraft.CopyFileDraft     as CopyFD
 import qualified Generator.FileDraft.TemplateFileDraft as TmplFD
 import           Generator.FileDraft.Writeable
-import           Generator.Template                    (TemplateDir)
-import           StrongPath                            (Abs, Dir, File, Path,
+import           Path                                  (Abs, Dir, File, Path,
                                                         Rel)
 
 
@@ -28,9 +26,9 @@ instance Writeable FileDraft where
     write dstDir (FileDraftCopyFd draft)     = write dstDir draft
 
 
-createTemplateFileDraft :: Path (Rel ProjectRootDir) File
-                        -> Path Abs (Dir TemplateDir)
-                        -> Path (Rel TemplateDir) File
+createTemplateFileDraft :: Path Rel File
+                        -> Path Abs Dir
+                        -> Path Rel File
                         -> Maybe Aeson.Value
                         -> FileDraft
 createTemplateFileDraft dstPath tmplPath tmplSrcPath tmplData =
@@ -40,6 +38,6 @@ createTemplateFileDraft dstPath tmplPath tmplSrcPath tmplData =
                                                    , TmplFD._tmplData = tmplData
                                                    }
 
-createCopyFileDraft :: Path (Rel ProjectRootDir) File -> Path Abs File -> FileDraft
+createCopyFileDraft :: Path Rel File -> Path Abs File -> FileDraft
 createCopyFileDraft dstPath srcPath =
     FileDraftCopyFd $ CopyFD.CopyFileDraft { CopyFD._dstPath = dstPath, CopyFD._srcPath = srcPath}

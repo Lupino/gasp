@@ -46,8 +46,7 @@ import qualified Data.Text            as T
 import           Data.Text.Encoding   (encodeUtf8)
 import           Data.Yaml            (decodeEither')
 import           Text.Parsec          (alphaNum, anyChar, char, letter, many,
-                                       manyTill, oneOf, option, spaces, string,
-                                       try, (<|>))
+                                       manyTill, oneOf, spaces, try, (<|>))
 import           Text.Parsec.Language (emptyDef)
 import           Text.Parsec.String   (Parser)
 import qualified Text.Parsec.Token    as Token

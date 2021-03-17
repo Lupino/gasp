@@ -2,24 +2,22 @@ module Generator.FileDraft.CopyFileDraft
        ( CopyFileDraft(..)
        ) where
 
-import           Generator.Common                   (ProjectRootDir)
 import           Generator.FileDraft.Writeable
 import           Generator.FileDraft.WriteableMonad
-import           StrongPath                         (Abs, File, Path, Rel,
-                                                     (</>))
-import qualified StrongPath                         as SP
+import           Path                               (Abs, File, Path, Rel,
+                                                     parent, toFilePath, (</>))
 
 
 -- | File draft based purely on another file, that is just copied.
 data CopyFileDraft = CopyFileDraft
-    { _dstPath :: !(Path (Rel ProjectRootDir) File)-- ^ Path where the file will be copied to.
+    { _dstPath :: !(Path Rel File)-- ^ Path where the file will be copied to.
     , _srcPath :: !(Path Abs File) -- ^ Absolute path of source file to copy.
     }
     deriving (Show, Eq)
 
 instance Writeable CopyFileDraft where
     write absDstDirPath draft = do
-        createDirectoryIfMissing True (SP.toFilePath $ SP.parent absDraftDstPath)
-        copyFile (SP.toFilePath $ _srcPath draft) (SP.toFilePath absDraftDstPath)
+        createDirectoryIfMissing True (toFilePath $ parent absDraftDstPath)
+        copyFile (toFilePath $ _srcPath draft) (toFilePath absDraftDstPath)
       where
           absDraftDstPath = absDstDirPath </> _dstPath draft

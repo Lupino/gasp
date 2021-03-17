@@ -2,24 +2,22 @@ module Command.CreateNewProject
     ( createNewProject
     ) where
 
+import           Command                (Command, CommandError (..))
+import qualified Common
 import           Control.Monad.Except   (throwError)
 import           Control.Monad.IO.Class (liftIO)
-import qualified Path                   as P
+import           Path                   (File, Path, Rel, parseAbsDir, relfile,
+                                         toFilePath, (</>))
 import           System.Directory       (createDirectory, getCurrentDirectory)
 import qualified System.FilePath        as FP
 import           Text.Printf            (printf)
-
-import           Command                (Command, CommandError (..))
-import qualified Common
-import           StrongPath             (File, Path, Rel, (</>))
-import qualified StrongPath             as SP
 import qualified Util.Terminal          as Term
 
 
 createNewProject :: String -> Command ()
 createNewProject projectName = do
     absCwd <- liftIO getCurrentDirectory
-    gaspProjectDir <- case SP.parseAbsDir $ absCwd FP.</> projectName of
+    gaspProjectDir <- case parseAbsDir $ absCwd FP.</> projectName of
         Left err -> throwError $ CommandError ("Failed to parse absolute path to gasp project dir: " ++ show err)
         Right sp -> return sp
     liftIO $ do
@@ -36,8 +34,8 @@ createNewProject projectName = do
             ++ "' to compile the app."
 
   where
-      mainGaspFileInGaspProjectDir :: Path (Rel Common.GaspProjectDir) File
-      mainGaspFileInGaspProjectDir = SP.fromPathRelFile [P.relfile|main.gasp|]
+      mainGaspFileInGaspProjectDir :: Path Rel File
+      mainGaspFileInGaspProjectDir = [relfile|main.gasp|]
       mainGaspFileContent = unlines
           [ "app %s {" `printf` projectName
           , "  key: \"1234567890abcdef\","
@@ -251,11 +249,11 @@ createNewProject projectName = do
           , "  on givelink_context_authed()"
           ]
 
-      gitignoreFileInGaspProjectDir :: Path (Rel Common.GaspProjectDir) File
-      gitignoreFileInGaspProjectDir = SP.fromPathRelFile [P.relfile|.gitignore|]
+      gitignoreFileInGaspProjectDir :: Path Rel File
+      gitignoreFileInGaspProjectDir = [relfile|.gitignore|]
       gitignoreFileContent = unlines
           [ "/build/"
           ]
 
-      writeFileSP = writeFile . SP.toFilePath
-      createDirectorySP = createDirectory . SP.toFilePath
+      writeFileSP = writeFile . toFilePath
+      createDirectorySP = createDirectory . toFilePath

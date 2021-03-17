@@ -1,14 +1,12 @@
 module Generator.ExternalCodeGenerator
-       ( generateExternalCodeDir
-       ) where
+  ( generateExternalCodeDir
+  ) where
 
 import qualified ExternalCode        as EC
 import           Gasp                (Gasp)
 import qualified Gasp
-import           Generator.Common    (ProjectRootDir)
 import qualified Generator.FileDraft as FD
-import           StrongPath          (File, Path, Rel)
-import qualified StrongPath          as SP
+import           Path                (File, Path, Rel)
 
 
 -- | Takes external code files from Gasp and generates them in new location as part of the generated project.
@@ -24,5 +22,5 @@ generateFile file =
       absSrcPath = EC.fileAbsPath file
   in FD.createCopyFileDraft relDstPath absSrcPath
   where
-    dstPathInGenExtCodeDir :: Path (Rel ProjectRootDir) File
-    dstPathInGenExtCodeDir = SP.castRel $ EC.filePathInExtCodeDir file
+    dstPathInGenExtCodeDir :: Path Rel File
+    dstPathInGenExtCodeDir = EC.filePathInExtCodeDir file
