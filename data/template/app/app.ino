@@ -875,7 +875,7 @@ bool set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, ch
         {=# is_float =}
         float tmp;
         if (tp == 0) {
-            tmp = (float)atoi(requestValue);
+            tmp = (float)atol(requestValue);
         } else {
             tmp = (float)atof(requestValue);
         }
@@ -901,7 +901,7 @@ bool set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, ch
 
 bool get_attr_{= name =}(char *retval) {
     {=^ is_float =}
-    sprintf(retval, FC(F("{\"{= name =}\": %d}")), ({= type =})attr_{= name =} / {= scale =});
+    sprintf(retval, FC(F("{\"{= name =}\": %ld}")), ({= type =})attr_{= name =} / {= scale =});
     {=/ is_float =}
     {=# is_float =}
     dtostrf(({= type =})attr_{= name =} / {= scale =}, {= width =}, {= prec =}, requestValue);
@@ -923,7 +923,7 @@ bool set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int nu
         {=# is_float =}
         float tmp;
         if (tp == 0) {
-            tmp = (float)atoi(requestValue);
+            tmp = (float)atol(requestValue);
         } else {
             tmp = (float)atof(requestValue);
         }
@@ -956,7 +956,7 @@ bool set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int nu
 
 bool get_metric_{= name =}_threshold(char *retval) {
     {=^ is_float =}
-    sprintf(retval, FC(F("{\"{= name =}_threshold\": %d}")), metric_{= name =}_threshold);
+    sprintf(retval, FC(F("{\"{= name =}_threshold\": %ld}")), metric_{= name =}_threshold);
     {=/ is_float =}
     {=# is_float =}
     dtostrf(metric_{= name =}_threshold, {= width =}, {= prec =}, requestValue);
@@ -980,7 +980,7 @@ bool get_metric_{= name =}(char *retval) {
         return invalid_metric_{= name =}_error(retval);
     }
     {=^ is_float =}
-    sprintf(retval, FC(F("{\"{= name =}\": %d}")), metric_{= name =});
+    sprintf(retval, FC(F("{\"{= name =}\": %ld}")), metric_{= name =});
     {=/ is_float =}
     {=# is_float =}
     dtostrf(metric_{= name =}, {= width =}, {= prec =}, requestValue);
