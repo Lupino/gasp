@@ -150,9 +150,9 @@ rule condition do [later do_later_ms ]action [else [later do_later_ms ]elseActio
 
 ```
 uart uartName rx tx speed {
-    write writeName "1234"  // hex command
-    read readName bufLen fnReadName fnParseName
-}
+    write writeName "1234" [mode] // hex command
+    read bufLen fnReadName fnParseName
+} [-> link attrName]
 ```
 
 ## require

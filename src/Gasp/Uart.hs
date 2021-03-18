@@ -3,9 +3,11 @@ module Gasp.Uart
   , UartName (..)
   , UartWriter (..)
   , UartReader (..)
+  , ModeBind (..)
   ) where
 
 import           Data.Aeson    (ToJSON (..), object, (.=))
+import           Gasp.Attr     (AttrName)
 import           Gasp.Function (FuncName)
 import           Gasp.Gpio     (Pin)
 
@@ -16,6 +18,23 @@ newtype UartName = UartName String
 instance ToJSON UartName where
   toJSON (UartName n) = toJSON n
 
+
+data ModeBind
+  = LinkAttr AttrName
+  | NoBind
+  deriving (Show, Eq)
+
+instance ToJSON ModeBind where
+    toJSON (LinkAttr link) = object
+        [ "link"       .= link
+        , "is_link"    .= True
+        , "is_no_bind" .= False
+        ]
+    toJSON NoBind = object
+        [ "is_no_bind" .= True
+        , "is_link"    .= False
+        ]
+
 data Uart = Uart
   { uartName    :: !UartName
   , uartTxPin   :: !Pin
@@ -23,6 +42,7 @@ data Uart = Uart
   , uartSpeed   :: !Int
   , uartWriters :: [UartWriter]
   , uartReaders :: [UartReader]
+  , uartBind    :: ModeBind
   } deriving (Show, Eq)
 
 instance ToJSON Uart where
@@ -34,12 +54,14 @@ instance ToJSON Uart where
         , "readers" .= uartReaders uart
         , "writers" .= uartWriters uart
         , "wcount"  .= length (uartWriters uart)
+        , "bind"    .= uartBind uart
         ]
 
 data UartWriter = UartWriter
   { uartWName :: String
   , uartWCmd  :: String
   , uartWId   :: Int
+  , uartWMode :: Int
   } deriving (Show, Eq)
 
 instance ToJSON UartWriter where
@@ -47,6 +69,7 @@ instance ToJSON UartWriter where
         [ "wname" .= uartWName uw
         , "bytes" .= toHex (uartWCmd uw)
         , "index" .= uartWId uw
+        , "mode"  .= uartWMode uw
         ]
 
 

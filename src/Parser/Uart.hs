@@ -31,7 +31,9 @@ writer = do
   reserved reservedNameUartWrite
   n <- identifier
   cmd <- stringLiteral
-  return $ UartWriter n cmd 0
+  mode <- fromIntegral <$> option 0 decimal
+  spaces
+  return $ UartWriter n cmd 0 mode
 
 data ReadWrite
   = Read UartReader
@@ -41,9 +43,17 @@ data ReadWrite
 readWrite :: Parser ReadWrite
 readWrite = (Read <$> reader) <|> (Write <$> writer)
 
-fillId :: Int -> [UartWriter] -> [UartWriter]
-fillId _ []       = []
-fillId idx (x:xs) = x {uartWId = idx} : fillId (idx + 1) xs
+
+bindLink :: Parser ModeBind
+bindLink = do
+  _ <- symbol "link"
+  n <- AttrName <$> identifier
+  return $ LinkAttr n
+
+bindParser :: Parser ModeBind
+bindParser = do
+  _ <- symbol "->"
+  bindLink
 
 uart :: Parser Uart
 uart = do
@@ -55,6 +65,8 @@ uart = do
   spaces
   rws <- gaspClosure $ many readWrite
 
+  b <- option NoBind bindParser
+
   return Uart
     { uartName = n
     , uartTxPin = tx
@@ -62,4 +74,5 @@ uart = do
     , uartReaders = [x | Read x <- rws]
     , uartWriters = fillId 0 [x | Write x <- rws]
     , uartSpeed = speed
+    , uartBind = b
     }
