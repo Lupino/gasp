@@ -5,6 +5,7 @@ module Gasp.Common
   , isUnsigned
   , maxValue
   , minValue
+  , isLong
   , DataType (..)
   ) where
 
@@ -100,3 +101,9 @@ minValue (DataType "uint8_t")       = 0
 minValue (DataType "uint16_t")      = 0
 minValue (DataType "uint32_t")      = 0
 minValue _                          = 0
+
+isLong :: DataType -> Bool
+isLong (DataType "uint32_t")      = True
+isLong (DataType "unsigned long") = True
+isLong (DataType "long")          = True
+isLong _                          = False

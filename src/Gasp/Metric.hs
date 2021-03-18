@@ -56,6 +56,7 @@ instance ToJSON Metric where
         , "uncheckmin"      .= (isUnsigned (metricType metric) && metricMin metric <= 0)
         , "onebyte"         .= (getMetricDataLength metric == 1)
         , "auto"            .= metricAuto metric
+        , "is_long"         .= isLong (metricType metric)
         ]
 
 metricNameLen :: Metric -> Int

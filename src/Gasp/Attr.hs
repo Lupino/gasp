@@ -50,6 +50,7 @@ instance ToJSON Attr where
         , "width"      .= calcAttrWidth attr
         , "prec"       .= attrPrec   attr
         , "keep"       .= attrKeep   attr
+        , "is_long"    .= isLong (attrType attr)
         ]
           where tpMax = maxValue (attrType attr)
                 tpMin = minValue (attrType attr)
