@@ -1104,10 +1104,33 @@ void uart_{= name =}_write_{= wname =}() {
 }
 
 {=/ writers =}
+bool uart_{= name =}_is_valid_index() {
+    {=# writers =}
+    {=# has_on =}
+    if ({= on =}) {
+        if (uart_{= name =}_write_index == {= index =}) {
+            return true;
+        }
+    }
+    {=/ has_on =}
+    {=^ has_on =}
+    if (uart_{= name =}_write_index == {= index =}) {
+        return true;
+    }
+    {=/ has_on =}
+    {=/ writers =}
+    return false;
+}
+
 void uart_{= name =}_write_next_index() {
-    uart_{= name =}_write_index += 1;
-    if (uart_{= name =}_write_index >= {= wcount =}) {
-        uart_{= name =}_write_index = 0;
+    for (int i = 0; i < {= wcount =}; i ++) {
+        uart_{= name =}_write_index += 1;
+        if (uart_{= name =}_write_index >= {= wcount =}) {
+            uart_{= name =}_write_index = 0;
+        }
+        if (uart_{= name =}_is_valid_index()) {
+            break;
+        }
     }
 }
 
