@@ -184,8 +184,8 @@ uint16_t agpio_{= name =}_value = 0;
 {=# uarts =}
 SoftwareSerial uart_{= name =}({= rx =}, {= tx =});
 {=# readers =}
-uint8_t uart_{= name =}_read_{= rname =}_buffer[{= buf_len =}];
-int uart_{= name =}_read_{= rname =}_buffer_len = 0;
+uint8_t uart_{= name =}_read_{= index =}_buffer[{= buf_len =}];
+int uart_{= name =}_read_{= index =}_buffer_len = 0;
 {=/ readers =}
 {=# writers =}
 bool is_uart_{= name =}_write_{= wname =} = false;
@@ -625,9 +625,9 @@ void loop() {
     {=# uarts =}
     while (uart_{= name =}.available() > 0) {
         {=# readers =}
-        if ({= reader =}(uart_{= name =}.read(), uart_{= name =}_read_{= rname =}_buffer, &uart_{= name =}_read_{= rname =}_buffer_len)) {
-            {= parser =}(uart_{= name =}_read_{= rname =}_buffer, uart_{= name =}_read_{= rname =}_buffer_len);
-            uart_{= name =}_read_{= rname =}_buffer_len = 0;
+        if ({= reader =}(uart_{= name =}.read(), uart_{= name =}_read_{= index =}_buffer, &uart_{= name =}_read_{= index =}_buffer_len)) {
+            {= parser =}(uart_{= name =}_read_{= index =}_buffer, uart_{= name =}_read_{= index =}_buffer_len);
+            uart_{= name =}_read_{= index =}_buffer_len = 0;
         }
         {=/ readers =}
     }

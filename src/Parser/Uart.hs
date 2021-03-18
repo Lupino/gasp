@@ -2,24 +2,24 @@ module Parser.Uart
   ( uart
   ) where
 
+import           Gasp.Attr          (AttrName (..))
 import           Gasp.Function      (FuncName (..))
 import           Gasp.Uart
 import           Lexer
 import           Parser.Common
 import           Parser.Gpio        (pin)
-import           Text.Parsec        (many, spaces, (<|>))
+import           Text.Parsec        (many, option, spaces, (<|>))
 import           Text.Parsec.String (Parser)
 
 reader :: Parser UartReader
 reader = do
   reserved reservedNameUartRead
-  n <- identifier
   v <- decimal
   spaces
   rfn <- FuncName <$> identifier
   pfn <- FuncName <$> identifier
   return UartReader
-    { uartRName = n
+    { uartRId = 0
     , uartRBufLen = fromIntegral v
     , uartRFn = rfn
     , uartRPFn = pfn
@@ -43,6 +43,13 @@ data ReadWrite
 readWrite :: Parser ReadWrite
 readWrite = (Read <$> reader) <|> (Write <$> writer)
 
+fillWId :: Int -> [UartWriter] -> [UartWriter]
+fillWId _ []       = []
+fillWId idx (x:xs) = x {uartWId = idx} : fillWId (idx + 1) xs
+
+fillRId :: Int -> [UartReader] -> [UartReader]
+fillRId _ []       = []
+fillRId idx (x:xs) = x {uartRId = idx} : fillRId (idx + 1) xs
 
 bindLink :: Parser ModeBind
 bindLink = do
@@ -71,8 +78,8 @@ uart = do
     { uartName = n
     , uartTxPin = tx
     , uartRxPin = rx
-    , uartReaders = [x | Read x <- rws]
-    , uartWriters = fillId 0 [x | Write x <- rws]
+    , uartReaders = fillRId 0 [x | Read x <- rws]
+    , uartWriters = fillWId 0 [x | Write x <- rws]
     , uartSpeed = speed
     , uartBind = b
     }

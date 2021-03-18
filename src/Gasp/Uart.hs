@@ -79,7 +79,7 @@ toHex [_]      = error "wrong hex string"
 toHex (x:y:xs) = (x:y:[]): toHex xs
 
 data UartReader = UartReader
-  { uartRName   :: String
+  { uartRId     :: Int
   , uartRFn     :: FuncName
   , uartRPFn    :: FuncName
   , uartRBufLen :: Int
@@ -87,7 +87,7 @@ data UartReader = UartReader
 
 instance ToJSON UartReader where
     toJSON ur = object
-        [ "rname"   .= uartRName ur
+        [ "index"   .= uartRId ur
         , "reader"  .= uartRFn ur
         , "parser"  .= uartRPFn ur
         , "buf_len" .= uartRBufLen ur
