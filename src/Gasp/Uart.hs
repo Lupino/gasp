@@ -62,6 +62,7 @@ data UartWriter = UartWriter
   , uartWCmd  :: String
   , uartWId   :: Int
   , uartWMode :: Int
+  , uartWOn   :: !String
   } deriving (Show, Eq)
 
 instance ToJSON UartWriter where
@@ -70,6 +71,8 @@ instance ToJSON UartWriter where
         , "bytes" .= toHex (uartWCmd uw)
         , "index" .= uartWId uw
         , "mode"  .= uartWMode uw
+        , "on"       .= uartWOn uw
+        , "has_on"   .= not (null $ uartWOn uw)
         ]
 
 
@@ -83,6 +86,7 @@ data UartReader = UartReader
   , uartRFn     :: FuncName
   , uartRPFn    :: FuncName
   , uartRBufLen :: Int
+  , uartROn     :: !String
   } deriving (Show, Eq)
 
 instance ToJSON UartReader where
@@ -91,4 +95,6 @@ instance ToJSON UartReader where
         , "reader"  .= uartRFn ur
         , "parser"  .= uartRPFn ur
         , "buf_len" .= uartRBufLen ur
+        , "on"       .= uartROn ur
+        , "has_on"   .= not (null $ uartROn ur)
         ]

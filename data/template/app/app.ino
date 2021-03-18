@@ -625,10 +625,20 @@ void loop() {
     {=# uarts =}
     while (uart_{= name =}.available() > 0) {
         {=# readers =}
+        {=# has_on =}
+        if ({= on =}) {
+            if ({= reader =}(uart_{= name =}.read(), uart_{= name =}_read_{= index =}_buffer, &uart_{= name =}_read_{= index =}_buffer_len)) {
+                {= parser =}(uart_{= name =}_read_{= index =}_buffer, uart_{= name =}_read_{= index =}_buffer_len);
+                uart_{= name =}_read_{= index =}_buffer_len = 0;
+            }
+        }
+        {=/ has_on =}
+        {=^ has_on =}
         if ({= reader =}(uart_{= name =}.read(), uart_{= name =}_read_{= index =}_buffer, &uart_{= name =}_read_{= index =}_buffer_len)) {
             {= parser =}(uart_{= name =}_read_{= index =}_buffer, uart_{= name =}_read_{= index =}_buffer_len);
             uart_{= name =}_read_{= index =}_buffer_len = 0;
         }
+        {=/ has_on =}
         {=/ readers =}
     }
 
@@ -1107,16 +1117,34 @@ void uart_{= name =}_write() {
     {=# bind =}
     {=# is_no_bind =}
     {=# writers =}
+    {=# has_on =}
+    if ({= on =}) {
+        if (uart_{= name =}_write_index == {= index =}) {
+            uart_{= name =}_write_{= wname =}();
+        }
+    }
+    {=/ has_on =}
+    {=^ has_on =}
     if (uart_{= name =}_write_index == {= index =}) {
         uart_{= name =}_write_{= wname =}();
     }
+    {=/ has_on =}
     {=/ writers =}
     {=/ is_no_bind =}
     {=# is_link =}
     {=# writers =}
+    {=# has_on =}
+    if ({= on =}) {
+        if (attr_{= link =} == {= mode =} && uart_{= name =}_write_index == {= index =}) {
+            uart_{= name =}_write_{= wname =}();
+        }
+    }
+    {=/ has_on =}
+    {=^ has_on =}
     if (attr_{= link =} == {= mode =} && uart_{= name =}_write_index == {= index =}) {
         uart_{= name =}_write_{= wname =}();
     }
+    {=/ has_on =}
     {=/ writers =}
     {=/ is_link =}
     {=/ bind =}

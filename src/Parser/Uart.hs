@@ -18,11 +18,13 @@ reader = do
   spaces
   rfn <- FuncName <$> identifier
   pfn <- FuncName <$> identifier
+  on <- option "" $ block "on" "\n"
   return UartReader
     { uartRId = 0
     , uartRBufLen = fromIntegral v
     , uartRFn = rfn
     , uartRPFn = pfn
+    , uartROn = on
     }
 
 
@@ -33,7 +35,8 @@ writer = do
   cmd <- stringLiteral
   mode <- fromIntegral <$> option 0 decimal
   spaces
-  return $ UartWriter n cmd 0 mode
+  on <- option "" $ block "on" "\n"
+  return $ UartWriter n cmd 0 mode on
 
 data ReadWrite
   = Read UartReader
