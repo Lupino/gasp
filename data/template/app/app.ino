@@ -1110,12 +1110,11 @@ void uart_{= name =}_write_next_index() {
         uart_{= name =}_write_index = 0;
     }
 }
+
 void uart_{= name =}_write() {
     {=# writers =}
     is_uart_{= name =}_write_{= wname =} = false;
     {=/ writers =}
-    {=# bind =}
-    {=# is_no_bind =}
     {=# writers =}
     {=# has_on =}
     if ({= on =}) {
@@ -1130,26 +1129,9 @@ void uart_{= name =}_write() {
     }
     {=/ has_on =}
     {=/ writers =}
-    {=/ is_no_bind =}
-    {=# is_link =}
-    {=# writers =}
-    {=# has_on =}
-    if ({= on =}) {
-        if (attr_{= link =} == {= mode =} && uart_{= name =}_write_index == {= index =}) {
-            uart_{= name =}_write_{= wname =}();
-        }
-    }
-    {=/ has_on =}
-    {=^ has_on =}
-    if (attr_{= link =} == {= mode =} && uart_{= name =}_write_index == {= index =}) {
-        uart_{= name =}_write_{= wname =}();
-    }
-    {=/ has_on =}
-    {=/ writers =}
-    {=/ is_link =}
-    {=/ bind =}
     uart_{= name =}_write_next_index();
 }
+
 {=/ uarts =}
 {=# has_app =}
 bool processRequest(const char *json, int length, char *retval) {

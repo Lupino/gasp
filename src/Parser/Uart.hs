@@ -2,7 +2,6 @@ module Parser.Uart
   ( uart
   ) where
 
-import           Gasp.Attr          (AttrName (..))
 import           Gasp.Function      (FuncName (..))
 import           Gasp.Uart
 import           Lexer
@@ -33,10 +32,8 @@ writer = do
   reserved reservedNameUartWrite
   n <- identifier
   cmd <- stringLiteral
-  mode <- fromIntegral <$> option 0 decimal
-  spaces
   on <- option "" $ block "on" "\n"
-  return $ UartWriter n cmd 0 mode on
+  return $ UartWriter n cmd 0 on
 
 data ReadWrite
   = Read UartReader
@@ -54,17 +51,6 @@ fillRId :: Int -> [UartReader] -> [UartReader]
 fillRId _ []       = []
 fillRId idx (x:xs) = x {uartRId = idx} : fillRId (idx + 1) xs
 
-bindLink :: Parser ModeBind
-bindLink = do
-  _ <- symbol "link"
-  n <- AttrName <$> identifier
-  return $ LinkAttr n
-
-bindParser :: Parser ModeBind
-bindParser = do
-  _ <- symbol "->"
-  bindLink
-
 uart :: Parser Uart
 uart = do
   reserved reservedNameUart
@@ -75,8 +61,6 @@ uart = do
   spaces
   rws <- gaspClosure $ many readWrite
 
-  b <- option NoBind bindParser
-
   return Uart
     { uartName = n
     , uartTxPin = tx
@@ -84,5 +68,4 @@ uart = do
     , uartReaders = fillRId 0 [x | Read x <- rws]
     , uartWriters = fillWId 0 [x | Write x <- rws]
     , uartSpeed = speed
-    , uartBind = b
     }
