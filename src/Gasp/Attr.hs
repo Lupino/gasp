@@ -50,7 +50,6 @@ instance ToJSON Attr where
         , "width"      .= calcAttrWidth attr
         , "prec"       .= attrPrec   attr
         , "keep"       .= attrKeep   attr
-        , "unsigned"   .= isUnsigned (attrType attr)
         ]
           where tpMax = maxValue (attrType attr)
                 tpMin = minValue (attrType attr)

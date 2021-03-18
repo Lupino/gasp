@@ -882,32 +882,13 @@ bool set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, ch
         if (!is_valid_float(tmp, {= min =}, {= max =})) {
         {=/ is_float =}
         {=^ is_float =}
-        {=# unsigned =}
-        if (requestValue[0] == '-') {
-            sprintf(retval, FC(F("{\"err\": \"data must between: [{= min =}, {= max =}]\"}")));
-            return false;
-        }
-        unsigned long tmp;
-        if (tp == 0) {
-            tmp = (unsigned long)atoi(requestValue);
-        } else {
-            tmp = (unsigned long)atof(requestValue);
-        }
-        {=/ unsigned =}
-        {=^ unsigned =}
         long tmp;
         if (tp == 0) {
-            tmp = (long)atoi(requestValue);
+            tmp = (long)atol(requestValue);
         } else {
             tmp = (long)atof(requestValue);
         }
-        {=/ unsigned =}
-        {=# uncheckmin =}
-        if (tmp > {= max =}) {
-        {=/ uncheckmin =}
-        {=^ uncheckmin =}
         if (tmp < {= min =} || tmp > {= max =}) {
-        {=/ uncheckmin =}
         {=/ is_float =}
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min =}, {= max =}]\"}")));
           return false;
@@ -949,32 +930,13 @@ bool set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int nu
         if (!is_valid_float(tmp, {= min_threshold =}, {= max_threshold =})) {
         {=/ is_float =}
         {=^ is_float =}
-        {=# unsigned =}
-        if (requestValue[0] == '-') {
-            sprintf(retval, FC(F("{\"err\": \"data must between: [{= min_threshold =}, {= max_threshold =}]\"}")));
-            return false;
-        }
-        unsigned long tmp;
-        if (tp == 0) {
-            tmp = (unsigned long)atoi(requestValue);
-        } else {
-            tmp = (unsigned long)atof(requestValue);
-        }
-        {=/ unsigned =}
-        {=^ unsigned =}
         long tmp;
         if (tp == 0) {
-            tmp = (long)atoi(requestValue);
+            tmp = (long)atol(requestValue);
         } else {
             tmp = (long)atof(requestValue);
         }
-        {=/ unsigned =}
-        {=# uncheckmin =}
-        if (tmp > {= max_threshold =}) {
-        {=/ uncheckmin =}
-        {=^ uncheckmin =}
         if (tmp < {= min_threshold =} || tmp > {= max_threshold =}) {
-        {=/ uncheckmin =}
         {=/ is_float =}
           sprintf(retval, FC(F("{\"err\": \"data must between: [{= min_threshold =}, {= max_threshold =}]\"}")));
           return false;
