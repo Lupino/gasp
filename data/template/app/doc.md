@@ -240,6 +240,7 @@ bool is_valid_float(float number, float min, float max);
 {=# has_app =}
 void mainAction();
 void noop();
+void send_packet_raw(uint8_t * buf, uint16_t length);
 void send_packet();
 void send_packet_0(const uint8_t type);
 void send_packet_1(const uint8_t type, const char *data);

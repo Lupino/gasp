@@ -203,6 +203,7 @@ bool is_valid_float(float number, float min, float max);
 {=# has_app =}
 void mainAction();
 void noop();
+void send_packet_raw(uint8_t * buf, uint16_t length);
 void send_packet();
 void send_packet_0(const uint8_t type);
 void send_packet_1(const uint8_t type, const char *data);
@@ -745,6 +746,15 @@ void mainAction() {
 
 void noop() {}
 
+void send_packet_raw(uint8_t * buf, uint16_t length) {
+    for (uint16_t i = 0; i < length; i ++) {
+        GL_SERIAL.write(buf[i]);
+    }
+    GL_SERIAL.write('\r');
+    GL_SERIAL.write('\n');
+    GL_SERIAL.flush();
+}
+
 void send_packet() {
     {=# has_debug =}
     #ifdef DEBUG_SERIAL
@@ -768,17 +778,12 @@ void send_packet() {
     givelink_to_binary(sendedPayload);
     {=/ low_memory =}
     uint16_t length = givelink_get_length();
-    for (uint16_t i = 0; i < length; i ++) {
-        {=# low_memory =}
-        GL_SERIAL.write(readedPayload[i]);
-        {=/ low_memory =}
-        {=^ low_memory =}
-        GL_SERIAL.write(sendedPayload[i]);
-        {=/ low_memory =}
-    }
-    GL_SERIAL.write('\r');
-    GL_SERIAL.write('\n');
-    GL_SERIAL.flush();
+    {=# low_memory =}
+    send_packet_raw(readedPayload, length);
+    {=/ low_memory =}
+    {=^ low_memory =}
+    send_packet_raw(sendedPayload, length);
+    {=/ low_memory =}
 }
 
 void send_packet_0(const uint8_t type) {
