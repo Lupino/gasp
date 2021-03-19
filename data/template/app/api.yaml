@@ -64,7 +64,7 @@
     docs:
     - {= name =} is between [{= min =}, {= max =}]
     payload:
-      {= name =}_threshold: {= min =}
+      {= name =}: {= min =}
   error:
     payload:
       err: {= name =} is inviald

@@ -127,9 +127,11 @@ bool attr_{= name =}_force = true;
 {= type =} metric_{= name =} = 0;
 {=# has_app =}
 {= type =} last_metric_{= name =} = 0;
+{=# auto =}
 {= type =} metric_{= name =}_threshold = {= threshold =};
 {= type =} last_metric_{= name =}_threshold = {= threshold =};
 bool metric_{= name =}_threshold_force = true;
+{=/ auto =}
 {=/ has_app =}
 
 {=/ metrics =}
