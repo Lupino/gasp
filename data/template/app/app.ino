@@ -624,17 +624,18 @@ void loop() {
     {=/ agpios =}
     {=# uarts =}
     while (uart_{= name =}.available() > 0) {
+        uint8_t outByte = uart_{= name =}.read();
         {=# readers =}
         {=# has_on =}
         if ({= on =}) {
-            if ({= reader =}(uart_{= name =}.read(), uart_{= name =}_read_{= index =}_buffer, &uart_{= name =}_read_{= index =}_buffer_len)) {
+            if ({= reader =}(outByte, uart_{= name =}_read_{= index =}_buffer, &uart_{= name =}_read_{= index =}_buffer_len)) {
                 {= parser =}(uart_{= name =}_read_{= index =}_buffer, uart_{= name =}_read_{= index =}_buffer_len);
                 uart_{= name =}_read_{= index =}_buffer_len = 0;
             }
         }
         {=/ has_on =}
         {=^ has_on =}
-        if ({= reader =}(uart_{= name =}.read(), uart_{= name =}_read_{= index =}_buffer, &uart_{= name =}_read_{= index =}_buffer_len)) {
+        if ({= reader =}(outByte, uart_{= name =}_read_{= index =}_buffer, &uart_{= name =}_read_{= index =}_buffer_len)) {
             {= parser =}(uart_{= name =}_read_{= index =}_buffer, uart_{= name =}_read_{= index =}_buffer_len);
             uart_{= name =}_read_{= index =}_buffer_len = 0;
         }
