@@ -71,16 +71,21 @@ attr = do
     (attrName, attrProps) <- gaspElementNameAndClosureContent reservedNameAttr attrProperties
 
     let tp = getAttrType (DataType "int") attrProps
+        tpMax = maxValue tp
+        tpMin = minValue tp
+        scale = getAttrScale 1 attrProps
+        unScaledMax = tpMax / scale
+        unScaledMin = tpMin / scale
 
     return Attr.Attr
         { Attr.attrName   = Attr.AttrName attrName
         , Attr.attrAddr   = 0
         , Attr.attrType   = tp
-        , Attr.attrMax    = getAttrMax    (maxValue tp) attrProps
-        , Attr.attrMin    = getAttrMin    (minValue tp) attrProps
-        , Attr.attrDef    = getAttrDef    0 attrProps
+        , Attr.attrMax    = min unScaledMax (getAttrMax unScaledMax attrProps)
+        , Attr.attrMin    = max unScaledMin (getAttrMin unScaledMin attrProps)
+        , Attr.attrDef    = getAttrDef 0 attrProps
         , Attr.attrGenSet = getAttrGenSet attrProps
-        , Attr.attrKeep   = getAttrKeep   attrProps
-        , Attr.attrScale  = getAttrScale  1 attrProps
+        , Attr.attrKeep   = getAttrKeep attrProps
+        , Attr.attrScale  = scale
         , Attr.attrPrec   = fromIntegral $ getAttrPrec 2 attrProps
         }

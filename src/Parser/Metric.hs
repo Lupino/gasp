@@ -75,8 +75,10 @@ metric = do
     (metricName, metricProps) <- gaspElementNameAndClosureContent reservedNameMetric metricProperties
 
     let tp = getMetricType (DataType "float") metricProps
-        maxv = getMetricMax (maxValue tp) metricProps
-        minv = getMetricMin (minValue tp) metricProps
+        tpMax = maxValue tp
+        tpMin = minValue tp
+        maxv = min tpMax $ getMetricMax (maxValue tp) metricProps
+        minv = max tpMin $ getMetricMin (minValue tp) metricProps
         maxt = (maxv - minv) / 2
         mint = maxt / 50
 
@@ -85,8 +87,8 @@ metric = do
         , Metric.metricType         = tp
         , Metric.metricMax          = maxv
         , Metric.metricMin          = minv
-        , Metric.metricMaxThreshold = getMetricMaxThreshold maxt metricProps
-        , Metric.metricMinThreshold = getMetricMinThreshold mint metricProps
+        , Metric.metricMaxThreshold = min maxv $ getMetricMaxThreshold maxt metricProps
+        , Metric.metricMinThreshold = max minv $ getMetricMinThreshold mint metricProps
         , Metric.metricThreshold    = getMetricThreshold mint metricProps
         , Metric.metricPrec         = fromIntegral $ getMetricPrec 2 metricProps
         , Metric.metricAddr         = 0
