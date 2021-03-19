@@ -990,7 +990,12 @@ bool get_metric_{= name =}_threshold(char *retval) {
 
 {=/ auto =}
 bool check_metric_{= name =}() {
+    {=# is_float =}
     return is_valid_float(metric_{= name =}, {= min =}, {= max =});
+    {=/ is_float =}
+    {=^ is_float =}
+    return metric_{= name =} >= {= min =} && metric_{= name =} <= {= max =};
+    {=/ is_float =}
 }
 
 bool invalid_metric_{= name =}_error(char *retval) {
