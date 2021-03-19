@@ -104,6 +104,9 @@ minValue _                          = 0
 
 isLong :: DataType -> Bool
 isLong (DataType "uint32_t")      = True
+isLong (DataType "uint16_t")      = True
 isLong (DataType "unsigned long") = True
+isLong (DataType "unsigned int")  = True
+isLong (DataType "word")          = True
 isLong (DataType "long")          = True
 isLong _                          = False
