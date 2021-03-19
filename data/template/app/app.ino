@@ -89,6 +89,8 @@ uint16_t readedLen = 0;
 uint8_t  readedPayload[MAX_GL_PAYLOAD_LENGTH];
 {=^ low_memory =}
 uint8_t  sendedPayload[MAX_GL_PAYLOAD_LENGTH];
+uint8_t  retryPayload[MAX_GL_PAYLOAD_LENGTH];
+uint16_t retryLen = 0;
 {=/ low_memory =}
 
 
@@ -112,6 +114,8 @@ unsigned long metric_timer_ms = 0;
 {=# use_eeprom =}
 bool requireReportAttribute = true;
 bool requireReportMetric = true;
+bool retry_payload = false;
+unsigned long retry_timer_ms = 0;
 
 {=/ use_eeprom =}
 {=/ has_app =}
@@ -513,6 +517,7 @@ void loop() {
                 }
                 if (obj.type == SUCCESS) {
                     ponged = true;
+                    retry_payload = false;
                 }
                 if (obj.type == CTRLREQ) {
                     {=# ctrl_mode =}
@@ -521,7 +526,9 @@ void loop() {
                     send_packet_0(CTRLRES);
                 }
                 if (obj.type == CTRLREQ1) {
-                    send_packet_0(PING);
+                    if (!retry_payload) {
+                        send_packet_0(PING);
+                    }
                     {=# ctrl_mode =}
                     mainAction();
                     {=/ ctrl_mode =}
@@ -707,6 +714,13 @@ bool is_valid_float(float number, float min, float max) {
 {=/ has_float =}
 {=# has_app =}
 void mainAction() {
+    if (retry_payload) {
+        if (retry_timer_ms + 1000 < get_current_time_ms()) {
+            retry_timer_ms = get_current_time_ms();
+            send_packet_raw(retryPayload, retryLen);
+        }
+        return;
+    }
     {=# use_eeprom =}
     reportAttribute(requireReportAttribute);
     if (requireReportAttribute) {
@@ -773,16 +787,20 @@ void send_packet() {
     {=/ has_debug =}
     {=# low_memory =}
     givelink_to_binary(readedPayload);
+    send_packet_raw(readedPayload, givelink_get_length());
     {=/ low_memory =}
     {=^ low_memory =}
-    givelink_to_binary(sendedPayload);
-    {=/ low_memory =}
-    uint16_t length = givelink_get_length();
-    {=# low_memory =}
-    send_packet_raw(readedPayload, length);
-    {=/ low_memory =}
-    {=^ low_memory =}
-    send_packet_raw(sendedPayload, length);
+    if (obj.type == ATTRIBUTE || obj.type == TELEMETRY) {
+        givelink_to_binary(retryPayload);
+        retryLen = givelink_get_length();
+        retry_payload = true;
+        retry_timer_ms = get_current_time_ms();
+
+        send_packet_raw(retryPayload, retryLen);
+    } else {
+        givelink_to_binary(sendedPayload);
+        send_packet_raw(sendedPayload, givelink_get_length());
+    }
     {=/ low_memory =}
 }
 
