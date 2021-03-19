@@ -192,7 +192,7 @@ int uart_{= name =}_read_{= index =}_buffer_len = 0;
 {=# writers =}
 bool is_uart_{= name =}_write_{= wname =} = false;
 {=/ writers =}
-bool uart_{= name =}_write_index = 0;
+uint8_t uart_{= name =}_write_index = 0;
 {=/ uarts =}
 // defined
 unsigned long get_current_time_ms();
