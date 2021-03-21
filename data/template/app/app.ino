@@ -42,6 +42,10 @@ unsigned long auth_timer_ms = 0;
 #define MAX_PING_FAILED 10
 #endif
 
+#ifndef SENDED_DELAY_MS
+#define SENDED_DELAY_MS 200
+#endif
+
 unsigned long pong_timer_ms = 0;
 unsigned long ping_timer_ms = 0;
 bool ponged = true;
@@ -761,6 +765,7 @@ void mainAction() {
 void noop() {}
 
 void send_packet_raw(uint8_t * buf, uint16_t length) {
+    delay(SENDED_DELAY_MS);
     for (uint16_t i = 0; i < length; i ++) {
         GL_SERIAL.write(buf[i]);
     }
