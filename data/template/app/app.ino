@@ -156,6 +156,10 @@ unsigned long rule_{= id =}_{= action =}_timer_ms = 0;
 {=# has_else_later =}
 unsigned long rule_{= id =}_{= else_action =}_timer_ms = 0;
 {=/ has_else_later =}
+bool rule_{= id =}_do_yes = true;
+{=# has_else =}
+bool rule_{= id =}_do_else  = true;
+{=/ has_else =}
 {=/ rules =}
 {=/ has_rule =}
 {=# has_input =}
@@ -435,19 +439,23 @@ void loop() {
     {=/ has_on =}
         {=# has_later =}
         if ({=& condition =}) {
-            if (rule_{= id =}_{= action =}_timer_ms + {= later =} < get_current_time_ms()) {
+            if (rule_{= id =}_do_yes && rule_{= id =}_{= action =}_timer_ms + {= later =} < get_current_time_ms()) {
+                rule_{= id =}_do_yes = false;
                 {= action =}();
             }
             {=# has_else =}
+            rule_{= id =}_do_else = true;
             {=# has_else_later =}
             rule_{= id =}_{= else_action =}_timer_ms = get_current_time_ms();
             {=/ has_else_later =}
             {=/ has_else =}
         } else {
+            rule_{= id =}_do_yes = true;
             rule_{= id =}_{= action =}_timer_ms = get_current_time_ms();
             {=# has_else =}
             {=# has_else_later =}
-            if (rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_current_time_ms()) {
+            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_current_time_ms()) {
+                rule_{= id =}_do_else = false;
                 {= else_action =}();
             }
             {=/ has_else_later =}
@@ -459,21 +467,30 @@ void loop() {
         {=/ has_later =}
         {=^ has_later =}
         if ({=& condition =}) {
-            {= action =}();
-        {=# has_else =}
+            if (rule_{= id =}_do_yes) {
+                rule_{= id =}_do_yes = false;
+                {= action =}();
+            }
+            {=# has_else =}
+            rule_{= id =}_do_else = true;
             {=# has_else_later =}
             rule_{= id =}_{= else_action =}_timer_ms = get_current_time_ms();
             {=/ has_else_later =}
+            {=/ has_else =}
         } else {
+            rule_{= id =}_do_yes = true;
+            {=# has_else =}
             {=# has_else_later =}
-            if (rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_current_time_ms()) {
+            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_current_time_ms()) {
+                rule_{= id =}_do_else = false;
                 {= else_action =}();
             }
             {=/ has_else_later =}
             {=^ has_else_later =}
+            rule_{= id =}_do_else = false;
             {= else_action =}();
             {=/ has_else_later =}
-        {=/ has_else =}
+            {=/ has_else =}
         }
         {=/ has_later =}
     }
