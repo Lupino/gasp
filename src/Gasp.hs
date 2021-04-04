@@ -42,6 +42,7 @@ import           Gasp.Metric
 import           Gasp.Require
 import           Gasp.Rule
 import           Gasp.Setup
+import           Gasp.Timer
 import           Gasp.Uart
 
 
@@ -70,6 +71,7 @@ data Expr
     | ExprConst !Constant
     | ExprUart !Uart
     | ExprRequire !Require
+    | ExprTimer !Timer
     deriving (Show, Eq)
 
 fromGaspExprs :: [Expr] -> Gasp
@@ -224,6 +226,12 @@ getRequires :: Gasp -> [Require]
 getRequires gasp = [r | (ExprRequire r) <- gaspExprs gasp]
 
 
+-- * Timer
+
+getTimers :: Gasp -> [Timer]
+getTimers gasp = [r | (ExprTimer r) <- gaspExprs gasp]
+
+
 -- * Flags
 
 getFlags:: Gasp -> [Flag]
@@ -254,6 +262,7 @@ getCommandLength :: Expr -> Int
 getCommandLength (ExprCmd cmd)   = length $ cmdFunc cmd
 getCommandLength (ExprAttr attr) = setAttrLength attr
 getCommandLength (ExprMetric m)  = setMetricThresholdLength m
+getCommandLength (ExprTimer t)   = setTimerLength t
 getCommandLength _               = 0
 
 
@@ -263,6 +272,7 @@ getMaxCommandLength = maximum . map getCommandLength . gaspExprs
 getRequestValueLength :: Expr -> Int
 getRequestValueLength (ExprAttr attr) = getAttrValueLength attr
 getRequestValueLength (ExprMetric m)  = getMetricValueLength m
+getRequestValueLength (ExprTimer _)   = 10
 getRequestValueLength _               = 0
 
 
@@ -273,6 +283,7 @@ getTmplLength :: Expr -> Int
 getTmplLength (ExprCmd cmd)   = getCmdRspLength cmd
 getTmplLength (ExprAttr attr) = getAttrRspLength attr
 getTmplLength (ExprMetric m)  = getMetricThresholdRspLength m
+getTmplLength (ExprTimer _)   = timerRspLength
 getTmplLength _               = 0
 
 
@@ -290,6 +301,7 @@ prepareGasp sAddr flags gasp = setGaspExprs gasp . go 1 sAddr $ gaspExprs gasp
         go ri addr (ExprMetric x:xs)
           | metricAuto x = ExprMetric x {metricAddr = addr} : go ri (addr + getMetricDataLength x) xs
           | otherwise  = ExprMetric x : go ri addr xs
+        go ri addr (ExprTimer x:xs) = ExprTimer x {timerAddr = addr} : go ri (addr + timerDataLen) xs
         go ri addr (ExprCmd x:xs) = ExprCmd (setCommandFlag flags x) : go ri addr xs
         go ri addr (ExprFunction x:xs) = ExprFunction (setFunctionFlag flags x) : go ri addr xs
         go ri addr (ExprRule x:xs) = ExprRule x {ruleIndex=ri} : go (ri + 1) addr xs
@@ -350,6 +362,8 @@ instance ToJSON Gasp where
         , "has_uart"    .= not (null uarts)
         , "ctrl_mode"   .= ctrlMode
         , "production"  .= prod
+        , "timers"      .= timers
+        , "has_timer"   .= not (null timers)
         ]
         where gasp = prepareGasp (maybe 0 (startAddr prod) app) (getFlags gasp0) gasp0
               prod = getProd gasp0
@@ -367,6 +381,7 @@ instance ToJSON Gasp where
               useEeprom = hasMetric || hasAttr
               app = getApp gasp0
               rules = getRules gasp
+              timers = getTimers gasp
               maxCmdLen = getMaxCommandLength gasp
               maxTmplLen = getMaxTmplLength gasp
               bufLen0 = getTotalMetricThresholdLength (getTotalAttrLength 0 attrs) metrics

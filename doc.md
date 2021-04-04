@@ -161,6 +161,14 @@ uart uartName rx tx speed {
 require "path to part gasp file"
 ```
 
+
+## timer
+
+```
+timer timerName callFuncName finishFuncName
+```
+
+
 # Template Special
 
 README sample compiled syntax.

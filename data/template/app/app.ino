@@ -206,6 +206,21 @@ bool is_uart_{= name =}_write_{= wname =} = false;
 {=/ writers =}
 uint8_t uart_{= name =}_write_index = 0;
 {=/ uarts =}
+{=# has_timer =}
+uint32_t sys_timer_s = 0;
+uint32_t sys_timer_sync_ms = 0;
+uint32_t next_timer_event_ms = 0;
+uint32_t timer_delta0_ms = 0;
+uint32_t timer_delta1_ms = 0;
+uint32_t timer_schedat_s = 0;
+uint32_t timer_period_s = 0;
+uint16_t timer_duration_s = 0;
+uint8_t timer_action = 0;
+{=/ has_timer =}
+{=# timers =}
+bool timer_{= name =}_sched = false;
+{=/ timers =}
+unsigned long current_time_ms = 0;
 // defined
 unsigned long get_current_time_ms();
 
@@ -308,6 +323,15 @@ void uart_{= name =}_write();
 //  0 int
 //  1 float
 int isnum(const char *buf);
+{=# has_timer =}
+void swap_timer_event(uint32_t delta_ms);
+uint32_t get_value(const char *json, jsmntok_t *tokens, int num_tokens, const char * name);
+void set_timer_raw(const char *json, jsmntok_t *tokens, int num_tokens, int addr0, int addr1, int addr2);
+bool get_timer_raw(int addr0, int addr1, int addr2, char *retval);
+bool getset_timer(const char *json, jsmntok_t *tokens, int num_tokens, char *retval, bool set);
+void processTimer(int addr0, int addr1, int addr2, bool * sched);
+
+{=/ has_timer =}
 // end defined
 void setup() {
     {=# has_app =}
@@ -421,6 +445,7 @@ void setup() {
 }
 
 void loop() {
+    current_time_ms = millis();
     {=# loops =}
     {=& code =}
     {=/ loops =}
@@ -675,10 +700,27 @@ void loop() {
     }
 
     {=/ uarts =}
+
+    {=# has_timer =}
+    if (sys_timer_s > 0 && next_timer_event_ms <= get_current_time_ms()) {
+        {=# timers =}
+        processTimer({= addr0 =}, {= addr1 =}, {= addr2 =}, &timer_{= name =}_sched);
+        if (timer_action == 1) {
+            {= fn0 =}();
+        } else if (timer_action == 2) {
+            {= fn1 =}();
+        }
+
+        {=/ timers =}
+        if (next_timer_event_ms < get_current_time_ms()) {
+            next_timer_event_ms += 60000;
+        }
+    }
+    {=/ has_timer =}
 }
 
 unsigned long get_current_time_ms() {
-    return millis();
+    return current_time_ms;
 }
 
 // -1 non num
@@ -1290,6 +1332,14 @@ bool processRequest(const char *json, int length, char *retval) {
             return get_metric_{= name =}(retval);
         }
         {=/ metrics =}
+        {=# has_timer =}
+        if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_timer")))) {
+            return getset_timer(json, requestJsmnTokens, num_tokens, retval, true);
+        }
+        if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_timer")))) {
+            return getset_timer(json, requestJsmnTokens, num_tokens, retval, false);
+        }
+        {=/ has_timer =}
     }
     return false;
 }
@@ -1423,3 +1473,111 @@ bool reportAttribute(bool force) {
 {=/ use_eeprom =}
 {=/ low_memory =}
 {=/ has_app =}
+
+{=# has_timer =}
+void swap_timer_event(uint32_t delta_ms) {
+    if (delta_ms <= get_current_time_ms()) {
+        return;
+    }
+    if (next_timer_event_ms > get_current_time_ms()) {
+        if (next_timer_event_ms > delta_ms) {
+            next_timer_event_ms = delta_ms;
+        }
+    } else {
+        next_timer_event_ms = delta_ms;
+    }
+}
+
+uint32_t get_value(const char *json, jsmntok_t *tokens, int num_tokens, const char * name) {
+    if (jsonlookup(json, tokens, num_tokens, name, requestValue)) {
+        int tp = isnum(requestValue);
+        if (tp == -1) {
+            return 0;
+        }
+        long tmp;
+        if (tp == 0) {
+            tmp = (long)atol(requestValue);
+        } else {
+            tmp = (long)atof(requestValue);
+        }
+
+        if (tmp > 0) {
+            return (uint32_t) tmp;
+        }
+    }
+    return 0;
+}
+
+void set_timer_raw(const char *json, jsmntok_t *tokens, int num_tokens, int addr0, int addr1, int addr2) {
+    timer_schedat_s = get_value(json, tokens, num_tokens, "sched_at");
+    timer_period_s = get_value(json, tokens, num_tokens, "period");
+    timer_duration_s = (uint16_t)get_value(json, tokens, num_tokens, "duration");
+    EEPROM.put(addr0, timer_schedat_s);
+    EEPROM.put(addr1, timer_period_s);
+    EEPROM.put(addr2, timer_duration_s);
+}
+
+bool get_timer_raw(int addr0, int addr1, int addr2, char *retval) {
+    EEPROM.get(addr0, timer_schedat_s);
+    EEPROM.get(addr1, timer_period_s);
+    EEPROM.get(addr2, timer_duration_s);
+    sprintf(retval, FC(F("{\"sched_at\": %ld, \"period\": %ld, \"duration\": %ld}")), timer_schedat_s, timer_period_s, timer_duration_s);
+    return true;
+}
+
+bool getset_timer(const char *json, jsmntok_t *tokens, int num_tokens, char *retval, bool set) {
+    int token = jsonfind(json, tokens, num_tokens, "name");
+    if (token > 1) {
+        {=# timers =}
+        if (jsoneq(json, &tokens[token], FC(F("{= name =}")))) {
+            if (set) {
+                set_timer_raw(json, tokens, num_tokens, {= addr0 =}, {= addr1 =}, {= addr2 =});
+            }
+            return get_timer_raw({= addr0 =}, {= addr1 =}, {= addr2 =}, retval);
+        }
+        {=/ timers =}
+    }
+    return false;
+}
+
+void processTimer(int addr0, int addr1, int addr2, bool * sched) {
+    timer_action = 0;
+    EEPROM.get(addr0, timer_schedat_s);
+    EEPROM.get(addr2, timer_duration_s);
+    if (timer_schedat_s >= sys_timer_s) {
+        timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
+    } else {
+        timer_delta0_ms = 0;
+    }
+
+    if (timer_schedat_s + timer_duration_s >= sys_timer_s) {
+        timer_delta1_ms = (timer_schedat_s - sys_timer_s + timer_duration_s) * 1000 + sys_timer_sync_ms;
+    } else {
+        timer_delta1_ms = 0;
+    }
+
+    if (*sched) {
+        if (timer_duration_s > 0) {
+            if (timer_delta1_ms <= get_current_time_ms()) {
+                *sched = false;
+                timer_action = 2;
+                EEPROM.get(addr1, timer_period_s);
+                if (timer_period_s > 0) {
+                    timer_schedat_s += timer_period_s;
+                    EEPROM.put(addr0, timer_schedat_s);
+                    timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
+                }
+            }
+        }
+    } else {
+        if (timer_delta0_ms >= 0 && timer_delta1_ms > 0 && timer_delta0_ms <= get_current_time_ms() && timer_delta1_ms >= get_current_time_ms()) {
+            *sched = true;
+            timer_action = 1;
+        }
+    }
+
+    swap_timer_event(timer_delta0_ms);
+    swap_timer_event(timer_delta1_ms);
+}
+
+{=/ has_timer =}

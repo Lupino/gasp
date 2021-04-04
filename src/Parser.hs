@@ -19,6 +19,7 @@ import           Parser.Metric      (metric)
 import           Parser.Require     (require)
 import           Parser.Rule        (rule)
 import           Parser.Setup       (setup)
+import           Parser.Timer       (timer)
 import           Parser.Uart        (uart)
 import           Text.Parsec        (ParseError, eof, many1, (<|>))
 import           Text.Parsec.String (Parser)
@@ -40,6 +41,7 @@ expr
     <|> exprRule
     <|> exprConst
     <|> exprRequire
+    <|> exprTimer
 
 exprApp :: Parser Gasp.Expr
 exprApp = Gasp.ExprApp <$> app
@@ -85,6 +87,9 @@ exprConst = Gasp.ExprConst <$> constant
 
 exprRequire :: Parser Gasp.Expr
 exprRequire = Gasp.ExprRequire <$> require
+
+exprTimer :: Parser Gasp.Expr
+exprTimer = Gasp.ExprTimer <$> timer
 
 -- | Top level parser, produces Gasp.
 gaspParser :: Parser Gasp.Gasp
