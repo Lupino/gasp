@@ -571,7 +571,7 @@ void loop() {
                 }
                 if (obj.type == SYNCTIME) {
                     sys_timer_can_sync = true;
-                    sys_timer_s = (uint32_t)atol(obj.data);
+                    sys_timer_s = (uint32_t)atol((const char *)obj.data);
                 }
                 if (obj.type == CTRLREQ) {
                     {=# ctrl_mode =}
