@@ -216,6 +216,10 @@ uint32_t timer_schedat_s = 0;
 uint32_t timer_period_s = 0;
 uint16_t timer_duration_s = 0;
 uint8_t timer_action = 0;
+bool sys_timer_can_sync = true;
+#ifndef SYNCTIME_DELAY_MS
+#define SYNCTIME_DELAY_MS 3600000
+#endif
 {=/ has_timer =}
 {=# timers =}
 bool timer_{= name =}_sched = false;
@@ -565,6 +569,10 @@ void loop() {
                     ponged = true;
                     retry_payload = false;
                 }
+                if (obj.type == SYNCTIME) {
+                    sys_timer_can_sync = true;
+                    sys_timer_s = (uint32_t)atol(obj.data);
+                }
                 if (obj.type == CTRLREQ) {
                     {=# ctrl_mode =}
                     mainAction();
@@ -817,6 +825,17 @@ void mainAction() {
             if (ping_failed > MAX_PING_FAILED) {
                 PING_FAILED_CB();
             }
+        }
+    }
+    if (sys_timer_can_sync) {
+        if (sys_timer_s < 1000) {
+            send_packet_0(SYNCTIME);
+            sys_timer_can_sync = false;
+        }
+
+        if (sys_timer_sync_ms + SYNCTIME_DELAY_MS < get_current_time_ms()) {
+            send_packet_0(SYNCTIME);
+            sys_timer_can_sync = false;
         }
     }
 }
