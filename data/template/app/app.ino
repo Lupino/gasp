@@ -59,7 +59,7 @@ uint8_t ping_failed = 0;
 #endif
 
 #ifndef MAX_NUM_TOKENS
-#define MAX_NUM_TOKENS 10
+#define MAX_NUM_TOKENS 12
 #endif
 
 #ifndef MAX_REQUEST_VALUE_LENGTH
