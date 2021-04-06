@@ -1534,6 +1534,8 @@ void set_timer_raw(const char *json, jsmntok_t *tokens, int num_tokens, int addr
     EEPROM.put(addr0, timer_schedat_s);
     EEPROM.put(addr1, timer_period_s);
     EEPROM.put(addr2, timer_duration_s);
+    timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
+    swap_timer_event(timer_delta0_ms);
 }
 
 bool get_timer_raw(int addr0, int addr1, int addr2, char *retval) {
@@ -1559,44 +1561,49 @@ bool getset_timer(const char *json, jsmntok_t *tokens, int num_tokens, char *ret
     return false;
 }
 
+void finishTimer(int addr0, int addr1, bool *sched) {
+    if (*sched) {
+        timer_delta1_ms = (timer_schedat_s - sys_timer_s + timer_duration_s) * 1000 + sys_timer_sync_ms;
+        if (timer_delta1_ms <= get_current_time_ms()) {
+            *sched = false;
+            timer_action = 2;
+            EEPROM.get(addr1, timer_period_s);
+            if (timer_period_s > 0) {
+                timer_schedat_s += timer_period_s;
+                EEPROM.put(addr0, timer_schedat_s);
+                timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
+            }
+        }
+    }
+}
+
 void processTimer(int addr0, int addr1, int addr2, bool * sched) {
+    processTimer0(addr0, addr1, addr2, sched);
+    swap_timer_event(timer_delta0_ms);
+    swap_timer_event(timer_delta1_ms);
+}
+
+void processTimer0(int addr0, int addr1, int addr2, bool * sched) {
     timer_action = 0;
     EEPROM.get(addr0, timer_schedat_s);
     EEPROM.get(addr2, timer_duration_s);
-    if (timer_schedat_s >= sys_timer_s) {
-        timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
-    } else {
-        timer_delta0_ms = 0;
+
+    if (timer_duration_s == 0) {
+        return;
     }
 
-    if (timer_schedat_s + timer_duration_s >= sys_timer_s) {
-        timer_delta1_ms = (timer_schedat_s - sys_timer_s + timer_duration_s) * 1000 + sys_timer_sync_ms;
-    } else {
-        timer_delta1_ms = 0;
+    if (timer_schedat_s < sys_timer_s || *sched) {
+        finishTimer(addr0, addr1, sched);
+        return;
     }
 
-    if (*sched) {
-        if (timer_duration_s > 0) {
-            if (timer_delta1_ms <= get_current_time_ms()) {
-                *sched = false;
-                timer_action = 2;
-                EEPROM.get(addr1, timer_period_s);
-                if (timer_period_s > 0) {
-                    timer_schedat_s += timer_period_s;
-                    EEPROM.put(addr0, timer_schedat_s);
-                    timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
-                }
-            }
-        }
-    } else {
-        if (timer_delta0_ms >= 0 && timer_delta1_ms > 0 && timer_delta0_ms <= get_current_time_ms() && timer_delta1_ms >= get_current_time_ms()) {
-            *sched = true;
-            timer_action = 1;
-        }
-    }
+    timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
+    timer_delta1_ms = timer_duration_s * 1000 + timer_delta0_ms;
 
-    swap_timer_event(timer_delta0_ms);
-    swap_timer_event(timer_delta1_ms);
+    if (timer_delta0_ms <= get_current_time_ms() && timer_delta1_ms > get_current_time_ms()) {
+        *sched = true;
+        timer_action = 1;
+    }
 }
 
 {=/ has_timer =}
