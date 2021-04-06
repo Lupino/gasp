@@ -214,7 +214,7 @@ uint32_t timer_delta0_ms = 0;
 uint32_t timer_delta1_ms = 0;
 uint32_t timer_schedat_s = 0;
 uint32_t timer_period_s = 0;
-uint16_t timer_duration_s = 0;
+uint32_t timer_duration_s = 0;
 uint8_t timer_action = 0;
 bool sys_timer_can_sync = true;
 #ifndef SYNCTIME_DELAY_MS
@@ -1528,9 +1528,9 @@ uint32_t get_value(const char *json, jsmntok_t *tokens, int num_tokens, const ch
 }
 
 void set_timer_raw(const char *json, jsmntok_t *tokens, int num_tokens, int addr0, int addr1, int addr2) {
-    timer_schedat_s = get_value(json, tokens, num_tokens, "sched_at");
-    timer_period_s = get_value(json, tokens, num_tokens, "period");
-    timer_duration_s = (uint16_t)get_value(json, tokens, num_tokens, "duration");
+    timer_schedat_s  = get_value(json, tokens, num_tokens, "sched_at");
+    timer_period_s   = get_value(json, tokens, num_tokens, "period");
+    timer_duration_s = get_value(json, tokens, num_tokens, "duration");
     EEPROM.put(addr0, timer_schedat_s);
     EEPROM.put(addr1, timer_period_s);
     EEPROM.put(addr2, timer_duration_s);
