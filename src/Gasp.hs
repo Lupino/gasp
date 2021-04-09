@@ -363,7 +363,7 @@ instance ToJSON Gasp where
         , "ctrl_mode"   .= ctrlMode
         , "production"  .= prod
         , "timers"      .= timers
-        , "has_timer"   .= not (null timers)
+        , "has_timer"   .= hasTimer
         ]
         where gasp = prepareGasp (maybe 0 (startAddr prod) app) (getFlags gasp0) gasp0
               prod = getProd gasp0
@@ -378,10 +378,11 @@ instance ToJSON Gasp where
               consts = getConstants gasp
               hasMetric = not (null metrics)
               hasAttr = not (null attrs)
-              useEeprom = hasMetric || hasAttr
+              useEeprom = hasMetric || hasAttr || hasTimer
               app = getApp gasp0
               rules = getRules gasp
               timers = getTimers gasp
+              hasTimer = not (null timers)
               maxCmdLen = getMaxCommandLength gasp
               maxTmplLen = getMaxTmplLength gasp
               bufLen0 = getTotalMetricThresholdLength (getTotalAttrLength 0 attrs) metrics
