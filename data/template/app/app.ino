@@ -70,6 +70,13 @@ uint8_t ping_failed = 0;
 #define MAX_TMPL_LENGTH {= max_tpl_len =}
 #endif
 
+#ifdef ARDUINO_RPI_PICO
+#define EEPROM_NEED_COMMIT
+#ifndef EEPROM_SIZE
+#define EEPROM_SIZE 1024
+#endif
+#endif
+
 givelink_context_t ctx;
 {=# app =}
 uint8_t ctx_buff[{= context_len =}];
@@ -360,6 +367,9 @@ void setup() {
 
     {=/ has_app =}
     {=# use_eeprom =}
+    #ifdef EEPROM_SIZE
+    EEPROM.begin(EEPROM_SIZE);
+    #endif
     {=# attrs =}
     {=# keep =}
     {=# onebyte =}
@@ -550,6 +560,9 @@ void loop() {
                     for (int i = 0; i < {= addr_len =}; i ++) {
                         EEPROM.write({= addr_addr =} + i, obj.data[i]);
                     }
+                    #ifdef EEPROM_NEED_COMMIT
+                    EEPROM.commit();
+                    #endif
                     {=/ app =}
                     {=/ production =}
                 }
@@ -982,6 +995,9 @@ void set_attr_{= name =}_raw({= type =} unscaled_value) {
     EEPROM.put({= addr =}, attr_{= name =});
     {=/ onebyte =}
     {=/ keep =}
+    #ifdef EEPROM_NEED_COMMIT
+    EEPROM.commit();
+    #endif
 }
 
 bool set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
@@ -1073,6 +1089,9 @@ bool set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int nu
         {=^ onebyte =}
         EEPROM.put({= addr =}, metric_{= name =}_threshold);
         {=/ onebyte =}
+        #ifdef EEPROM_NEED_COMMIT
+        EEPROM.commit();
+        #endif
     }
     get_metric_{= name =}_threshold(retval);
     return true;
@@ -1534,6 +1553,9 @@ void set_timer_raw(const char *json, jsmntok_t *tokens, int num_tokens, int addr
     EEPROM.put(addr0, timer_schedat_s);
     EEPROM.put(addr1, timer_period_s);
     EEPROM.put(addr2, timer_duration_s);
+    #ifdef EEPROM_NEED_COMMIT
+    EEPROM.commit();
+    #endif
     timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
     swap_timer_event(timer_delta0_ms);
 }
@@ -1571,6 +1593,9 @@ void finishTimer(int addr0, int addr1, bool *sched) {
             if (timer_period_s > 0) {
                 timer_schedat_s += timer_period_s;
                 EEPROM.put(addr0, timer_schedat_s);
+                #ifdef EEPROM_NEED_COMMIT
+                EEPROM.commit();
+                #endif
                 timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
             }
         }
