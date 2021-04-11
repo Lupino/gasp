@@ -226,13 +226,8 @@ uint16_t agpio_{= name =}_value = 0;
 {=/ bind =}
 {=/ agpios =}
 {=# uarts =}
-SoftwareSerial uart_{= name =}({= rx =}, {= tx =});
-{=# readers =}
-uint8_t uart_read_{= rname =}_buffer[{= buf_len =}];
-int uart_read_{= rname =}_buffer_len = 0;
-{=/ readers =}
 {=# writers =}
-bool is_uart_write_{= wname =} = false;
+bool is_{= name =}_write_{= wname =} = false;
 {=/ writers =}
 {=/ uarts =}
 
@@ -243,8 +238,8 @@ bool is_valid_float(float number, float min, float max);
 {=/ has_float =}
 {=# has_app =}
 void mainAction();
-bool is_valid_addr();
 void noop();
+void send_packet_raw(uint8_t * buf, uint16_t length);
 void send_packet();
 void send_packet_0(const uint8_t type);
 void send_packet_1(const uint8_t type, const char *data);
@@ -329,7 +324,8 @@ bool reportAttribute(bool force);
 {=/ has_app =}
 {=# uarts =}
 {=# writers =}
-void uart_write_{= wname =}();
+void {= name =}_write_{= wname =}();
 {=/ writers =}
+void {= name =}_write();
 {=/ uarts =}
 ```
