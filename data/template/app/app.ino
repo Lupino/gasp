@@ -229,6 +229,7 @@ bool timer_{= name =}_sched = false;
 unsigned long current_time_ms = 0;
 // defined
 unsigned long get_current_time_ms();
+unsigned long get_cache_time_ms();
 
 {=# has_float =}
 bool is_valid_float(float number, float min, float max);
@@ -454,7 +455,7 @@ void setup() {
 }
 
 void loop() {
-    current_time_ms = millis();
+    current_time_ms = get_current_time_ms();
     {=# loops =}
     {=& code =}
     {=/ loops =}
@@ -473,22 +474,22 @@ void loop() {
     {=/ has_on =}
         {=# has_later =}
         if ({=& condition =}) {
-            if (rule_{= id =}_do_yes && rule_{= id =}_{= action =}_timer_ms + {= later =} < get_current_time_ms()) {
+            if (rule_{= id =}_do_yes && rule_{= id =}_{= action =}_timer_ms + {= later =} < get_cache_time_ms()) {
                 rule_{= id =}_do_yes = false;
                 {= action =}();
             }
             {=# has_else =}
             rule_{= id =}_do_else = true;
             {=# has_else_later =}
-            rule_{= id =}_{= else_action =}_timer_ms = get_current_time_ms();
+            rule_{= id =}_{= else_action =}_timer_ms = get_cache_time_ms();
             {=/ has_else_later =}
             {=/ has_else =}
         } else {
             rule_{= id =}_do_yes = true;
-            rule_{= id =}_{= action =}_timer_ms = get_current_time_ms();
+            rule_{= id =}_{= action =}_timer_ms = get_cache_time_ms();
             {=# has_else =}
             {=# has_else_later =}
-            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_current_time_ms()) {
+            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_cache_time_ms()) {
                 rule_{= id =}_do_else = false;
                 {= else_action =}();
             }
@@ -508,14 +509,14 @@ void loop() {
             {=# has_else =}
             rule_{= id =}_do_else = true;
             {=# has_else_later =}
-            rule_{= id =}_{= else_action =}_timer_ms = get_current_time_ms();
+            rule_{= id =}_{= else_action =}_timer_ms = get_cache_time_ms();
             {=/ has_else_later =}
             {=/ has_else =}
         } else {
             rule_{= id =}_do_yes = true;
             {=# has_else =}
             {=# has_else_later =}
-            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_current_time_ms()) {
+            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_cache_time_ms()) {
                 rule_{= id =}_do_else = false;
                 {= else_action =}();
             }
@@ -615,9 +616,9 @@ void loop() {
         {=# use_eeprom =}
         requireReportAttribute = true;
         {=/ use_eeprom =}
-        if (auth_timer_ms + AUTH_DELAY_MS < get_current_time_ms()) {
+        if (auth_timer_ms + AUTH_DELAY_MS < get_cache_time_ms()) {
             send_packet_0(AUTHREQ);
-            auth_timer_ms = get_current_time_ms();
+            auth_timer_ms = get_cache_time_ms();
         }
     {=^ ctrl_mode =}
     } else {
@@ -628,13 +629,13 @@ void loop() {
     {=/ has_app =}
     {=# actions =}
     {=# has_on =}
-    if ({= on =} && {= fn =}_timer_ms + {= delay_ms =} < get_current_time_ms()) {
+    if ({= on =} && {= fn =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
     {=/ has_on =}
     {=^ has_on =}
-    if ({= fn =}_timer_ms + {= delay_ms =} < get_current_time_ms()) {
+    if ({= fn =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
     {=/ has_on =}
         {= fn =}();
-        {= fn =}_timer_ms = get_current_time_ms();
+        {= fn =}_timer_ms = get_cache_time_ms();
     }
     {=/ actions =}
     {=# has_gpio =}
@@ -643,9 +644,9 @@ void loop() {
     {=# is_fn =}
     gpio_reading = digitalRead({= pin =});
     if (gpio_reading != last_gpio_{= name =}_state) {
-        last_gpio_{= name =}_debounce_time_ms = get_current_time_ms();
+        last_gpio_{= name =}_debounce_time_ms = get_cache_time_ms();
     }
-    if ((get_current_time_ms() - last_gpio_{= name =}_debounce_time_ms) > DEBOUNCE_DELAY_MS) {
+    if ((get_cache_time_ms() - last_gpio_{= name =}_debounce_time_ms) > DEBOUNCE_DELAY_MS) {
         if (gpio_reading != gpio_{= name =}_state) {
           gpio_{= name =}_state = gpio_reading;
           if (gpio_{= name =}_state == {= emit =}) {
@@ -720,7 +721,7 @@ void loop() {
     {=/ uarts =}
 
     {=# has_timer =}
-    if (sys_timer_s > 0 && next_timer_event_ms <= get_current_time_ms()) {
+    if (sys_timer_s > 0 && next_timer_event_ms <= get_cache_time_ms()) {
         {=# timers =}
         processTimer({= addr0 =}, {= addr1 =}, {= addr2 =}, &timer_{= name =}_sched);
         if (timer_action == 1) {
@@ -730,7 +731,7 @@ void loop() {
         }
 
         {=/ timers =}
-        if (next_timer_event_ms < get_current_time_ms()) {
+        if (next_timer_event_ms < get_cache_time_ms()) {
             next_timer_event_ms += 60000;
         }
     }
@@ -738,6 +739,10 @@ void loop() {
 }
 
 unsigned long get_current_time_ms() {
+    return millis();
+}
+
+unsigned long get_cache_time_ms() {
     return current_time_ms;
 }
 
@@ -796,8 +801,8 @@ bool is_valid_float(float number, float min, float max) {
 {=# has_app =}
 void mainAction() {
     if (retry_payload) {
-        if (retry_timer_ms + 1000 < get_current_time_ms()) {
-            retry_timer_ms = get_current_time_ms();
+        if (retry_timer_ms + 1000 < get_cache_time_ms()) {
+            retry_timer_ms = get_cache_time_ms();
             send_packet_raw(retryPayload, retryLen);
         }
         return;
@@ -809,28 +814,28 @@ void mainAction() {
     }
     {=/ use_eeprom =}
     {=# has_metric =}
-    if (metric_timer_ms + METRIC_DELAY_MS < get_current_time_ms()) {
+    if (metric_timer_ms + METRIC_DELAY_MS < get_cache_time_ms()) {
         requireReportMetric = true;
     }
     if (reportMetric(requireReportMetric)) {
-        metric_timer_ms = get_current_time_ms();
+        metric_timer_ms = get_cache_time_ms();
         requireReportMetric = false;
     }
     {=/ has_metric =}
 
-    if (ping_timer_ms + PING_DELAY_MS < get_current_time_ms()) {
+    if (ping_timer_ms + PING_DELAY_MS < get_cache_time_ms()) {
         send_packet_0(PING);
         ponged = false;
-        ping_timer_ms = get_current_time_ms();
-        pong_timer_ms = get_current_time_ms();
+        ping_timer_ms = get_cache_time_ms();
+        pong_timer_ms = get_cache_time_ms();
     }
 
     if (ponged) {
         ping_failed = 0;
     } else {
-        if (pong_timer_ms + PONG_DELAY_MS < get_current_time_ms()) {
+        if (pong_timer_ms + PONG_DELAY_MS < get_cache_time_ms()) {
             ping_failed += 1;
-            pong_timer_ms = get_current_time_ms();
+            pong_timer_ms = get_cache_time_ms();
 
             if (ping_failed > MAX_PING_FAILED) {
                 PING_FAILED_CB();
@@ -844,7 +849,7 @@ void mainAction() {
             sys_timer_can_sync = false;
         }
 
-        if (sys_timer_sync_ms + SYNCTIME_DELAY_MS < get_current_time_ms()) {
+        if (sys_timer_sync_ms + SYNCTIME_DELAY_MS < get_cache_time_ms()) {
             send_packet_0(SYNCTIME);
             sys_timer_can_sync = false;
         }
@@ -889,7 +894,7 @@ void send_packet() {
         givelink_to_binary(retryPayload);
         retryLen = givelink_get_length();
         retry_payload = true;
-        retry_timer_ms = get_current_time_ms();
+        retry_timer_ms = get_cache_time_ms();
 
         send_packet_raw(retryPayload, retryLen);
     } else {
@@ -1513,10 +1518,10 @@ bool reportAttribute(bool force) {
 
 {=# has_timer =}
 void swap_timer_event(uint32_t delta_ms) {
-    if (delta_ms <= get_current_time_ms()) {
+    if (delta_ms <= get_cache_time_ms()) {
         return;
     }
-    if (next_timer_event_ms > get_current_time_ms()) {
+    if (next_timer_event_ms > get_cache_time_ms()) {
         if (next_timer_event_ms > delta_ms) {
             next_timer_event_ms = delta_ms;
         }
@@ -1585,7 +1590,7 @@ bool getset_timer(const char *json, jsmntok_t *tokens, int num_tokens, char *ret
 void finishTimer(int addr0, int addr1, bool *sched) {
     if (*sched) {
         timer_delta1_ms = (timer_schedat_s - sys_timer_s + timer_duration_s) * 1000 + sys_timer_sync_ms;
-        if (timer_delta1_ms <= get_current_time_ms()) {
+        if (timer_delta1_ms <= get_cache_time_ms()) {
             *sched = false;
             timer_action = 2;
             EEPROM.get(addr1, timer_period_s);
@@ -1624,7 +1629,7 @@ void processTimer0(int addr0, int addr1, int addr2, bool * sched) {
     timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
     timer_delta1_ms = timer_duration_s * 1000 + timer_delta0_ms;
 
-    if (timer_delta0_ms <= get_current_time_ms() && timer_delta1_ms > get_current_time_ms()) {
+    if (timer_delta0_ms <= get_cache_time_ms() && timer_delta1_ms > get_cache_time_ms()) {
         *sched = true;
         timer_action = 1;
     }
