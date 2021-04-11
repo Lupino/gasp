@@ -66,7 +66,7 @@ uint8_t ping_failed = 0;
 #define MAX_TMPL_LENGTH {= max_tpl_len =}
 #endif
 
-#ifdef ARDUINO_RPI_PICO
+#ifdef ARDUINO_ARCH_RP2040
 #define EEPROM_NEED_COMMIT
 #ifndef EEPROM_SIZE
 #define EEPROM_SIZE 1024
