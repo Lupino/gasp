@@ -578,10 +578,12 @@ void loop() {
                     ponged = true;
                     retry_payload = false;
                 }
+                {=# has_timer =}
                 if (obj.type == SYNCTIME) {
                     sys_timer_can_sync = true;
                     sys_timer_s = (uint32_t)atol((const char *)obj.data);
                 }
+                {=/ has_timer =}
                 if (obj.type == CTRLREQ) {
                     {=# ctrl_mode =}
                     mainAction();
@@ -836,6 +838,7 @@ void mainAction() {
             }
         }
     }
+    {=# has_timer =}
     if (sys_timer_can_sync) {
         if (sys_timer_s < 1000) {
             send_packet_0(SYNCTIME);
@@ -847,6 +850,7 @@ void mainAction() {
             sys_timer_can_sync = false;
         }
     }
+    {=/ has_timer =}
 }
 
 void noop() {}
