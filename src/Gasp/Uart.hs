@@ -7,7 +7,6 @@ module Gasp.Uart
 
 import           Data.Aeson    (ToJSON (..), object, (.=))
 import           Gasp.Function (FuncName)
-import           Gasp.Gpio     (Pin)
 
 newtype UartName = UartName String
   deriving (Show, Eq)
@@ -18,8 +17,7 @@ instance ToJSON UartName where
 
 data Uart = Uart
   { uartName    :: !UartName
-  , uartTxPin   :: !Pin
-  , uartRxPin   :: !Pin
+  , uartSerial  :: !String
   , uartSpeed   :: !Int
   , uartWriters :: [UartWriter]
   , uartReaders :: [UartReader]
@@ -28,8 +26,7 @@ data Uart = Uart
 instance ToJSON Uart where
     toJSON uart = object
         [ "name"    .= uartName  uart
-        , "tx"      .= uartTxPin uart
-        , "rx"      .= uartRxPin uart
+        , "serial"  .= uartSerial uart
         , "speed"   .= uartSpeed uart
         , "readers" .= uartReaders uart
         , "writers" .= uartWriters uart

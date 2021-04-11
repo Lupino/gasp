@@ -226,7 +226,7 @@ uint16_t agpio_{= name =}_value = 0;
 {=/ bind =}
 {=/ agpios =}
 {=# uarts =}
-SoftwareSerial uart_{= name =}({= rx =}, {= tx =});
+#define uart_{= name =} {= serial =}
 {=# writers =}
 bool is_uart_{= name =}_write_{= wname =} = false;
 {=/ writers =}

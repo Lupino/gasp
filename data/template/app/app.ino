@@ -8,10 +8,6 @@
 #include <EEPROM.h>
 
 {=/ use_eeprom =}
-{=# has_uart =}
-#include <SoftwareSerial.h>
-
-{=/ has_uart =}
 {=# consts =}
 #define {= name =} {= value =}
 {=/ consts =}
@@ -203,7 +199,7 @@ uint16_t agpio_{= name =}_value = 0;
 {=/ bind =}
 {=/ agpios =}
 {=# uarts =}
-SoftwareSerial uart_{= name =}({= rx =}, {= tx =});
+#define uart_{= name =} {= serial =}
 {=# readers =}
 uint8_t uart_{= name =}_read_{= index =}_buffer[{= buf_len =}];
 int uart_{= name =}_read_{= index =}_buffer_len = 0;

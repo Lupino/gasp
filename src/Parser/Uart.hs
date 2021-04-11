@@ -6,7 +6,6 @@ import           Gasp.Function      (FuncName (..))
 import           Gasp.Uart
 import           Lexer
 import           Parser.Common
-import           Parser.Gpio        (pin)
 import           Text.Parsec        (many, option, spaces, (<|>))
 import           Text.Parsec.String (Parser)
 
@@ -55,17 +54,15 @@ uart :: Parser Uart
 uart = do
   reserved reservedNameUart
   n <- UartName <$> identifier
-  rx <- pin
-  tx <- pin
+  serial <- identifier
   speed <- fromIntegral <$> decimal
   spaces
   rws <- gaspClosure $ many readWrite
 
   return Uart
-    { uartName = n
-    , uartTxPin = tx
-    , uartRxPin = rx
+    { uartName    = n
+    , uartSerial  = serial
     , uartReaders = fillRId 0 [x | Read x <- rws]
     , uartWriters = fillWId 0 [x | Write x <- rws]
-    , uartSpeed = speed
+    , uartSpeed   = speed
     }
