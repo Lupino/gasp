@@ -54,14 +54,12 @@ uart :: Parser Uart
 uart = do
   reserved reservedNameUart
   n <- UartName <$> identifier
-  serial <- identifier
   speed <- fromIntegral <$> decimal
   spaces
   rws <- gaspClosure $ many readWrite
 
   return Uart
     { uartName    = n
-    , uartSerial  = serial
     , uartReaders = fillRId 0 [x | Read x <- rws]
     , uartWriters = fillWId 0 [x | Write x <- rws]
     , uartSpeed   = speed

@@ -226,9 +226,8 @@ uint16_t agpio_{= name =}_value = 0;
 {=/ bind =}
 {=/ agpios =}
 {=# uarts =}
-#define uart_{= name =} {= serial =}
 {=# writers =}
-bool is_uart_{= name =}_write_{= wname =} = false;
+bool is_{= name =}_write_{= wname =} = false;
 {=/ writers =}
 {=/ uarts =}
 
@@ -325,8 +324,8 @@ bool reportAttribute(bool force);
 {=/ has_app =}
 {=# uarts =}
 {=# writers =}
-void uart_{= name =}_write_{= wname =}();
+void {= name =}_write_{= wname =}();
 {=/ writers =}
-void uart_{= name =}_write();
+void {= name =}_write();
 {=/ uarts =}
 ```

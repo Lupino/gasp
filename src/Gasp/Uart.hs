@@ -17,7 +17,6 @@ instance ToJSON UartName where
 
 data Uart = Uart
   { uartName    :: !UartName
-  , uartSerial  :: !String
   , uartSpeed   :: !Int
   , uartWriters :: [UartWriter]
   , uartReaders :: [UartReader]
@@ -26,7 +25,6 @@ data Uart = Uart
 instance ToJSON Uart where
     toJSON uart = object
         [ "name"    .= uartName  uart
-        , "serial"  .= uartSerial uart
         , "speed"   .= uartSpeed uart
         , "readers" .= uartReaders uart
         , "writers" .= uartWriters uart

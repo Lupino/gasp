@@ -199,15 +199,14 @@ uint16_t agpio_{= name =}_value = 0;
 {=/ bind =}
 {=/ agpios =}
 {=# uarts =}
-#define uart_{= name =} {= serial =}
 {=# readers =}
-uint8_t uart_{= name =}_read_{= index =}_buffer[{= buf_len =}];
-int uart_{= name =}_read_{= index =}_buffer_len = 0;
+uint8_t {= name =}_read_{= index =}_buffer[{= buf_len =}];
+int {= name =}_read_{= index =}_buffer_len = 0;
 {=/ readers =}
 {=# writers =}
-bool is_uart_{= name =}_write_{= wname =} = false;
+bool is_{= name =}_write_{= wname =} = false;
 {=/ writers =}
-uint8_t uart_{= name =}_write_index = 0;
+uint8_t {= name =}_write_index = 0;
 {=/ uarts =}
 {=# has_timer =}
 uint32_t sys_timer_s = 0;
@@ -322,9 +321,9 @@ bool reportAttribute(bool force);
 {=/ has_app =}
 {=# uarts =}
 {=# writers =}
-void uart_{= name =}_write_{= wname =}();
+void {= name =}_write_{= wname =}();
 {=/ writers =}
-void uart_{= name =}_write();
+void {= name =}_write();
 {=/ uarts =}
 // -1 non num
 //  0 int
@@ -443,7 +442,7 @@ void setup() {
 
     {=/ setups =}
     {=# uarts =}
-    uart_{= name =}.begin({= speed =});
+    {= name =}.begin({= speed =});
     {=/ uarts =}
     {=# has_app =}
     {=# has_debug =}
@@ -698,21 +697,21 @@ void loop() {
     {=/ bind =}
     {=/ agpios =}
     {=# uarts =}
-    while (uart_{= name =}.available() > 0) {
-        uint8_t outByte = uart_{= name =}.read();
+    while ({= name =}.available() > 0) {
+        uint8_t outByte = {= name =}.read();
         {=# readers =}
         {=# has_on =}
         if ({= on =}) {
-            if ({= reader =}(outByte, uart_{= name =}_read_{= index =}_buffer, &uart_{= name =}_read_{= index =}_buffer_len)) {
-                {= parser =}(uart_{= name =}_read_{= index =}_buffer, uart_{= name =}_read_{= index =}_buffer_len);
-                uart_{= name =}_read_{= index =}_buffer_len = 0;
+            if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
+                {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
+                {= name =}_read_{= index =}_buffer_len = 0;
             }
         }
         {=/ has_on =}
         {=^ has_on =}
-        if ({= reader =}(outByte, uart_{= name =}_read_{= index =}_buffer, &uart_{= name =}_read_{= index =}_buffer_len)) {
-            {= parser =}(uart_{= name =}_read_{= index =}_buffer, uart_{= name =}_read_{= index =}_buffer_len);
-            uart_{= name =}_read_{= index =}_buffer_len = 0;
+        if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
+            {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
+            {= name =}_read_{= index =}_buffer_len = 0;
         }
         {=/ has_on =}
         {=/ readers =}
@@ -1244,25 +1243,25 @@ bool {= name =}() {
 {=/ functions =}
 {=# uarts =}
 {=# writers =}
-void uart_{= name =}_write_{= wname =}() {
-    is_uart_{= name =}_write_{= wname =} = true;
+void {= name =}_write_{= wname =}() {
+    is_{= name =}_write_{= wname =} = true;
     {=# bytes =}
-    uart_{= name =}.write((uint8_t)0x{= . =});
+    {= name =}.write((uint8_t)0x{= . =});
     {=/ bytes =}
 }
 
 {=/ writers =}
-bool uart_{= name =}_is_valid_index() {
+bool {= name =}_is_valid_index() {
     {=# writers =}
     {=# has_on =}
     if ({= on =}) {
-        if (uart_{= name =}_write_index == {= index =}) {
+        if ({= name =}_write_index == {= index =}) {
             return true;
         }
     }
     {=/ has_on =}
     {=^ has_on =}
-    if (uart_{= name =}_write_index == {= index =}) {
+    if ({= name =}_write_index == {= index =}) {
         return true;
     }
     {=/ has_on =}
@@ -1270,37 +1269,37 @@ bool uart_{= name =}_is_valid_index() {
     return false;
 }
 
-void uart_{= name =}_write_next_index() {
+void {= name =}_write_next_index() {
     for (int i = 0; i < {= wcount =}; i ++) {
-        uart_{= name =}_write_index += 1;
-        if (uart_{= name =}_write_index >= {= wcount =}) {
-            uart_{= name =}_write_index = 0;
+        {= name =}_write_index += 1;
+        if ({= name =}_write_index >= {= wcount =}) {
+            {= name =}_write_index = 0;
         }
-        if (uart_{= name =}_is_valid_index()) {
+        if ({= name =}_is_valid_index()) {
             break;
         }
     }
 }
 
-void uart_{= name =}_write() {
+void {= name =}_write() {
     {=# writers =}
-    is_uart_{= name =}_write_{= wname =} = false;
+    is_{= name =}_write_{= wname =} = false;
     {=/ writers =}
     {=# writers =}
     {=# has_on =}
     if ({= on =}) {
-        if (uart_{= name =}_write_index == {= index =}) {
-            uart_{= name =}_write_{= wname =}();
+        if ({= name =}_write_index == {= index =}) {
+            {= name =}_write_{= wname =}();
         }
     }
     {=/ has_on =}
     {=^ has_on =}
-    if (uart_{= name =}_write_index == {= index =}) {
-        uart_{= name =}_write_{= wname =}();
+    if ({= name =}_write_index == {= index =}) {
+        {= name =}_write_{= wname =}();
     }
     {=/ has_on =}
     {=/ writers =}
-    uart_{= name =}_write_next_index();
+    {= name =}_write_next_index();
 }
 
 {=/ uarts =}
