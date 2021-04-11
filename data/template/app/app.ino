@@ -199,6 +199,7 @@ uint16_t agpio_{= name =}_value = 0;
 {=/ bind =}
 {=/ agpios =}
 {=# uarts =}
+bool is_{= name =}_readed = false;
 {=# readers =}
 uint8_t {= name =}_read_{= index =}_buffer[{= buf_len =}];
 int {= name =}_read_{= index =}_buffer_len = 0;
@@ -698,26 +699,7 @@ void loop() {
     {=/ bind =}
     {=/ agpios =}
     {=# uarts =}
-    while ({= name =}.available() > 0) {
-        uint8_t outByte = {= name =}.read();
-        {=# readers =}
-        {=# has_on =}
-        if ({= on =}) {
-            if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
-                {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
-                {= name =}_read_{= index =}_buffer_len = 0;
-            }
-        }
-        {=/ has_on =}
-        {=^ has_on =}
-        if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
-            {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
-            {= name =}_read_{= index =}_buffer_len = 0;
-        }
-        {=/ has_on =}
-        {=/ readers =}
-    }
-
+    {= name =}_poll();
     {=/ uarts =}
 
     {=# has_timer =}
@@ -1247,9 +1229,34 @@ bool {= name =}() {
 
 {=/ functions =}
 {=# uarts =}
+void {= name =}_poll() {
+    while ({= name =}.available() > 0) {
+        uint8_t outByte = {= name =}.read();
+        {=# readers =}
+        {=# has_on =}
+        if ({= on =}) {
+            if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
+                {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
+                {= name =}_read_{= index =}_buffer_len = 0;
+                is_{= name =}_readed = true;
+            }
+        }
+        {=/ has_on =}
+        {=^ has_on =}
+        if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
+            {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
+            {= name =}_read_{= index =}_buffer_len = 0;
+            is_{= name =}_readed = true;
+        }
+        {=/ has_on =}
+        {=/ readers =}
+    }
+}
+
 {=# writers =}
 void {= name =}_write_{= wname =}() {
     is_{= name =}_write_{= wname =} = true;
+    is_{= name =}_readed = false;
     {=# bytes =}
     {= name =}.write((uint8_t)0x{= . =});
     {=/ bytes =}
