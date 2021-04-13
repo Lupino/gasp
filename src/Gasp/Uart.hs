@@ -24,12 +24,14 @@ data Uart = Uart
 
 instance ToJSON Uart where
     toJSON uart = object
-        [ "name"    .= uartName  uart
-        , "speed"   .= uartSpeed uart
-        , "readers" .= uartReaders uart
-        , "writers" .= uartWriters uart
-        , "wcount"  .= length (uartWriters uart)
-        ]
+      [ "name"    .= uartName  uart
+      , "speed"   .= uartSpeed uart
+      , "readers" .= uartReaders uart
+      , "writers" .= uartWriters uart
+      , "wcount"  .= length (filter filterFunc $ uartWriters uart)
+      ]
+      where filterFunc :: UartWriter -> Bool
+            filterFunc uw = uartWOn uw /= "false"
 
 data UartWriter = UartWriter
   { uartWName :: String
@@ -40,11 +42,12 @@ data UartWriter = UartWriter
 
 instance ToJSON UartWriter where
     toJSON uw = object
-        [ "wname" .= uartWName uw
-        , "bytes" .= toHex (uartWCmd uw)
-        , "index" .= uartWId uw
-        , "on"       .= uartWOn uw
-        , "has_on"   .= not (null $ uartWOn uw)
+        [ "wname"  .= uartWName uw
+        , "bytes"  .= toHex (uartWCmd uw)
+        , "index"  .= uartWId uw
+        , "on"     .= uartWOn uw
+        , "has_on" .= not (null $ uartWOn uw)
+        , "auto"   .= (uartWOn uw /= "false")
         ]
 
 

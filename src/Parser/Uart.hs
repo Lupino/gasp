@@ -44,7 +44,9 @@ readWrite = (Read <$> reader) <|> (Write <$> writer)
 
 fillWId :: Int -> [UartWriter] -> [UartWriter]
 fillWId _ []       = []
-fillWId idx (x:xs) = x {uartWId = idx} : fillWId (idx + 1) xs
+fillWId idx (x:xs)
+  | uartWOn x == "false" = x : fillWId idx xs
+  | otherwise = x {uartWId = idx} : fillWId (idx + 1) xs
 
 fillRId :: Int -> [UartReader] -> [UartReader]
 fillRId _ []       = []

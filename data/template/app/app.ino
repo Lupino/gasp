@@ -1271,6 +1271,7 @@ void {= name =}_write_{= wname =}() {
 {=/ writers =}
 bool {= name =}_is_valid_index() {
     {=# writers =}
+    {=# auto =}
     {=# has_on =}
     if ({= on =}) {
         if ({= name =}_write_index == {= index =}) {
@@ -1283,6 +1284,7 @@ bool {= name =}_is_valid_index() {
         return true;
     }
     {=/ has_on =}
+    {=/ auto =}
     {=/ writers =}
     return false;
 }
@@ -1301,9 +1303,13 @@ void {= name =}_write_next_index() {
 
 void {= name =}_write() {
     {=# writers =}
+    {=# auto =}
     is_{= name =}_write_{= wname =} = false;
+    {=/ auto =}
     {=/ writers =}
     {=# writers =}
+    {=# auto =}
+    is_{= name =}_write_{= wname =} = false;
     {=# has_on =}
     if ({= on =}) {
         if ({= name =}_write_index == {= index =}) {
@@ -1316,6 +1322,7 @@ void {= name =}_write() {
         {= name =}_write_{= wname =}();
     }
     {=/ has_on =}
+    {=/ auto =}
     {=/ writers =}
     {= name =}_write_next_index();
 }
