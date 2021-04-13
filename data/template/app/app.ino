@@ -96,10 +96,12 @@ uint16_t readedLen = 0;
 uint8_t  readedPayload[MAX_GL_PAYLOAD_LENGTH];
 {=^ low_memory =}
 uint8_t  sendedPayload[MAX_GL_PAYLOAD_LENGTH];
+{=# auto_retry =}
 uint8_t  retryPayload[MAX_GL_PAYLOAD_LENGTH];
 uint16_t retryLen = 0;
 bool need_retry = false;
 unsigned long retry_timer_ms = 0;
+{=/ auto_retry =}
 {=/ low_memory =}
 
 
@@ -578,7 +580,9 @@ void loop() {
                 if (obj.type == SUCCESS) {
                     ponged = true;
                     {=^ low_memory =}
+                    {=# auto_retry =}
                     need_retry = false;
+                    {=/ auto_retry =}
                     {=/ low_memory =}
                 }
                 {=# has_timer =}
@@ -595,9 +599,11 @@ void loop() {
                 }
                 if (obj.type == CTRLREQ1) {
                     {=^ low_memory =}
+                    {=# auto_retry =}
                     if (!need_retry) {
                         send_packet_0(PING);
                     }
+                    {=/ auto_retry =}
                     {=/ low_memory =}
                     {=# ctrl_mode =}
                     mainAction();
@@ -787,6 +793,7 @@ bool is_valid_float(float number, float min, float max) {
 {=# has_app =}
 void mainAction() {
     {=^ low_memory =}
+    {=# auto_retry =}
     if (need_retry) {
         if (retry_timer_ms + 1000 < get_cache_time_ms()) {
             retry_timer_ms = get_cache_time_ms();
@@ -794,6 +801,7 @@ void mainAction() {
         }
         return;
     }
+    {=/ auto_retry =}
     {=/ low_memory =}
     {=# use_eeprom =}
     reportAttribute(requireReportAttribute);
@@ -878,6 +886,7 @@ void send_packet() {
     send_packet_raw(readedPayload, givelink_get_length());
     {=/ low_memory =}
     {=^ low_memory =}
+    {=# auto_retry =}
     if (obj.type == ATTRIBUTE || obj.type == TELEMETRY) {
         givelink_to_binary(retryPayload);
         retryLen = givelink_get_length();
@@ -889,6 +898,11 @@ void send_packet() {
         givelink_to_binary(sendedPayload);
         send_packet_raw(sendedPayload, givelink_get_length());
     }
+    {=/ auto_retry =}
+    {=^ auto_retry =}
+    givelink_to_binary(sendedPayload);
+    send_packet_raw(sendedPayload, givelink_get_length());
+    {=/ auto_retry =}
     {=/ low_memory =}
 }
 

@@ -364,6 +364,7 @@ instance ToJSON Gasp where
         , "production"  .= prod
         , "timers"      .= timers
         , "has_timer"   .= hasTimer
+        , "auto_retry"  .= maybe True appRetry app
         ]
         where gasp = prepareGasp (maybe 0 (startAddr prod) app) (getFlags gasp0) gasp0
               prod = getProd gasp0
