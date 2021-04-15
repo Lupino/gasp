@@ -1323,7 +1323,6 @@ void {= name =}_write() {
     {=/ writers =}
     {=# writers =}
     {=# auto =}
-    is_{= name =}_write_{= wname =} = false;
     {=# has_on =}
     if ({= on =}) {
         if ({= name =}_write_index == {= index =}) {
