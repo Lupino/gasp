@@ -4,18 +4,16 @@ module Command.Watch
     ) where
 
 import           Command                 (Command)
-import           CompileOptions          (CompileOptions (..))
-import           Control.Concurrent.Chan (Chan, newChan, readChan)
-import           Data.List               (isSuffixOf)
-import           Data.Time.Clock         (UTCTime, getCurrentTime)
-import qualified System.FSNotify         as FSN
-import qualified System.FilePath         as FP
-
 import           Command.Compile         (compile, compileIO, compileOptions)
 import           Common                  (gaspSays)
-import           CompileOptions          (CompileType (..))
+import           CompileOptions          (CompileOptions (..), CompileType (..))
+import           Control.Concurrent.Chan (Chan, newChan, readChan)
 import           Control.Monad.IO.Class  (liftIO)
+import           Data.List               (isSuffixOf)
+import           Data.Time.Clock         (UTCTime, getCurrentTime)
 import           Path                    (Abs, Dir, Path, toFilePath)
+import qualified System.FSNotify         as FSN
+import qualified System.FilePath         as FP
 
 
 compileAndWatch :: [String] -> Command ()

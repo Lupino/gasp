@@ -42,7 +42,7 @@ instance ToJSON App where
 toHex :: String -> [String]
 toHex []       = []
 toHex [_]      = error "wrong hex string"
-toHex (x:y:xs) = (x:y:[]): toHex xs
+toHex (x:y:xs) = [x, y] : toHex xs
 
 hexArray :: [String] -> String
 hexArray []     = []

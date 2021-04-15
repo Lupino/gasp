@@ -51,7 +51,7 @@ findGaspTemplateDir outDir = do
     Nothing -> do
       doesTempDirExist <- liftIO $ doesPathExist tempDir
       if doesTempDirExist then return $ fromJust $ parseAbsDir tempDir
-                          else liftIO $ (FP.</> "template") <$> Paths_gasp.getDataDir >>= parseAbsDir
+                          else liftIO $ Paths_gasp.getDataDir >>= parseAbsDir . (FP.</> "template")
 
 
   where dataDir = toFilePath outDir

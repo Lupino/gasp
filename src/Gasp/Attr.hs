@@ -75,8 +75,7 @@ setAttrLength :: Attr -> Int
 setAttrLength attr = 28 + attrNameLen attr + getAttrValueLength attr
 
 getTotalAttrLength :: Int -> [Attr] -> Int
-getTotalAttrLength v []     = v
-getTotalAttrLength v (x:xs) = getTotalAttrLength (v + getAttrRspLength x) xs
+getTotalAttrLength = foldl (\ v x -> v + getAttrRspLength x)
 
 getAttrValueLength :: Attr -> Int
 getAttrValueLength attr

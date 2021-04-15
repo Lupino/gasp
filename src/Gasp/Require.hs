@@ -2,5 +2,5 @@ module Gasp.Require
   ( Require (..)
   ) where
 
-data Require = Require FilePath
+newtype Require = Require FilePath
   deriving (Show, Eq)

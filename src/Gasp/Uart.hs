@@ -54,7 +54,7 @@ instance ToJSON UartWriter where
 toHex :: String -> [String]
 toHex []       = []
 toHex [_]      = error "wrong hex string"
-toHex (x:y:xs) = (x:y:[]): toHex xs
+toHex (x:y:xs) = [x, y]: toHex xs
 
 data UartReader = UartReader
   { uartRId     :: Int

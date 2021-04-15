@@ -43,11 +43,11 @@ instance ToJSON Metric where
     toJSON metric = object
         [ "name"            .= metricName metric
         , "type"            .= metricType metric
-        , "max"             .= (metricMax metric)
-        , "min"             .= (metricMin metric)
-        , "min_threshold"   .= (metricMinThreshold metric)
-        , "max_threshold"   .= (metricMaxThreshold metric)
-        , "threshold"       .= (metricThreshold metric)
+        , "max"             .= metricMax metric
+        , "min"             .= metricMin metric
+        , "min_threshold"   .= metricMinThreshold metric
+        , "max_threshold"   .= metricMaxThreshold metric
+        , "threshold"       .= metricThreshold metric
         , "threshold_width" .= calcMetricThresholdWidth metric
         , "width"           .= calcMetricWidth metric
         , "prec"            .= metricPrec metric
@@ -73,8 +73,8 @@ getMetricThresholdRspLength metric =
   16 + metricNameLen metric + getMetricThresholdValueLength metric
 
 getTotalMetricThresholdLength :: Int -> [Metric] -> Int
-getTotalMetricThresholdLength v [] = v
-getTotalMetricThresholdLength v (x:xs) = getTotalMetricThresholdLength (v + getMetricThresholdRspLength x) xs
+getTotalMetricThresholdLength =
+  foldl $ \ v x -> v + getMetricThresholdRspLength x
 
 getMetricValueLength :: Metric -> Int
 getMetricValueLength metric = calcMetricWidth metric + 1 + metricPrec metric
