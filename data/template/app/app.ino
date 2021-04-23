@@ -39,7 +39,7 @@ unsigned long auth_timer_ms = 0;
 #endif
 
 #ifndef SENDED_DELAY_MS
-#define SENDED_DELAY_MS 200
+#define SENDED_DELAY_MS 100
 #endif
 
 unsigned long pong_timer_ms = 0;
@@ -243,7 +243,7 @@ void noop();
 void send_packet_raw(uint8_t * buf, uint16_t length);
 void send_packet();
 void send_packet_0(const uint8_t type);
-void send_packet_1(const uint8_t type, const char *data);
+void send_packet_1(const uint8_t type, const char *data, const int length);
 void send_packet_rsp(const char *data);
 void next_packet(const uint8_t type);
 char * FC(const __FlashStringHelper *ifsh);
@@ -253,6 +253,7 @@ int jsonfind(const char *json, jsmntok_t *tokens, int num_tokens, const char *na
 
 bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char *name, char *value);
 void merge_json(char *dst, char *src, int *total_length);
+int get_json_length(const char *src);
 {=# attrs =}
 void set_attr_{= name =}_raw({= type =} unscaled_value);
 bool set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
@@ -911,15 +912,15 @@ void send_packet_0(const uint8_t type) {
     send_packet();
 }
 
-void send_packet_1(const uint8_t type, const char *data) {
+void send_packet_1(const uint8_t type, const char *data, const int length) {
     next_packet(type);
-    givelink_set_data((const uint8_t*)data, strlen(data));
+    givelink_set_data((const uint8_t*)data, length);
     send_packet();
 }
 
 void send_packet_rsp(const char *data) {
     givelink_set_type(RESPONSE);
-    givelink_set_data((const uint8_t*)wantSendData, strlen(data));
+    givelink_set_data((const uint8_t*)wantSendData, get_json_length(data));
     send_packet();
 }
 
@@ -982,11 +983,21 @@ bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char 
 
 void merge_json(char *dst, char *src, int *total_length) {
     src[0] = ' ';
-    while (*src != '\0') {
+    while (*src != '}') {
         dst[*total_length]=*src++;
         *total_length += 1;
     }
-    dst[*total_length-1] = ',';
+    dst[*total_length] = ',';
+    *total_length += 1;
+}
+
+int get_json_length(const char *src) {
+    int length = 1;
+    while (*src != '}') {
+        *src++;
+        length += 1;
+    }
+    return length;
 }
 
 {=# attrs =}
@@ -1444,7 +1455,7 @@ bool reportMetric(bool force) {
         wantSendData[total_length-1] = '}';
         wantSendData[total_length] = '\0';
 
-        send_packet_1(TELEMETRY, wantSendData);
+        send_packet_1(TELEMETRY, wantSendData, total_length);
         return true;
     }
     return false;
@@ -1488,7 +1499,7 @@ bool reportAttribute(bool force) {
         wantSendData[total_length-1] = '}';
         wantSendData[total_length] = '\0';
 
-        send_packet_1(ATTRIBUTE, wantSendData);
+        send_packet_1(ATTRIBUTE, wantSendData, total_length);
         return true;
     }
     return false;
@@ -1505,7 +1516,7 @@ bool reportMetric(bool force) {
         wantSendData[0] = '\0';
         if (get_metric_{= name =}(wantSendData)) {
             last_metric_{= name =} = metric_{= name =};
-            send_packet_1(TELEMETRY, wantSendData);
+            send_packet_1(TELEMETRY, wantSendData, total_length);
             sended = true;
         }
     }
@@ -1525,7 +1536,7 @@ bool reportAttribute(bool force) {
         if (get_attr_{= name =}(wantSendData)) {
             sended = true;
             last_attr_{= name =} = attr_{= name =};
-            send_packet_1(ATTRIBUTE, wantSendData);
+            send_packet_1(ATTRIBUTE, wantSendData, total_length);
         }
     }
 
@@ -1537,7 +1548,7 @@ bool reportAttribute(bool force) {
         if (get_metric_{= name =}_threshold(wantSendData)) {
             sended = true;
             last_metric_{= name =}_threshold = metric_{= name =}_threshold;
-            send_packet_1(ATTRIBUTE, wantSendData);
+            send_packet_1(ATTRIBUTE, wantSendData, total_length);
         }
     }
 
