@@ -252,7 +252,9 @@ bool jsoneq(const char *json, jsmntok_t *token, const char *s);
 int jsonfind(const char *json, jsmntok_t *tokens, int num_tokens, const char *name);
 
 bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char *name, char *value);
+{=^ low_memory =}
 void merge_json(char *dst, char *src, int *total_length);
+{=/ low_memory =}
 int get_json_length(const char *src);
 {=# attrs =}
 void set_attr_{= name =}_raw({= type =} unscaled_value);
@@ -981,6 +983,7 @@ bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char 
     return false;
 }
 
+{=^ low_memory =}
 void merge_json(char *dst, char *src, int *total_length) {
     src[0] = ' ';
     while (*src != '}') {
@@ -991,6 +994,7 @@ void merge_json(char *dst, char *src, int *total_length) {
     *total_length += 1;
 }
 
+{=/ low_memory =}
 int get_json_length(const char *src) {
     int length = 1;
     while (*src != '}') {
@@ -1516,7 +1520,7 @@ bool reportMetric(bool force) {
         wantSendData[0] = '\0';
         if (get_metric_{= name =}(wantSendData)) {
             last_metric_{= name =} = metric_{= name =};
-            send_packet_1(TELEMETRY, wantSendData, total_length);
+            send_packet_1(TELEMETRY, wantSendData, get_json_length(wantSendData));
             sended = true;
         }
     }
@@ -1536,7 +1540,7 @@ bool reportAttribute(bool force) {
         if (get_attr_{= name =}(wantSendData)) {
             sended = true;
             last_attr_{= name =} = attr_{= name =};
-            send_packet_1(ATTRIBUTE, wantSendData, total_length);
+            send_packet_1(ATTRIBUTE, wantSendData, get_json_length(wantSendData));
         }
     }
 
@@ -1548,7 +1552,7 @@ bool reportAttribute(bool force) {
         if (get_metric_{= name =}_threshold(wantSendData)) {
             sended = true;
             last_metric_{= name =}_threshold = metric_{= name =}_threshold;
-            send_packet_1(ATTRIBUTE, wantSendData, total_length);
+            send_packet_1(ATTRIBUTE, wantSendData, get_json_length(wantSendData));
         }
     }
 

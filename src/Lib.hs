@@ -16,8 +16,7 @@ import           Gasp                       (App (..), Attr (..), Expr (..),
                                              Gasp, Metric (..), Require (..),
                                              fromGaspExprs, getGaspExprs,
                                              getRequires, setExternalCodeFiles,
-                                             setGaspExprs, setLowMemory,
-                                             setProd)
+                                             setGaspExprs, setProd)
 import           Generator                  (writeAppCode)
 import           Parser                     (parseGasp)
 import           Path                       (Abs, Dir, File, Path, parent,
@@ -150,5 +149,4 @@ enrichGaspASTBasedOnCompileOptions :: Gasp -> CompileOptions -> IO Gasp
 enrichGaspASTBasedOnCompileOptions gasp options = do
     externalCodeFiles <- ExternalCode.readFiles (CompileOptions.externalCodeDirPath options)
     return (gasp `setExternalCodeFiles` externalCodeFiles
-                 `setLowMemory` CompileOptions.lowMemory options
                  `setProd` CompileOptions.isProd options)

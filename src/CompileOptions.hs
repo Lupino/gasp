@@ -21,6 +21,5 @@ data CompileOptions = CompileOptions
     , compileType         :: !CompileType
     , projectRootDir      :: !(Path Abs Dir)
     , templateDir         :: !(Path Abs Dir)
-    , lowMemory           :: !Bool
     , isProd              :: !Bool
     }

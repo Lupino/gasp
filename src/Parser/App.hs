@@ -18,6 +18,7 @@ data AppProperty
     | StartAddr !Int
     | Ctrl      !Bool
     | Retry     !Bool
+    | LowMemory !Bool
     deriving (Show, Eq)
 
 -- | Parses supported app properties, expects format "key1: value1, key2: value2, ..."
@@ -30,6 +31,7 @@ appProperties =
   <|> appPropertyCtrl
   <|> try appPropertyAddr
   <|> try appPropertyRetry
+  <|> try appPropertyLowMemory
 
 appPropertyKey :: Parser AppProperty
 appPropertyKey = Key <$> gaspPropertyStringLiteral "key"
@@ -49,6 +51,9 @@ appPropertyCtrl = Ctrl <$> gaspPropertyBool "ctrl_mode"
 appPropertyRetry :: Parser AppProperty
 appPropertyRetry = Retry <$> gaspPropertyBool "auto_retry"
 
+appPropertyLowMemory :: Parser AppProperty
+appPropertyLowMemory = LowMemory <$> gaspPropertyBool "low_memory"
+
 getAppKey :: [AppProperty] -> String
 getAppKey ps = head $ [t | Key t <- ps]
 
@@ -67,6 +72,9 @@ getAppCtrl ps = fromMaybe False $ listToMaybe $ [t | Ctrl t <- ps]
 getAppRetry :: [AppProperty] -> Bool
 getAppRetry ps = fromMaybe True $ listToMaybe $ [t | Retry t <- ps]
 
+getAppLowMemory :: [AppProperty] -> Bool
+getAppLowMemory ps = fromMaybe False $ listToMaybe $ [t | LowMemory t <- ps]
+
 -- | Top level parser, parses App.
 app :: Parser App.App
 app = do
@@ -80,4 +88,5 @@ app = do
         , App.appStartAddr = getAppStartAddr appProps
         , App.appCtrl      = getAppCtrl appProps
         , App.appRetry     = getAppRetry appProps
+        , App.appLowMemory = getAppLowMemory appProps
         }

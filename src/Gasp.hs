@@ -4,8 +4,6 @@ module Gasp
     , fromGaspExprs
     , setGaspExprs
     , getGaspExprs
-    , setLowMemory
-    , getLowMemory
     , setProd
     , getProd
     , getRequires
@@ -51,7 +49,6 @@ import           Gasp.Uart
 data Gasp = Gasp
     { gaspExprs         :: ![Expr]
     , externalCodeFiles :: ![ExternalCode.File]
-    , isLowMemory       :: !Bool
     , isProd            :: !Bool
     } deriving (Show, Eq)
 
@@ -78,7 +75,6 @@ fromGaspExprs :: [Expr] -> Gasp
 fromGaspExprs exprs = Gasp
     { gaspExprs         = exprs
     , externalCodeFiles = []
-    , isLowMemory       = False
     , isProd            = False
     }
 
@@ -95,14 +91,6 @@ getExternalCodeFiles = externalCodeFiles
 
 setExternalCodeFiles :: Gasp -> [ExternalCode.File] -> Gasp
 setExternalCodeFiles wasp files = wasp { externalCodeFiles = files }
-
--- * Low Memory
-
-setLowMemory :: Gasp -> Bool -> Gasp
-setLowMemory gasp lowMem = gasp { isLowMemory = lowMem }
-
-getLowMemory :: Gasp -> Bool
-getLowMemory = isLowMemory
 
 -- * Production
 
@@ -356,7 +344,7 @@ instance ToJSON Gasp where
         , "has_debug"   .= constDebug consts
         , "has_rule"    .= not (null rules)
         , "has_float"   .= (hasFloatAttr attrs || hasFloatMetric metrics)
-        , "low_memory"  .= getLowMemory gasp
+        , "low_memory"  .= isLowMemory
         , "consts"      .= consts
         , "uarts"       .= uarts
         , "has_uart"    .= not (null uarts)
@@ -387,7 +375,8 @@ instance ToJSON Gasp where
               maxCmdLen = getMaxCommandLength gasp
               maxTmplLen = getMaxTmplLength gasp
               bufLen0 = getTotalMetricThresholdLength (getTotalAttrLength 0 attrs) metrics
-              bufLen = if getLowMemory gasp then max maxCmdLen maxTmplLen else max maxCmdLen bufLen0
+              isLowMemory = maybe False appLowMemory app
+              bufLen = if isLowMemory then max maxCmdLen maxTmplLen else max maxCmdLen bufLen0
               contextLen = maybe 0 appContexLen app
               ctrlMode = maybe False appCtrl app
 

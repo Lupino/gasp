@@ -7,7 +7,8 @@ app appName {
     token: "you_token",
     addr: "00000000",
     start_addr: 0,
-    ctrl_mode: false
+    ctrl_mode: false,
+    low_memory: false
 }
 ```
 
