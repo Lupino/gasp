@@ -330,7 +330,6 @@ instance ToJSON Gasp where
         , "has_attr"    .= hasAttr
         , "metrics"     .= metrics
         , "has_metric"  .= hasMetric
-        , "use_eeprom"  .= useEeprom
         , "max_req_len" .= (getMaxRequestValueLength gasp + 1)
         , "max_buf_len" .= (bufLen + 1)
         , "max_tpl_len" .= (maxTmplLen + 1)
@@ -367,7 +366,6 @@ instance ToJSON Gasp where
               consts = getConstants gasp
               hasMetric = not (null metrics)
               hasAttr = not (null attrs)
-              useEeprom = hasMetric || hasAttr || hasTimer
               app = getApp gasp0
               rules = getRules gasp
               timers = getTimers gasp

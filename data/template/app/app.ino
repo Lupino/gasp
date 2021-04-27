@@ -2,12 +2,9 @@
 {=# has_app =}
 #include <givelink.h>
 #include <jsmn.h>
-
-{=/ has_app =}
-{=# use_eeprom =}
 #include <EEPROM.h>
 
-{=/ use_eeprom =}
+{=/ has_app =}
 {=# consts =}
 #define {= name =} {= value =}
 {=/ consts =}
@@ -122,11 +119,8 @@ char wantSendDataTpl[MAX_TMPL_LENGTH];
 unsigned long metric_timer_ms = 0;
 
 {=/ has_metric =}
-{=# use_eeprom =}
 bool requireReportAttribute = true;
 bool requireReportMetric = true;
-
-{=/ use_eeprom =}
 {=/ has_app =}
 {=# attrs =}
 {= type =} attr_{= name =} = {= default =};
@@ -234,10 +228,14 @@ unsigned long current_time_ms = 0;
 unsigned long get_current_time_ms();
 unsigned long get_cache_time_ms();
 
+{=# has_app =}
+// -1 non num
+//  0 int
+//  1 float
+int isnum(const char *buf);
 {=# has_float =}
 bool is_valid_float(float number, float min, float max);
 {=/ has_float =}
-{=# has_app =}
 void mainAction();
 void noop();
 void send_packet_raw(uint8_t * buf, uint16_t length);
@@ -322,9 +320,7 @@ bool processRequest(const char *json, int length, char *retval);
 {=# has_metric =}
 bool reportMetric(bool force);
 {=/ has_metric =}
-{=# use_eeprom =}
 bool reportAttribute(bool force);
-{=/ use_eeprom =}
 {=/ has_app =}
 {=# uarts =}
 {=# writers =}
@@ -332,10 +328,6 @@ void {= name =}_write_{= wname =}();
 {=/ writers =}
 void {= name =}_write();
 {=/ uarts =}
-// -1 non num
-//  0 int
-//  1 float
-int isnum(const char *buf);
 {=# has_timer =}
 void swap_timer_event(uint32_t delta_ms);
 uint32_t get_value(const char *json, jsmntok_t *tokens, int num_tokens, const char * name);
@@ -367,8 +359,6 @@ void setup() {
     givelink_init(&obj, obj_buff);
     {=/ app =}
 
-    {=/ has_app =}
-    {=# use_eeprom =}
     #ifdef EEPROM_SIZE
     EEPROM.begin(EEPROM_SIZE);
     #endif
@@ -396,7 +386,6 @@ void setup() {
 
     {=/ keep =}
     {=/ attrs =}
-    {=# has_app =}
     {=# metrics =}
     {=# auto =}
     {=# onebyte =}
@@ -421,9 +410,8 @@ void setup() {
 
     {=/ auto =}
     {=/ metrics =}
-    {=/ has_app =}
 
-    {=/ use_eeprom =}
+    {=/ has_app =}
     {=# has_gpio =}
     {=# gpios =}
     {=# bind =}
@@ -627,9 +615,9 @@ void loop() {
     }
 
     if (!givelink_context_authed()) {
-        {=# use_eeprom =}
+        {=# has_app =}
         requireReportAttribute = true;
-        {=/ use_eeprom =}
+        {=/ has_app =}
         if (auth_timer_ms + AUTH_DELAY_MS < get_cache_time_ms()) {
             send_packet_0(AUTHREQ);
             auth_timer_ms = get_cache_time_ms();
@@ -741,6 +729,7 @@ unsigned long get_cache_time_ms() {
     return current_time_ms;
 }
 
+{=# has_app =}
 // -1 non num
 //  0 int
 //  1 float
@@ -793,7 +782,6 @@ bool is_valid_float(float number, float min, float max) {
 }
 
 {=/ has_float =}
-{=# has_app =}
 void mainAction() {
     {=^ low_memory =}
     {=# auto_retry =}
@@ -806,12 +794,11 @@ void mainAction() {
     }
     {=/ auto_retry =}
     {=/ low_memory =}
-    {=# use_eeprom =}
+    {=# has_app =}
     reportAttribute(requireReportAttribute);
     if (requireReportAttribute) {
         requireReportAttribute = false;
     }
-    {=/ use_eeprom =}
     {=# has_metric =}
     if (metric_timer_ms + METRIC_DELAY_MS < get_cache_time_ms()) {
         requireReportMetric = true;
@@ -821,6 +808,7 @@ void mainAction() {
         requireReportMetric = false;
     }
     {=/ has_metric =}
+    {=/ has_app =}
 
     if (ping_timer_ms + PING_DELAY_MS < get_cache_time_ms()) {
         send_packet_0(PING);
@@ -1466,7 +1454,7 @@ bool reportMetric(bool force) {
 }
 
 {=/ has_metric =}
-{=# use_eeprom =}
+{=# has_app =}
 bool reportAttribute(bool force) {
     int total_length = 0;
     bool wantSend = false;
@@ -1508,7 +1496,7 @@ bool reportAttribute(bool force) {
     }
     return false;
 }
-{=/ use_eeprom =}
+{=/ has_app =}
 {=/ low_memory =}
 {=# low_memory =}
 {=# has_metric =}
@@ -1531,7 +1519,7 @@ bool reportMetric(bool force) {
 }
 
 {=/ has_metric =}
-{=# use_eeprom =}
+{=# has_app =}
 bool reportAttribute(bool force) {
     bool sended = true;
     {=# attrs =}
@@ -1560,7 +1548,7 @@ bool reportAttribute(bool force) {
     {=/ metrics =}
     return sended;
 }
-{=/ use_eeprom =}
+{=/ has_app =}
 {=/ low_memory =}
 {=/ has_app =}
 
