@@ -12,10 +12,10 @@ app appName {
 }
 ```
 
-## Constant
+## Constant or Variable
 
 ```
-name = value
+name[(argv)] [type] = value
 ```
 
 ## init
@@ -24,6 +24,12 @@ name = value
 init {
 // you init code
 }
+```
+
+## import
+
+```
+import lib [url]
 ```
 
 ## setup
@@ -62,7 +68,7 @@ agpio agpioName pinName [-> link attrName]
 ## func
 
 ```
-func funcName [(argv)] {
+func funcName [(argv)] [type] {
     // you func code
 }
 ```
