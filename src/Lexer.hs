@@ -16,6 +16,7 @@ module Lexer
   , reservedNameUartRead
   , reservedNameUartWrite
   , reservedNameRequire
+  , reservedNameImport
   , reservedNameTimer
   , braces
   , brackets
@@ -106,6 +107,9 @@ reservedNameUartWrite = "write"
 reservedNameRequire :: String
 reservedNameRequire = "require"
 
+reservedNameImport :: String
+reservedNameImport = "import"
+
 reservedNameTimer :: String
 reservedNameTimer = "timer"
 
@@ -137,6 +141,7 @@ reservedNames =
     , reservedNameUartRead
     , reservedNameUartWrite
     , reservedNameRequire
+    , reservedNameImport
     , reservedNameTimer
     -- * Data types
     , reservedNameBooleanTrue

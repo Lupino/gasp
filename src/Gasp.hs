@@ -34,6 +34,7 @@ import           Gasp.Every
 import           Gasp.Flag
 import           Gasp.Function
 import           Gasp.Gpio
+import           Gasp.Import
 import           Gasp.Init
 import           Gasp.Loop
 import           Gasp.Metric
@@ -68,6 +69,7 @@ data Expr
     | ExprConst !Constant
     | ExprUart !Uart
     | ExprRequire !Require
+    | ExprImport !Import
     | ExprTimer !Timer
     deriving (Show, Eq)
 
@@ -214,6 +216,12 @@ getRequires :: Gasp -> [Require]
 getRequires gasp = [r | (ExprRequire r) <- gaspExprs gasp]
 
 
+-- * Imports
+
+getImports :: Gasp -> [Import]
+getImports gasp = [imp | (ExprImport imp) <- gaspExprs gasp]
+
+
 -- * Timer
 
 getTimers :: Gasp -> [Timer]
@@ -323,6 +331,7 @@ instance ToJSON Gasp where
         , "has_app"     .= isJust app
         , "commands"    .= cmds
         , "functions"   .= funcs
+        , "imports"     .= getImports gasp
         , "loops"       .= getLoops gasp
         , "setups"      .= getSetups gasp
         , "inits"       .= inits

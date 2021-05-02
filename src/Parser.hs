@@ -13,6 +13,7 @@ import           Parser.Constant    (constant)
 import           Parser.Every       (every)
 import           Parser.Function    (function)
 import           Parser.Gpio        (gpio)
+import           Parser.Import      (importParser)
 import           Parser.Init        (initP)
 import           Parser.Loop        (loop)
 import           Parser.Metric      (metric)
@@ -41,6 +42,7 @@ expr
     <|> exprRule
     <|> exprConst
     <|> exprRequire
+    <|> exprImport
     <|> exprTimer
 
 exprApp :: Parser Gasp.Expr
@@ -87,6 +89,9 @@ exprConst = Gasp.ExprConst <$> constant
 
 exprRequire :: Parser Gasp.Expr
 exprRequire = Gasp.ExprRequire <$> require
+
+exprImport :: Parser Gasp.Expr
+exprImport = Gasp.ExprImport <$> importParser
 
 exprTimer :: Parser Gasp.Expr
 exprTimer = Gasp.ExprTimer <$> timer

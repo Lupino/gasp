@@ -5,6 +5,9 @@
 #include <EEPROM.h>
 
 {=/ has_app =}
+{=# imports =}
+#include {=& name =}
+{=/ imports =}
 {=# consts =}
 {=# has_value =}
 {=^ has_type =}
