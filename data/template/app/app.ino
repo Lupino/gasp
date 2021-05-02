@@ -12,7 +12,6 @@
 {=# has_type =}
 {= type =} {= name =} = {= value =};
 {=/ has_type =}
-#define {= name =} {= value =}
 {=/ consts =}
 {=# inits =}
 {=& code =}
