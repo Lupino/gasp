@@ -25,7 +25,7 @@ function = do
     reserved reservedNameFunction
     name  <- identifier
     argv  <- option ""     $ block "(" ")"
-    rettp <- option "bool" tpParser
+    tp    <- option "bool" tpParser
     code  <- gaspBlockClosure
 
 
@@ -34,5 +34,5 @@ function = do
         , funcCode = Text.pack code
         , funcArgv = argv
         , funcFlag = initFlag name
-        , funcRet  = rettp
+        , funcType = tp
         }

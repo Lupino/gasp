@@ -291,24 +291,24 @@ void toggle_gpio_{= name =}();
 {=/ gpios =}
 {=# functions =}
 {=# has_argv =}
-{= rettp =} {= name =}({= argv =});
+{= type =} {= name =}({= argv =});
 {=/ has_argv =}
 {=^ has_argv =}
 {=# flag =}
 {=# retval =}
 {=# json =}
-{= rettp =} {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
+{= type =} {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
 {=/ json =}
 {=^ json =}
-{= rettp =} {= name =}(char *retval);
+{= type =} {= name =}(char *retval);
 {=/ json =}
 {=/ retval =}
 {=^ retval =}
 {=# json =}
-{= rettp =} {= name =}(const char *json, jsmntok_t *tokens, int num_tokens);
+{= type =} {= name =}(const char *json, jsmntok_t *tokens, int num_tokens);
 {=/ json =}
 {=^ json =}
-{= rettp =} {= name =}();
+{= type =} {= name =}();
 {=/ json =}
 {=/ retval =}
 {=/ flag =}
@@ -1222,24 +1222,24 @@ void toggle_gpio_{= name =}() {
 {=/ gpios =}
 {=# functions =}
 {=# has_argv =}
-{= rettp =} {= name =}({= argv =}) {
+{= type =} {= name =}({= argv =}) {
 {=/ has_argv =}
 {=^ has_argv =}
 {=# flag =}
 {=# retval =}
 {=# json =}
-{= rettp =} {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
+{= type =} {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
 {=/ json =}
 {=^ json =}
-{= rettp =} {= name =}(char *retval) {
+{= type =} {= name =}(char *retval) {
 {=/ json =}
 {=/ retval =}
 {=^ retval =}
 {=# json =}
-{= rettp =} {= name =}(const char *json, jsmntok_t *tokens, int num_tokens) {
+{= type =} {= name =}(const char *json, jsmntok_t *tokens, int num_tokens) {
 {=/ json =}
 {=^ json =}
-{= rettp =} {= name =}() {
+{= type =} {= name =}() {
 {=/ json =}
 {=/ retval =}
 {=/ flag =}
