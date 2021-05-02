@@ -6,14 +6,14 @@ import           Gasp.Function      (FuncName (..))
 import           Gasp.Uart
 import           Lexer
 import           Parser.Common
-import           Text.Parsec        (many, option, spaces, (<|>))
+import           Text.Parsec        (many, option, (<|>))
 import           Text.Parsec.String (Parser)
 
 reader :: Parser UartReader
 reader = do
   reserved reservedNameUartRead
   v <- decimal
-  spaces
+  whiteSpace
   rfn <- FuncName <$> identifier
   pfn <- FuncName <$> identifier
   on <- option "" $ block "on" "\n"
@@ -57,7 +57,7 @@ uart = do
   reserved reservedNameUart
   n <- UartName <$> identifier
   speed <- fromIntegral <$> decimal
-  spaces
+  whiteSpace
   rws <- gaspClosure $ many readWrite
 
   return Uart

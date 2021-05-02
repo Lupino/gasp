@@ -48,7 +48,7 @@ import qualified Data.Text            as T
 import           Data.Text.Encoding   (encodeUtf8)
 import           Data.Yaml            (decodeEither')
 import           Text.Parsec          (alphaNum, anyChar, char, letter, many,
-                                       manyTill, oneOf, spaces, try, (<|>))
+                                       manyTill, oneOf, try, (<|>))
 import           Text.Parsec.Language (emptyDef)
 import           Text.Parsec.String   (Parser)
 import qualified Text.Parsec.Token    as Token
@@ -229,9 +229,9 @@ block start end = do
 
 blockC :: Char -> Char -> Parser String
 blockC start end = do
-  spaces
+  whiteSpace
   v <- drop 1 . strip <$> block0 0 start end
-  spaces
+  whiteSpace
   return v
 
 block0 :: Int -> Char -> Char -> Parser String
@@ -261,7 +261,6 @@ rmHeadSpace = unlines . go . lines
 json :: FromJSON a => Char -> Char -> Parser a
 json start end = do
   v <- rmHeadSpace <$> blockC start end
-  spaces
   case decodeEither' (encodeUtf8 $ T.pack v) of
     Left _   -> fail $ [start]  ++ v ++ [end]
     Right vv -> return vv

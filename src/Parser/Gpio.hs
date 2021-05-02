@@ -7,7 +7,7 @@ import           Gasp.Attr          (AttrName (..))
 import           Gasp.Function      (FuncName (..))
 import           Gasp.Gpio
 import           Lexer
-import           Text.Parsec        (option, spaces, (<|>))
+import           Text.Parsec        (option, (<|>))
 import           Text.Parsec.String (Parser)
 
 pinName :: Parser Pin
@@ -16,7 +16,7 @@ pinName = PinName <$> identifier
 pinNum :: Parser Pin
 pinNum = do
   v <- decimal
-  spaces
+  whiteSpace
   return $ PinNum v
 
 pin :: Parser Pin
@@ -63,7 +63,7 @@ stateHigh = State <$> symbol "HIGH"
 stateNum :: Parser State
 stateNum = do
   v <- show <$> decimal
-  spaces
+  whiteSpace
   return $ State v
 
 revertState :: State -> State
