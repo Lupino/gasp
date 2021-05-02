@@ -363,7 +363,7 @@ instance ToJSON Gasp where
               uarts = getUarts gasp
               cmds = getCmds gasp
               funcs = getFunctions gasp
-              consts = getConstants gasp
+              consts = combineConstant [] $ getConstants gasp
               hasMetric = not (null metrics)
               hasAttr = not (null attrs)
               app = getApp gasp0
@@ -396,7 +396,7 @@ instance Binary Gasp where
     putByteString $ toBytes $ hexString $ BC.pack addr
     mapM_ putExpr exprs
     where app = getApp gasp
-          token = maybe "1234567890ABCDEF" appToken app
+          token = maybe "1234567890abcdef" appToken app
           addr = maybe "00000000" appAddr app
 
   put Gasp {gaspExprs=exprs} = mapM_ putExpr exprs

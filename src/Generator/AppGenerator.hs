@@ -1,6 +1,7 @@
 module Generator.AppGenerator
-       ( generateApp
-       ) where
+  ( generateApp
+  , makeSimpleTemplateFD
+  ) where
 
 import           Gasp
 import           Generator.AppGenerator.Common   (makeSimpleTemplateFD,

@@ -1,0 +1,1455 @@
+{{={= =}=}}
+{=# has_app =}
+import <givelink.h>
+import <jsmn.h>
+import <EEPROM.h>
+
+{=/ has_app =}
+{=# has_app =}
+auth_timer_ms unsigned long = 0
+
+AUTH_DELAY_MS = 1000
+PONG_DELAY_MS = 6000
+PING_DELAY_MS = 300000
+PING_FAILED_CB = noop
+MAX_PING_FAILED = 10
+SENDED_DELAY_MS = 100
+MAX_GL_PAYLOAD_LENGTH = {= max_gl_len =}
+MAX_BUFFER_LENGTH = {= max_buf_len =}
+MAX_NUM_TOKENS = 12
+MAX_REQUEST_VALUE_LENGTH = {= max_req_len =}
+MAX_TMPL_LENGTH = {= max_tpl_len =}
+
+// EEPROM_SIZE = 1024
+// EEPROM_NEED_COMMIT
+
+pong_timer_ms unsigned long = 0
+ping_timer_ms unsigned long = 0
+ponged bool = true
+ping_failed uint8_t = 0
+
+ctx givelink_context_t
+{=# app =}
+ctx_buff[{= context_len =}] uint8_t
+key[{= key_len =}] const uint8_t = {{= key_hex_array =}}
+{=# production =}
+token[{= token_len =}] uint8_t
+addr[{= addr_len =}] uint8_t
+{=/ production =}
+{=^ production =}
+token[{= token_len =}] uint8_t = {{= token_hex_array =}}
+addr[{= addr_len =}] uint8_t = {{= addr_hex_array =}};
+{=/ production =}
+{=/ app =}
+
+obj givelink_t
+obj_buff[MAX_BUFFER_LENGTH] uint8_t
+
+crcFlag bool = false
+lastPayloadId uint16_t = 0
+readedLen uint16_t = 0
+ readedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
+{=^ low_memory =}
+sendedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
+{=# auto_retry =}
+retryPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
+retryLen uint16_t = 0
+need_retry bool = false
+retry_timer_ms unsigned long = 0
+{=/ auto_retry =}
+{=/ low_memory =}
+
+
+requestJsmnParser jsmn_parser
+requestJsmnTokens[MAX_NUM_TOKENS] jsmntok_t
+requestValue[MAX_REQUEST_VALUE_LENGTH] char
+wantSendData[MAX_BUFFER_LENGTH] char
+{=^ low_memory =}
+tempSendData[MAX_TMPL_LENGTH] char
+{=/ low_memory =}
+wantSendDataTpl[MAX_TMPL_LENGTH] char
+
+{=# has_metric =}
+METRIC_DELAY_MS = 1800000
+metric_timer_ms unsigned long = 0
+{=/ has_metric =}
+requireReportAttribute bool = true
+requireReportMetric bool = true
+{=/ has_app =}
+{=# attrs =}
+attr_{= name =} {= type =} = {= default =}
+{=# has_app =}
+last_attr_{= name =} {= type =} = {= default =}
+attr_{= name =}_force bool = true
+{=/ has_app =}
+
+{=/ attrs =}
+{=# metrics =}
+metric_{= name =} {= type =} = 0
+{=# has_app =}
+last_metric_{= name =} {= type =} = 0
+{=# auto =}
+metric_{= name =}_threshold {= type =} = {= threshold =}
+last_metric_{= name =}_threshold {= type =} = {= threshold =}
+metric_{= name =}_threshold_force bool = true
+{=/ auto =}
+{=/ has_app =}
+
+{=/ metrics =}
+{=# actions =}
+{= fn =}_timer_ms unsigned long = 0
+{=/ actions =}
+
+{=# has_rule =}
+rule_depends_checked bool = false
+{=# rules =}
+{=# has_later =}
+rule_{= id =}_{= action =}_timer_ms unsigned long = 0
+{=/ has_later =}
+{=# has_else_later =}
+rule_{= id =}_{= else_action =}_timer_ms unsigned long = 0
+{=/ has_else_later =}
+rule_{= id =}_do_yes bool = true
+{=# has_else =}
+rule_{= id =}_do_else bool = true
+{=/ has_else =}
+{=/ rules =}
+{=/ has_rule =}
+{=# has_input =}
+DEBOUNCE_DELAY_MS = 50
+gpio_reading uint8_t = 0
+{=/ has_input =}
+{=# has_gpio =}
+{=# gpios =}
+{=# bind =}
+{=# is_link =}
+gpio_{= name =}_state uint8_t = {= state =}
+{=/ is_link =}
+{=# is_fn =}
+gpio_{= name =}_state uint8_t = {= state =}
+last_gpio_{= name =}_debounce_time_ms unsigned long = 0
+last_gpio_{= name =}_state uint8_t = {= state =}
+{=/ is_fn =}
+{=# is_no_bind =}
+gpio_{= name =}_state uint8_t = {= state =}
+{=/ is_no_bind =}
+{=# is_pwm =}
+gpio_{= name =}_state uint8_t = {= state =}
+{=/ is_pwm =}
+{=/ bind =}
+{=/ gpios =}
+{=/ has_gpio =}
+{=# agpios =}
+{=# bind =}
+{=# is_no_bind =}
+agpio_{= name =}_value uint16_t = 0
+{=/ is_no_bind =}
+{=/ bind =}
+{=/ agpios =}
+{=# uarts =}
+is_{= name =}_readed bool = false
+{=# readers =}
+{= name =}_read_{= index =}_buffer[{= buf_len =}] uint8_t
+{= name =}_read_{= index =}_buffer_len int = 0
+{=/ readers =}
+{=# writers =}
+is_{= name =}_write_{= wname =} bool = false
+{=/ writers =}
+{= name =}_write_index uint8_t = 0
+{=/ uarts =}
+{=# has_timer =}
+sys_timer_s         uint32_t = 0
+sys_timer_sync_ms   uint32_t = 0
+next_timer_event_ms uint32_t = 0
+timer_delta0_ms     uint32_t = 0
+timer_delta1_ms     uint32_t = 0
+timer_schedat_s     uint32_t = 0
+timer_period_s      uint32_t = 0
+timer_duration_s    uint32_t = 0
+timer_action uint8_t = 0
+SYNCTIME_DELAY_MS = 3600000
+sys_timer_can_sync bool = true
+{=/ has_timer =}
+{=# timers =}
+timer_{= name =}_sched bool = false
+{=/ timers =}
+current_time_ms unsigned long = 0
+
+setup {
+    {=# has_app =}
+    {=# app =}
+    givelink_context_init(&ctx, ctx_buff);
+    givelink_context_set_key(key, {= key_len =});
+    {=# production =}
+    for (int i = 0; i < {= token_len =}; i ++) {
+        token[i] = EEPROM.read({= token_addr =} + i);
+    }
+    {=/ production =}
+    givelink_context_set_token(token, {= token_len =});
+    {=# production =}
+    for (int i = 0; i < {= addr_len =}; i ++) {
+        addr[i] = EEPROM.read({= addr_addr =} + i);
+    }
+    givelink_context_set_addr(addr, {= addr_len =});
+    givelink_context_set_auth(true);
+    {=/ production =}
+    givelink_init(&obj, obj_buff);
+    {=/ app =}
+
+    #ifdef EEPROM_SIZE
+    EEPROM.begin(EEPROM_SIZE);
+    #endif
+    {=# attrs =}
+    {=# keep =}
+    {=# onebyte =}
+    attr_{= name =} = EEPROM.read({= addr =});
+    {=/ onebyte =}
+    {=^ onebyte =}
+    EEPROM.get({= addr =}, attr_{= name =});
+    {=/ onebyte =}
+    {=# is_float =}
+    if (!is_valid_float(attr_{= name =}, {= scaled_min =}, {= scaled_max =})) {
+    {=/ is_float =}
+    {=^ is_float =}
+    {=# uncheckmin =}
+    if (attr_{= name =} > {= scaled_max =}) {
+    {=/ uncheckmin =}
+    {=^ uncheckmin =}
+    if (attr_{= name =} < {= scaled_min =} || attr_{= name =} > {= scaled_max =}) {
+    {=/ uncheckmin =}
+    {=/ is_float =}
+        attr_{= name =} = {= default =};
+    }
+
+    {=/ keep =}
+    {=/ attrs =}
+    {=# metrics =}
+    {=# auto =}
+    {=# onebyte =}
+    metric_{= name =}_threshold = EEPROM.read({= addr =});
+    {=/ onebyte =}
+    {=^ onebyte =}
+    EEPROM.get({= addr =}, metric_{= name =}_threshold);
+    {=/ onebyte =}
+    {=# is_float =}
+    if (!is_valid_float(metric_{= name =}_threshold, {= min_threshold =}, {= max_threshold =})) {
+    {=/ is_float =}
+    {=^ is_float =}
+    {=# uncheckmin =}
+    if (metric_{= name =}_threshold > {= max_threshold =}) {
+    {=/ uncheckmin =}
+    {=^ uncheckmin =}
+    if (metric_{= name =}_threshold < {= min_threshold =} || metric_{= name =}_threshold > {= max_threshold =}) {
+    {=/ uncheckmin =}
+    {=/ is_float =}
+        metric_{= name =}_threshold = {= threshold =};
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+
+    {=/ has_app =}
+    {=# has_gpio =}
+    {=# gpios =}
+    {=# bind =}
+    {=# is_link =}
+    pinMode({= pin =}, OUTPUT);
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+    {=/ is_link =}
+    {=# is_fn =}
+    pinMode({= pin =}, INPUT);
+    {=/ is_fn =}
+    {=# is_pwm =}
+    analogWrite({= pin =}, gpio_{= name =}_state);
+    {=/ is_pwm =}
+    {=# is_no_bind =}
+    pinMode({= pin =}, OUTPUT);
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+    {=/ is_no_bind =}
+    {=/ bind =}
+    {=/ gpios =}
+    {=/ has_gpio =}
+    {=# setups =}
+    {=& code =}
+
+    {=/ setups =}
+    {=# uarts =}
+    {= name =}.begin({= speed =});
+    {=/ uarts =}
+    {=# has_app =}
+    {=# has_debug =}
+    #ifdef DEBUG_SERIAL
+    DEBUG_SERIAL.println(F("Setup"));
+    #endif
+    {=/ has_debug =}
+    {=/ has_app =}
+}
+
+loop {
+    {=# rules =}
+    rule_depends_checked = true;
+    {=# depends =}
+    if (!check_metric_{= . =}()) {
+        rule_depends_checked = false;
+    }
+    {=/ depends =}
+    {=# has_on =}
+    if (rule_depends_checked && {=& on_condition =}) {
+    {=/ has_on =}
+    {=^ has_on =}
+    if (rule_depends_checked) {
+    {=/ has_on =}
+        {=# has_later =}
+        if ({=& condition =}) {
+            if (rule_{= id =}_do_yes && rule_{= id =}_{= action =}_timer_ms + {= later =} < get_cache_time_ms()) {
+                rule_{= id =}_do_yes = false;
+                {= action =}();
+            }
+            {=# has_else =}
+            rule_{= id =}_do_else = true;
+            {=# has_else_later =}
+            rule_{= id =}_{= else_action =}_timer_ms = get_cache_time_ms();
+            {=/ has_else_later =}
+            {=/ has_else =}
+        } else {
+            rule_{= id =}_do_yes = true;
+            rule_{= id =}_{= action =}_timer_ms = get_cache_time_ms();
+            {=# has_else =}
+            {=# has_else_later =}
+            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_cache_time_ms()) {
+                rule_{= id =}_do_else = false;
+                {= else_action =}();
+            }
+            {=/ has_else_later =}
+            {=^ has_else_later =}
+            {= else_action =}();
+            {=/ has_else_later =}
+            {=/ has_else =}
+        }
+        {=/ has_later =}
+        {=^ has_later =}
+        if ({=& condition =}) {
+            if (rule_{= id =}_do_yes) {
+                rule_{= id =}_do_yes = false;
+                {= action =}();
+            }
+            {=# has_else =}
+            rule_{= id =}_do_else = true;
+            {=# has_else_later =}
+            rule_{= id =}_{= else_action =}_timer_ms = get_cache_time_ms();
+            {=/ has_else_later =}
+            {=/ has_else =}
+        } else {
+            rule_{= id =}_do_yes = true;
+            {=# has_else =}
+            {=# has_else_later =}
+            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_cache_time_ms()) {
+                rule_{= id =}_do_else = false;
+                {= else_action =}();
+            }
+            {=/ has_else_later =}
+            {=^ has_else_later =}
+            rule_{= id =}_do_else = false;
+            {= else_action =}();
+            {=/ has_else_later =}
+            {=/ has_else =}
+        }
+        {=/ has_later =}
+    }
+    {=/ rules =}
+    {=# has_app =}
+    while (GL_SERIAL.available() > 0) {
+        if (givelink_recv(readedPayload, &readedLen, GL_SERIAL.read(), &crcFlag)) {
+            if (givelink_from_binary(readedPayload, readedLen)) {
+                {=# has_debug =}
+                #ifdef DEBUG_SERIAL
+                DEBUG_SERIAL.print(F("Recv Id: "));
+                DEBUG_SERIAL.print(obj.id);
+                DEBUG_SERIAL.print(F(" Type: "));
+                DEBUG_SERIAL.print(obj.type);
+                if (obj.length > TYPE_LENGTH) {
+                    DEBUG_SERIAL.print(F(" Data: "));
+                    for (uint16_t i = 0; i < obj.length - TYPE_LENGTH; i ++) {
+                        DEBUG_SERIAL.write(obj.data[i]);
+                    }
+                }
+                DEBUG_SERIAL.println();
+                #endif
+
+                {=/ has_debug =}
+                if (obj.type == AUTHRES && crcFlag) {
+                    {=# production =}
+                    {=# app =}
+                    for (int i = 0; i < {= addr_len =}; i ++) {
+                        EEPROM.write({= addr_addr =} + i, obj.data[i]);
+                    }
+                    #ifdef EEPROM_NEED_COMMIT
+                    EEPROM.commit();
+                    #endif
+                    {=/ app =}
+                    {=/ production =}
+                }
+                if (obj.type == REQUEST && crcFlag) {
+                    wantSendData[0] = '\0';
+                    bool ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
+                    if (wantSendData[0] == '\0') {
+                        if (ret) {
+                            sprintf(wantSendData, FC(F("{\"result\": \"OK\"}")));
+                        } else {
+                            sprintf(wantSendData, FC(F("{\"err\": \"not support\"}")));
+                        }
+                    }
+                    send_packet_rsp(wantSendData);
+                }
+                if (obj.type == SUCCESS) {
+                    ponged = true;
+                    {=^ low_memory =}
+                    {=# auto_retry =}
+                    need_retry = false;
+                    {=/ auto_retry =}
+                    {=/ low_memory =}
+                }
+                {=# has_timer =}
+                if (obj.type == SYNCTIME) {
+                    sys_timer_can_sync = true;
+                    sys_timer_s = (uint32_t)atol((const char *)obj.data);
+                }
+                {=/ has_timer =}
+                if (obj.type == CTRLREQ) {
+                    {=# ctrl_mode =}
+                    mainAction();
+                    {=/ ctrl_mode =}
+                    send_packet_0(CTRLRES);
+                }
+                if (obj.type == CTRLREQ1) {
+                    {=^ low_memory =}
+                    {=# auto_retry =}
+                    if (!need_retry) {
+                        send_packet_0(PING);
+                    }
+                    {=/ auto_retry =}
+                    {=/ low_memory =}
+                    {=# ctrl_mode =}
+                    mainAction();
+                    {=/ ctrl_mode =}
+                    send_packet_0(CTRLRES);
+                }
+            }
+            readedLen = 0;
+        }
+        if (readedLen > MAX_GL_PAYLOAD_LENGTH) {
+            {=# has_debug =}
+            #ifdef DEBUG_SERIAL
+            DEBUG_SERIAL.println(F("Error: payload to large"));
+            #endif
+            {=/ has_debug =}
+            readedLen = 0;
+        }
+    }
+
+    if (!givelink_context_authed()) {
+        {=# has_app =}
+        requireReportAttribute = true;
+        {=/ has_app =}
+        if (auth_timer_ms + AUTH_DELAY_MS < get_cache_time_ms()) {
+            send_packet_0(AUTHREQ);
+            auth_timer_ms = get_cache_time_ms();
+        }
+    {=^ ctrl_mode =}
+    } else {
+        mainAction();
+    {=/ ctrl_mode =}
+    }
+
+    {=/ has_app =}
+    {=# actions =}
+    {=# has_on =}
+    if ({= on =} && {= fn =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
+    {=/ has_on =}
+    {=^ has_on =}
+    if ({= fn =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
+    {=/ has_on =}
+        {= fn =}();
+        {= fn =}_timer_ms = get_cache_time_ms();
+    }
+    {=/ actions =}
+    {=# has_gpio =}
+    {=# gpios =}
+    {=# bind =}
+    {=# is_fn =}
+    gpio_reading = digitalRead({= pin =});
+    if (gpio_reading != last_gpio_{= name =}_state) {
+        last_gpio_{= name =}_debounce_time_ms = get_cache_time_ms();
+    }
+    if ((get_cache_time_ms() - last_gpio_{= name =}_debounce_time_ms) > DEBOUNCE_DELAY_MS) {
+        if (gpio_reading != gpio_{= name =}_state) {
+          gpio_{= name =}_state = gpio_reading;
+          if (gpio_{= name =}_state == {= emit =}) {
+            {= fn =}();
+          }
+        }
+    }
+    last_gpio_{= name =}_state = gpio_reading;
+
+    {=/ is_fn =}
+    {=# is_link =}
+    {=# reverse =}
+    if (attr_{= link =} == gpio_{= name =}_state) {
+        if (attr_{= link =} == {= open =}) {
+            close_gpio_{= name =}_raw();
+        } else {
+            open_gpio_{= name =}_raw();
+        }
+    }
+    {=/ reverse =}
+    {=^ reverse =}
+    if (attr_{= link =} != gpio_{= name =}_state) {
+        if (attr_{= link =} == {= open =}) {
+            open_gpio_{= name =}_raw();
+        } else {
+            close_gpio_{= name =}_raw();
+        }
+    }
+    {=/ reverse =}
+
+    {=/ is_link =}
+    {=# is_pwm =}
+    if (attr_{= link =} != gpio_{= name =}_state) {
+      gpio_{= name =}_state = attr_{= link =};
+      analogWrite({= pin =}, gpio_{= name =}_state);
+    }
+    {=/ is_pwm =}
+    {=/ bind =}
+    {=/ gpios =}
+    {=/ has_gpio =}
+    {=# agpios =}
+    {=# bind =}
+    {=# is_link =}
+    metric_{= link =} = analogRead({= pin =});
+    {=/ is_link =}
+    {=# is_no_bind =}
+    agpio_{= name =}_value = analogRead({= pin =});
+    {=/ is_no_bind =}
+    {=/ bind =}
+    {=/ agpios =}
+    {=# uarts =}
+    {= name =}_poll();
+    {=/ uarts =}
+
+    {=# has_timer =}
+    if (sys_timer_s > 0 && next_timer_event_ms <= get_cache_time_ms()) {
+        {=# timers =}
+        processTimer({= addr0 =}, {= addr1 =}, {= addr2 =}, &timer_{= name =}_sched);
+        if (timer_action == 1) {
+            {= fn0 =}();
+        } else if (timer_action == 2) {
+            {= fn1 =}();
+        }
+
+        {=/ timers =}
+        if (next_timer_event_ms < get_cache_time_ms()) {
+            next_timer_event_ms += 60000;
+        }
+    }
+    {=/ has_timer =}
+}
+
+func get_current_time_ms() unsigned long {
+    return millis();
+}
+
+func get_cache_time_ms() unsigned long {
+    return current_time_ms;
+}
+
+{=# has_app =}
+// -1 non num
+//  0 int
+//  1 float
+func isnum(const char *buf) int {
+    int length = strlen(buf);
+
+    if (length == 0) {
+        return -1;
+    }
+
+    if (!isdigit(buf[0])) {
+        if (length == 1) {
+            return -1;
+        }
+        if (buf[0] != '-') {
+            return -1;
+        }
+    }
+
+    if (buf[0] != '-' && !isdigit(buf[0])) {
+        return -1;
+    }
+
+    int f = 0;
+
+    for (int i = 1; i < length; i++) {
+        if (!isdigit(buf[i])) {
+            if (buf[i] == '.') {
+                if (f == 1) {
+                    return -1;
+                } else {
+                    f = 1;
+                }
+            } else {
+                return -1;
+            }
+        }
+    }
+
+    return f;
+}
+
+{=# has_float =}
+func is_valid_float(float number, float min, float max) bool {
+    if (isnan(number)) return false;
+    if (isinf(number)) return false;
+    if (number > max) return false;  // constant determined empirically
+    if (number < min) return false;  // constant determined empirically
+    return true;
+}
+
+{=/ has_float =}
+func mainAction() void {
+    {=^ low_memory =}
+    {=# auto_retry =}
+    if (need_retry) {
+        if (retry_timer_ms + 1000 < get_cache_time_ms()) {
+            retry_timer_ms = get_cache_time_ms();
+            send_packet_raw(retryPayload, retryLen);
+        }
+        return;
+    }
+    {=/ auto_retry =}
+    {=/ low_memory =}
+    {=# has_app =}
+    reportAttribute(requireReportAttribute);
+    if (requireReportAttribute) {
+        requireReportAttribute = false;
+    }
+    {=# has_metric =}
+    if (metric_timer_ms + METRIC_DELAY_MS < get_cache_time_ms()) {
+        requireReportMetric = true;
+    }
+    if (reportMetric(requireReportMetric)) {
+        metric_timer_ms = get_cache_time_ms();
+        requireReportMetric = false;
+    }
+    {=/ has_metric =}
+    {=/ has_app =}
+
+    if (ping_timer_ms + PING_DELAY_MS < get_cache_time_ms()) {
+        send_packet_0(PING);
+        ponged = false;
+        ping_timer_ms = get_cache_time_ms();
+        pong_timer_ms = get_cache_time_ms();
+    }
+
+    if (ponged) {
+        ping_failed = 0;
+    } else {
+        if (pong_timer_ms + PONG_DELAY_MS < get_cache_time_ms()) {
+            ping_failed += 1;
+            pong_timer_ms = get_cache_time_ms();
+
+            if (ping_failed > MAX_PING_FAILED) {
+                PING_FAILED_CB();
+            }
+        }
+    }
+    {=# has_timer =}
+    if (sys_timer_can_sync) {
+        if (sys_timer_s < 1000) {
+            send_packet_0(SYNCTIME);
+            sys_timer_can_sync = false;
+        }
+
+        if (sys_timer_sync_ms + SYNCTIME_DELAY_MS < get_cache_time_ms()) {
+            send_packet_0(SYNCTIME);
+            sys_timer_can_sync = false;
+        }
+    }
+    {=/ has_timer =}
+}
+
+func noop() void {}
+
+func send_packet_raw(uint8_t * buf, uint16_t length) void {
+    delay(SENDED_DELAY_MS);
+    for (uint16_t i = 0; i < length; i ++) {
+        GL_SERIAL.write(buf[i]);
+    }
+    GL_SERIAL.write('\r');
+    GL_SERIAL.write('\n');
+    GL_SERIAL.flush();
+}
+
+func send_packet() void {
+    {=# has_debug =}
+    #ifdef DEBUG_SERIAL
+    DEBUG_SERIAL.print(F("Send Id: "));
+    DEBUG_SERIAL.print(obj.id);
+    DEBUG_SERIAL.print(F(" Type: "));
+    DEBUG_SERIAL.print(obj.type);
+    if (givelink_get_data_length() > 0) {
+        DEBUG_SERIAL.print(F(" Data: "));
+        for (uint16_t i = 0; i < givelink_get_data_length(); i ++) {
+            DEBUG_SERIAL.write(obj.data[i]);
+        }
+    }
+    DEBUG_SERIAL.println();
+    #endif
+    {=/ has_debug =}
+    {=# low_memory =}
+    givelink_to_binary(readedPayload);
+    send_packet_raw(readedPayload, givelink_get_length());
+    {=/ low_memory =}
+    {=^ low_memory =}
+    {=# auto_retry =}
+    if (obj.type == ATTRIBUTE || obj.type == TELEMETRY) {
+        givelink_to_binary(retryPayload);
+        retryLen = givelink_get_length();
+        need_retry = true;
+        retry_timer_ms = get_cache_time_ms();
+
+        send_packet_raw(retryPayload, retryLen);
+    } else {
+        givelink_to_binary(sendedPayload);
+        send_packet_raw(sendedPayload, givelink_get_length());
+    }
+    {=/ auto_retry =}
+    {=^ auto_retry =}
+    givelink_to_binary(sendedPayload);
+    send_packet_raw(sendedPayload, givelink_get_length());
+    {=/ auto_retry =}
+    {=/ low_memory =}
+}
+
+func send_packet_0(const uint8_t type) void {
+    next_packet(type);
+    send_packet();
+}
+
+func send_packet_1(const uint8_t type, const char *data, const int length) void {
+    next_packet(type);
+    givelink_set_data((const uint8_t*)data, length);
+    send_packet();
+}
+
+func send_packet_rsp(const char *data) void {
+    givelink_set_type(RESPONSE);
+    givelink_set_data((const uint8_t*)wantSendData, get_json_length(data));
+    send_packet();
+}
+
+func next_packet(const uint8_t type) void {
+    givelink_reset();
+    givelink_set_id(lastPayloadId);
+    givelink_set_type(type);
+    lastPayloadId ++;
+}
+
+func FC(const __FlashStringHelper *ifsh) char * {
+    PGM_P p = reinterpret_cast<PGM_P>(ifsh);
+    size_t n = 0;
+    while (1) {
+        unsigned char c = pgm_read_byte(p++);
+        wantSendDataTpl[n] = c;
+        n++;
+        if (c == 0) break;
+    }
+    return wantSendDataTpl;
+}
+
+func ltrim(char *s) char * {
+  while (*s == ' ') s++;
+  return s;
+}
+
+func jsoneq(const char *json, jsmntok_t *token, const char *s) bool {
+  if (token->type == JSMN_STRING && (int)strlen(s) == token->end - token->start &&
+      strncmp(json + token->start, s, token->end - token->start) == 0) {
+    return true;
+  }
+  return false;
+}
+
+func jsonfind(const char *json, jsmntok_t *tokens, int num_tokens, const char *name) int {
+    /* Assume the top-level element is an object */
+    if (num_tokens < 1 || tokens[0].type != JSMN_OBJECT) {
+      return 0;
+    }
+    /* Loop over all keys of the root object */
+    for (int i = 1; i < num_tokens; i++) {
+        if (jsoneq(json, &tokens[i], name)) {
+            return i + 1;
+        }
+    }
+    return 0;
+}
+
+func jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char *name, char *value) bool {
+    int token = jsonfind(json, tokens, num_tokens, name);
+
+    if (token > 1) {
+        memcpy(value, json+tokens[token].start, tokens[token].end - tokens[token].start);
+        value[tokens[token].end - tokens[token].start] = '\0';
+        return true;
+    }
+    return false;
+}
+
+{=# attrs =}
+func set_attr_{= name =}_raw({= type =} unscaled_value) void {
+    attr_{= name =}_force = true;
+    attr_{= name =} = unscaled_value * {= scale =};
+    {=# keep =}
+    {=# onebyte =}
+    EEPROM.write({= addr =}, attr_{= name =});
+    {=/ onebyte =}
+    {=^ onebyte =}
+    EEPROM.put({= addr =}, attr_{= name =});
+    {=/ onebyte =}
+    {=/ keep =}
+    #ifdef EEPROM_NEED_COMMIT
+    EEPROM.commit();
+    #endif
+}
+
+func set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) bool {
+    if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
+        int tp = isnum(requestValue);
+        if (tp == -1) {
+            sprintf(retval, FC(F("{\"err\": \"data only support number\"}")));
+            return false;
+        }
+        {=# is_float =}
+        float tmp;
+        if (tp == 0) {
+            tmp = (float)atol(requestValue);
+        } else {
+            tmp = (float)atof(requestValue);
+        }
+        if (!is_valid_float(tmp, {= min =}, {= max =})) {
+        {=/ is_float =}
+        {=^ is_float =}
+        long tmp;
+        if (tp == 0) {
+            tmp = (long)atol(requestValue);
+        } else {
+            tmp = (long)atof(requestValue);
+        }
+        if (tmp < {= min =} || tmp > {= max =}) {
+        {=/ is_float =}
+          sprintf(retval, FC(F("{\"err\": \"data must between: [{= min =}, {= max =}]\"}")));
+          return false;
+        }
+        set_attr_{= name =}_raw(({= type =})tmp);
+    }
+    get_attr_{= name =}(retval);
+    return true;
+}
+
+func get_attr_{= name =}(char *retval) bool {
+    {=^ is_float =}
+    {=# is_long =}
+    sprintf(retval, FC(F("{\"{= name =}\": %ld}")), ({= type =})attr_{= name =} / {= scale =});
+    {=/ is_long =}
+    {=^ is_long =}
+    sprintf(retval, FC(F("{\"{= name =}\": %d}")), ({= type =})attr_{= name =} / {= scale =});
+    {=/ is_long =}
+    {=/ is_float =}
+    {=# is_float =}
+    dtostrf(({= type =})attr_{= name =} / {= scale =}, {= width =}, {= prec =}, requestValue);
+    sprintf(retval, FC(F("{\"{= name =}\": %s}")), ltrim(requestValue));
+    {=/ is_float =}
+    return true;
+}
+
+{=/ attrs =}
+{=# metrics =}
+{=# auto =}
+func set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) bool {
+    if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
+        int tp = isnum(requestValue);
+        if (tp == -1) {
+            sprintf(retval, FC(F("{\"err\": \"data only support number\"}")));
+            return false;
+        }
+        {=# is_float =}
+        float tmp;
+        if (tp == 0) {
+            tmp = (float)atol(requestValue);
+        } else {
+            tmp = (float)atof(requestValue);
+        }
+        if (!is_valid_float(tmp, {= min_threshold =}, {= max_threshold =})) {
+        {=/ is_float =}
+        {=^ is_float =}
+        long tmp;
+        if (tp == 0) {
+            tmp = (long)atol(requestValue);
+        } else {
+            tmp = (long)atof(requestValue);
+        }
+        if (tmp < {= min_threshold =} || tmp > {= max_threshold =}) {
+        {=/ is_float =}
+          sprintf(retval, FC(F("{\"err\": \"data must between: [{= min_threshold =}, {= max_threshold =}]\"}")));
+          return false;
+        }
+        metric_{= name =}_threshold = ({= type =})tmp;
+        metric_{= name =}_threshold_force = true;
+        {=# onebyte =}
+        EEPROM.write({= addr =}, metric_{= name =}_threshold);
+        {=/ onebyte =}
+        {=^ onebyte =}
+        EEPROM.put({= addr =}, metric_{= name =}_threshold);
+        {=/ onebyte =}
+        #ifdef EEPROM_NEED_COMMIT
+        EEPROM.commit();
+        #endif
+    }
+    get_metric_{= name =}_threshold(retval);
+    return true;
+}
+
+func get_metric_{= name =}_threshold(char *retval) bool {
+    {=^ is_float =}
+    {=# is_long =}
+    sprintf(retval, FC(F("{\"{= name =}_threshold\": %ld}")), metric_{= name =}_threshold);
+    {=/ is_long =}
+    {=^ is_long =}
+    sprintf(retval, FC(F("{\"{= name =}_threshold\": %d}")), metric_{= name =}_threshold);
+    {=/ is_long =}
+    {=/ is_float =}
+    {=# is_float =}
+    dtostrf(metric_{= name =}_threshold, {= width =}, {= prec =}, requestValue);
+    sprintf(retval, FC(F("{\"{= name =}_threshold\": %s}")), ltrim(requestValue));
+    {=/ is_float =}
+    return true;
+}
+
+{=/ auto =}
+func check_metric_{= name =}() bool {
+    {=# is_float =}
+    return is_valid_float(metric_{= name =}, {= min =}, {= max =});
+    {=/ is_float =}
+    {=^ is_float =}
+    return metric_{= name =} >= {= min =} && metric_{= name =} <= {= max =};
+    {=/ is_float =}
+}
+
+func invalid_metric_{= name =}_error(char *retval) bool {
+    sprintf(retval, FC(F("{\"err\": \"{= name =} is invalid\"}")));
+    return false;
+}
+
+func get_metric_{= name =}(char *retval) bool {
+    if (!check_metric_{= name =}()) {
+        return invalid_metric_{= name =}_error(retval);
+    }
+    {=^ is_float =}
+    {=# is_long =}
+    sprintf(retval, FC(F("{\"{= name =}\": %ld}")), metric_{= name =});
+    {=/ is_long =}
+    {=^ is_long =}
+    sprintf(retval, FC(F("{\"{= name =}\": %d}")), metric_{= name =});
+    {=/ is_long =}
+    {=/ is_float =}
+    {=# is_float =}
+    dtostrf(metric_{= name =}, {= width =}, {= prec =}, requestValue);
+    sprintf(retval, FC(F("{\"{= name =}\": %s}")), ltrim(requestValue));
+    {=/ is_float =}
+    return true;
+}
+
+{=/ metrics =}
+{=/ has_app =}
+{=# gpios =}
+{=# bind =}
+{=# is_link =}
+func open_gpio_{= name =}_raw() void {
+    gpio_{= name =}_state = {= open =};
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+}
+
+func close_gpio_{= name =}_raw() void {
+    gpio_{= name =}_state = {= close =};
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+}
+
+func open_gpio_{= name =}() void {
+    {=# reverse =}
+    set_attr_{= link =}_raw({= close =});
+    {=/ reverse =}
+    {=^ reverse =}
+    set_attr_{= link =}_raw({= open =});
+    {=/ reverse =}
+}
+
+func close_gpio_{= name =}() void {
+    {=# reverse =}
+    set_attr_{= link =}_raw({= open =});
+    {=/ reverse =}
+    {=^ reverse =}
+    set_attr_{= link =}_raw({= close =});
+    {=/ reverse =}
+}
+
+func toggle_gpio_{= name =}() void {
+    if (attr_{= link =} == {= open =}) {
+        set_attr_{= link =}_raw({= close =});
+    } else {
+        set_attr_{= link =}_raw({= open =});
+    }
+}
+
+{=/ is_link =}
+{=# is_no_bind =}
+func open_gpio_{= name =}() void {
+    gpio_{= name =}_state = {= open =};
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+}
+
+func close_gpio_{= name =}() void {
+    gpio_{= name =}_state = {= close =};
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+}
+
+func toggle_gpio_{= name =}() void {
+    if (gpio_{= name =}_state == {= open =}) {
+        close_gpio_{= name =}();
+    } else {
+        open_gpio_{= name =}();
+    }
+}
+
+{=/ is_no_bind =}
+{=/ bind =}
+{=/ gpios =}
+{=# uarts =}
+func {= name =}_poll() void {
+    while ({= name =}.available() > 0) {
+        uint8_t outByte = {= name =}.read();
+        {=# readers =}
+        {=# has_on =}
+        if ({= on =}) {
+            if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
+                {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
+                {= name =}_read_{= index =}_buffer_len = 0;
+                is_{= name =}_readed = true;
+            }
+        }
+        {=/ has_on =}
+        {=^ has_on =}
+        if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
+            {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
+            {= name =}_read_{= index =}_buffer_len = 0;
+            is_{= name =}_readed = true;
+        }
+        {=/ has_on =}
+        {=/ readers =}
+    }
+}
+
+{=# writers =}
+func {= name =}_write_{= wname =}() void {
+    is_{= name =}_write_{= wname =} = true;
+    is_{= name =}_readed = false;
+    {=# bytes =}
+    {= name =}.write((uint8_t)0x{= . =});
+    {=/ bytes =}
+}
+
+{=/ writers =}
+func {= name =}_is_valid_index() bool {
+    {=# writers =}
+    {=# auto =}
+    {=# has_on =}
+    if ({= on =}) {
+        if ({= name =}_write_index == {= index =}) {
+            return true;
+        }
+    }
+    {=/ has_on =}
+    {=^ has_on =}
+    if ({= name =}_write_index == {= index =}) {
+        return true;
+    }
+    {=/ has_on =}
+    {=/ auto =}
+    {=/ writers =}
+    return false;
+}
+
+func {= name =}_write_next_index() void {
+    for (int i = 0; i < {= wcount =}; i ++) {
+        {= name =}_write_index += 1;
+        if ({= name =}_write_index >= {= wcount =}) {
+            {= name =}_write_index = 0;
+        }
+        if ({= name =}_is_valid_index()) {
+            break;
+        }
+    }
+}
+
+func {= name =}_write() void {
+    {=# writers =}
+    {=# auto =}
+    is_{= name =}_write_{= wname =} = false;
+    {=/ auto =}
+    {=/ writers =}
+    {=# writers =}
+    {=# auto =}
+    {=# has_on =}
+    if ({= on =}) {
+        if ({= name =}_write_index == {= index =}) {
+            {= name =}_write_{= wname =}();
+        }
+    }
+    {=/ has_on =}
+    {=^ has_on =}
+    if ({= name =}_write_index == {= index =}) {
+        {= name =}_write_{= wname =}();
+    }
+    {=/ has_on =}
+    {=/ auto =}
+    {=/ writers =}
+    {= name =}_write_next_index();
+}
+
+{=/ uarts =}
+{=# has_app =}
+func processRequest(const char *json, int length, char *retval) bool {
+    /* Prepare parser */
+    jsmn_init(&requestJsmnParser);
+    int num_tokens = jsmn_parse(&requestJsmnParser, json, length, requestJsmnTokens, MAX_NUM_TOKENS);
+
+    if (num_tokens < 0) {
+        sprintf(retval, FC(F("{\"err\": \"Failed to parse JSON: %d\"}")), num_tokens);
+        return false;
+    }
+
+    int token = jsonfind(json, requestJsmnTokens, num_tokens, "method");
+
+    if (token > 1) {
+        {=# commands =}
+        if (jsoneq(json, &requestJsmnTokens[token], FC(F("{= name =}")))) {
+            {=# flag =}
+            {=# retval =}
+            {=# json =}
+            if ({= fn =}(json, requestJsmnTokens, num_tokens, retval)) {
+            {=/ json =}
+            {=^ json =}
+            if ({= fn =}(retval)) {
+            {=/ json =}
+            {=/ retval =}
+            {=^ retval =}
+            {=# json =}
+            if ({= fn =}(json, requestJsmnTokens, num_tokens)) {
+            {=/ json =}
+            {=^ json =}
+            if ({= fn =}()) {
+            {=/ json =}
+            {=/ retval =}
+                return true;
+            } else {
+                {=# error =}
+                sprintf(retval, FC(F("{\"err\": \"{= error =}\"}")));
+                {=/ error =}
+                return false;
+            }
+            {=/ flag =}
+        }
+        {=/ commands =}
+        {=# attrs =}
+        {=# gen_set =}
+        if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_{= name =}")))) {
+            return set_attr_{= name =}(json, requestJsmnTokens, num_tokens, retval);
+        }
+        {=/ gen_set =}
+        if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}")))) {
+            return get_attr_{= name =}(retval);
+        }
+        {=/ attrs =}
+        {=# metrics =}
+        {=# auto =}
+        if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_{= name =}_threshold")))) {
+            return set_metric_{= name =}_threshold(json, requestJsmnTokens, num_tokens, retval);
+        }
+        if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}_threshold")))) {
+            return get_metric_{= name =}_threshold(retval);
+        }
+        {=/ auto =}
+        if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}")))) {
+            return get_metric_{= name =}(retval);
+        }
+        {=/ metrics =}
+        {=# has_timer =}
+        if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_timer")))) {
+            return getset_timer(json, requestJsmnTokens, num_tokens, retval, true);
+        }
+        if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_timer")))) {
+            return getset_timer(json, requestJsmnTokens, num_tokens, retval, false);
+        }
+        {=/ has_timer =}
+    }
+    return false;
+}
+
+{=^ low_memory =}
+{=# has_metric =}
+func reportMetric(bool force) bool {
+    bool wantSend = false;
+    int total_length = 0;
+    wantSendData[0] = '{';
+    total_length += 1;
+
+    {=# metrics =}
+    {=# auto =}
+    if ((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || force) {
+        tempSendData[0] = '\0';
+        if (get_metric_{= name =}(tempSendData)) {
+            merge_json(wantSendData, tempSendData, &total_length);
+            wantSend = true;
+            last_metric_{= name =} = metric_{= name =};
+        }
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+    if (wantSend) {
+        wantSendData[total_length-1] = '}';
+        wantSendData[total_length] = '\0';
+
+        send_packet_1(TELEMETRY, wantSendData, total_length);
+        return true;
+    }
+    return false;
+}
+
+{=/ has_metric =}
+{=# has_app =}
+func reportAttribute(bool force) bool {
+    int total_length = 0;
+    bool wantSend = false;
+    wantSendData[0] = '{';
+    total_length += 1;
+
+    {=# attrs =}
+    if (last_attr_{= name =} != attr_{= name =} || force || attr_{= name =}_force) {
+        tempSendData[0] = '\0';
+        if (get_attr_{= name =}(tempSendData)) {
+            merge_json(wantSendData, tempSendData, &total_length);
+            wantSend = true;
+            last_attr_{= name =} = attr_{= name =};
+            attr_{= name =}_force = false;
+        }
+    }
+
+    {=/ attrs =}
+    {=# metrics =}
+    {=# auto =}
+    if (last_metric_{= name =}_threshold != metric_{= name =}_threshold || force || metric_{= name =}_threshold_force) {
+        tempSendData[0] = '\0';
+        if (get_metric_{= name =}_threshold(tempSendData)) {
+            merge_json(wantSendData, tempSendData, &total_length);
+            wantSend = true;
+            last_metric_{= name =}_threshold = metric_{= name =}_threshold;
+            metric_{= name =}_threshold_force = false;
+        }
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+    if (wantSend) {
+        wantSendData[total_length-1] = '}';
+        wantSendData[total_length] = '\0';
+
+        send_packet_1(ATTRIBUTE, wantSendData, total_length);
+        return true;
+    }
+    return false;
+}
+{=/ has_app =}
+{=/ low_memory =}
+{=# low_memory =}
+{=# has_metric =}
+func reportMetric(bool force) bool {
+    bool sended = false;
+    {=# metrics =}
+    {=# auto =}
+    if ((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || force) {
+        wantSendData[0] = '\0';
+        if (get_metric_{= name =}(wantSendData)) {
+            last_metric_{= name =} = metric_{= name =};
+            send_packet_1(TELEMETRY, wantSendData, get_json_length(wantSendData));
+            sended = true;
+        }
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+    return sended;
+}
+
+{=/ has_metric =}
+{=# has_app =}
+func reportAttribute(bool force) bool {
+    bool sended = true;
+    {=# attrs =}
+    if (last_attr_{= name =} != attr_{= name =} || force) {
+        wantSendData[0] = '\0';
+        if (get_attr_{= name =}(wantSendData)) {
+            sended = true;
+            last_attr_{= name =} = attr_{= name =};
+            send_packet_1(ATTRIBUTE, wantSendData, get_json_length(wantSendData));
+        }
+    }
+
+    {=/ attrs =}
+    {=# metrics =}
+    {=# auto =}
+    if (last_metric_{= name =}_threshold != metric_{= name =}_threshold || force) {
+        wantSendData[0] = '\0';
+        if (get_metric_{= name =}_threshold(wantSendData)) {
+            sended = true;
+            last_metric_{= name =}_threshold = metric_{= name =}_threshold;
+            send_packet_1(ATTRIBUTE, wantSendData, get_json_length(wantSendData));
+        }
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+    return sended;
+}
+{=/ has_app =}
+{=/ low_memory =}
+{=/ has_app =}
+
+{=# has_timer =}
+func swap_timer_event(uint32_t delta_ms) void {
+    if (delta_ms <= get_cache_time_ms()) {
+        return;
+    }
+    if (next_timer_event_ms > get_cache_time_ms()) {
+        if (next_timer_event_ms > delta_ms) {
+            next_timer_event_ms = delta_ms;
+        }
+    } else {
+        next_timer_event_ms = delta_ms;
+    }
+}
+
+func get_value(const char *json, jsmntok_t *tokens, int num_tokens, const char * name) uint32_t {
+    if (jsonlookup(json, tokens, num_tokens, name, requestValue)) {
+        int tp = isnum(requestValue);
+        if (tp == -1) {
+            return 0;
+        }
+        long tmp;
+        if (tp == 0) {
+            tmp = (long)atol(requestValue);
+        } else {
+            tmp = (long)atof(requestValue);
+        }
+
+        if (tmp > 0) {
+            return (uint32_t) tmp;
+        }
+    }
+    return 0;
+}
+
+func set_timer_raw(const char *json, jsmntok_t *tokens, int num_tokens, int addr0, int addr1, int addr2) void {
+    timer_schedat_s  = get_value(json, tokens, num_tokens, "sched_at");
+    timer_period_s   = get_value(json, tokens, num_tokens, "period");
+    timer_duration_s = get_value(json, tokens, num_tokens, "duration");
+    EEPROM.put(addr0, timer_schedat_s);
+    EEPROM.put(addr1, timer_period_s);
+    EEPROM.put(addr2, timer_duration_s);
+    #ifdef EEPROM_NEED_COMMIT
+    EEPROM.commit();
+    #endif
+    timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
+    swap_timer_event(timer_delta0_ms);
+}
+
+func get_timer_raw(int addr0, int addr1, int addr2, char *retval) bool {
+    EEPROM.get(addr0, timer_schedat_s);
+    EEPROM.get(addr1, timer_period_s);
+    EEPROM.get(addr2, timer_duration_s);
+    sprintf(retval, FC(F("{\"sched_at\": %ld, \"period\": %ld, \"duration\": %ld}")), timer_schedat_s, timer_period_s, timer_duration_s);
+    return true;
+}
+
+func getset_timer(const char *json, jsmntok_t *tokens, int num_tokens, char *retval, bool set) bool {
+    int token = jsonfind(json, tokens, num_tokens, "name");
+    if (token > 1) {
+        {=# timers =}
+        if (jsoneq(json, &tokens[token], FC(F("{= name =}")))) {
+            if (set) {
+                set_timer_raw(json, tokens, num_tokens, {= addr0 =}, {= addr1 =}, {= addr2 =});
+            }
+            return get_timer_raw({= addr0 =}, {= addr1 =}, {= addr2 =}, retval);
+        }
+        {=/ timers =}
+    }
+    return false;
+}
+
+func finishTimer(int addr0, int addr1, bool *sched) void {
+    if (*sched) {
+        timer_delta1_ms = (timer_schedat_s - sys_timer_s + timer_duration_s) * 1000 + sys_timer_sync_ms;
+        if (timer_delta1_ms <= get_cache_time_ms()) {
+            *sched = false;
+            timer_action = 2;
+            EEPROM.get(addr1, timer_period_s);
+            if (timer_period_s > 0) {
+                timer_schedat_s += timer_period_s;
+                EEPROM.put(addr0, timer_schedat_s);
+                #ifdef EEPROM_NEED_COMMIT
+                EEPROM.commit();
+                #endif
+                timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
+            }
+        }
+    }
+}
+
+func processTimer(int addr0, int addr1, int addr2, bool * sched) void {
+    processTimer0(addr0, addr1, addr2, sched);
+    swap_timer_event(timer_delta0_ms);
+    swap_timer_event(timer_delta1_ms);
+}
+
+func processTimer0(int addr0, int addr1, int addr2, bool * sched) void {
+    timer_action = 0;
+    EEPROM.get(addr0, timer_schedat_s);
+    EEPROM.get(addr2, timer_duration_s);
+
+    if (timer_duration_s == 0) {
+        return;
+    }
+
+    if (timer_schedat_s < sys_timer_s || *sched) {
+        finishTimer(addr0, addr1, sched);
+        return;
+    }
+
+    timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
+    timer_delta1_ms = timer_duration_s * 1000 + timer_delta0_ms;
+
+    if (timer_delta0_ms <= get_cache_time_ms() && timer_delta1_ms > get_cache_time_ms()) {
+        *sched = true;
+        timer_action = 1;
+    }
+}
+
+{=/ has_timer =}

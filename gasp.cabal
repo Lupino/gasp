@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 43fb259c0e22c3484fffb9d91f5147d370a968e3cd1b85c7404a54a3fe9dbcf4
+-- hash: 3391ee43b40f0f6326f089b239495a336377104df7bbf26e5b64ce9014f46944
 
 name:           gasp
 version:        0.1.0.0
@@ -24,6 +24,7 @@ data-files:
     template/app/api.yaml
     template/app/app.ino
     template/app/doc.md
+    template/combined.gasp
 data-dir:       data/
 
 source-repository head
