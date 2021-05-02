@@ -16,19 +16,25 @@ valueParser = do
   strip <$> many (noneOf "\n\r")
 
 
+argvP :: String -> String -> Parser String
+argvP s e = do
+  argv <- block s e
+  return $ s ++ argv ++ e
+
+
 -- | name [type] = value
 constant :: Parser Constant
 constant = do
   name  <- identifier
-  argv  <- option "" $ block "(" ")"
+  argv0  <- option "" $ argvP "[" "]"
+  argv1  <- option "" $ argvP "(" ")"
   tp    <- tpParser
   whiteSpace
   value <- option "" valueParser
   whiteSpace
 
   return Constant
-    { constName  = name
+    { constName  = name ++ argv0 ++ argv1
     , constValue = value
-    , constArgv  = argv
     , constType  = tp
     }

@@ -22,7 +22,7 @@
 #define {= name =}
 {=/ has_type =}
 {=# has_type =}
-{= type =} {= name =}{= argv =};
+{= type =} {= name =};
 {=/ has_type =}
 {=/ has_value =}
 {=/ consts =}
