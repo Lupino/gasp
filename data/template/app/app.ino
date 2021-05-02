@@ -6,12 +6,22 @@
 
 {=/ has_app =}
 {=# consts =}
+{=# has_value =}
 {=^ has_type =}
 #define {= name =} {= value =}
 {=/ has_type =}
 {=# has_type =}
 {= type =} {= name =} = {= value =};
 {=/ has_type =}
+{=/ has_value =}
+{=^ has_value =}
+{=^ has_type =}
+#define {= name =}
+{=/ has_type =}
+{=# has_type =}
+{= type =} {= name =}{= argv =};
+{=/ has_type =}
+{=/ has_value =}
 {=/ consts =}
 {=# inits =}
 {=& code =}
