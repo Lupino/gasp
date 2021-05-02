@@ -9,23 +9,24 @@ import           Gasp.Flag          (initFlag)
 import           Gasp.Function
 import           Lexer
 import           Parser.Common
-import           Text.Parsec        (anyChar, manyTill, option, try)
+import           Text.Parsec        (many, noneOf, option)
 
-argvParser :: Parser String
-argvParser = do
-  _ <- symbol "("
-  strip <$> manyTill anyChar (try (symbol ")"))
+tpParser :: Parser String
+tpParser = fixed . strip <$> many (noneOf "{}")
+  where fixed [] = "bool"
+        fixed v  = v
 
--- func funcName [(argv)] do
+-- func funcName [(argv)] [rettp] do
 --
 -- done
 
 function :: Parser Function
 function = do
     reserved reservedNameFunction
-    name <- identifier
-    argv <- option "" argvParser
-    code <- gaspBlockClosure
+    name  <- identifier
+    argv  <- option ""     $ block "(" ")"
+    rettp <- option "bool" tpParser
+    code  <- gaspBlockClosure
 
 
     return Function
@@ -33,4 +34,5 @@ function = do
         , funcCode = Text.pack code
         , funcArgv = argv
         , funcFlag = initFlag name
+        , funcRet  = rettp
         }

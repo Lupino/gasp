@@ -23,6 +23,7 @@ data Function = Function
     , funcCode :: !Text
     , funcFlag :: !Flag
     , funcArgv :: !String
+    , funcRet  :: !String
     } deriving (Show, Eq)
 
 instance ToJSON Function where
@@ -33,6 +34,7 @@ instance ToJSON Function where
         , "argv"     .= funcArgv func
         , "has_argv" .= not (null $ funcArgv func)
         , "return"   .= lastReturn (funcCode func)
+        , "rettp"    .= funcRet func
         ]
 
 lastReturn :: Text -> Bool
