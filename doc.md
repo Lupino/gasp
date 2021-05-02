@@ -18,14 +18,6 @@ app appName {
 name[(argv)] [type] = value
 ```
 
-## init
-
-```
-init {
-// you init code
-}
-```
-
 ## import
 
 ```

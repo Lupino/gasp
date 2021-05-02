@@ -14,7 +14,6 @@ import           Parser.Every       (every)
 import           Parser.Function    (function)
 import           Parser.Gpio        (gpio)
 import           Parser.Import      (importParser)
-import           Parser.Init        (initP)
 import           Parser.Loop        (loop)
 import           Parser.Metric      (metric)
 import           Parser.Require     (require)
@@ -32,7 +31,6 @@ expr
     <|> exprFunction
     <|> exprLoop
     <|> exprSetup
-    <|> exprInit
     <|> exprAttr
     <|> exprMetric
     <|> exprEvery
@@ -59,9 +57,6 @@ exprLoop = Gasp.ExprLoop <$> loop
 
 exprSetup :: Parser Gasp.Expr
 exprSetup = Gasp.ExprSetup <$> setup
-
-exprInit :: Parser Gasp.Expr
-exprInit = Gasp.ExprInit <$> initP
 
 exprAttr :: Parser Gasp.Expr
 exprAttr = Gasp.ExprAttr <$> attr

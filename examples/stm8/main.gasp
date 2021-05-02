@@ -141,9 +141,7 @@ rule metric_temperature < attr_high_temperature && metric_temperature > attr_low
     else later attr_close_delay close_gpio_relay
     on attr_relay_mode == 0
 
-init {
-bool can_emit_givelink_unauth = false;
-}
+can_emit_givelink_unauth bool = false
 
 func emit_givelink_unauth {
     if (can_emit_givelink_unauth) {

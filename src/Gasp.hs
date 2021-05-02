@@ -35,7 +35,6 @@ import           Gasp.Flag
 import           Gasp.Function
 import           Gasp.Gpio
 import           Gasp.Import
-import           Gasp.Init
 import           Gasp.Loop
 import           Gasp.Metric
 import           Gasp.Require
@@ -57,7 +56,6 @@ data Expr
     = ExprApp !App
     | ExprCmd !Command
     | ExprFunction !Function
-    | ExprInit !Init
     | ExprSetup !Setup
     | ExprLoop !Loop
     | ExprAttr !Attr
@@ -135,11 +133,6 @@ getLoops gasp = [loop | (ExprLoop loop) <- gaspExprs gasp]
 
 getSetups:: Gasp -> [Setup]
 getSetups gasp = [setup | (ExprSetup setup) <- gaspExprs gasp]
-
--- * Inits
-
-getInits:: Gasp -> [Init]
-getInits gasp = [initv | (ExprInit initv) <- gaspExprs gasp]
 
 constDebug :: [Constant] -> Bool
 constDebug [] = False
@@ -334,7 +327,6 @@ instance ToJSON Gasp where
         , "imports"     .= getImports gasp
         , "loops"       .= getLoops gasp
         , "setups"      .= getSetups gasp
-        , "inits"       .= inits
         , "attrs"       .= attrs
         , "has_attr"    .= hasAttr
         , "metrics"     .= metrics
@@ -371,7 +363,6 @@ instance ToJSON Gasp where
               uarts = getUarts gasp
               cmds = getCmds gasp
               funcs = getFunctions gasp
-              inits = getInits gasp
               consts = getConstants gasp
               hasMetric = not (null metrics)
               hasAttr = not (null attrs)

@@ -3,14 +3,29 @@
 #include <givelink.h>
 #include <jsmn.h>
 #include "dtostrf.h"
-
-{=/ has_app =}
-{=# use_eeprom =}
 #include <EEPROM.h>
 
-{=/ use_eeprom =}
+{=/ has_app =}
+{=# imports =}
+#include {=& name =}
+{=/ imports =}
 {=# consts =}
+{=# has_value =}
+{=^ has_type =}
 #define {= name =} {= value =}
+{=/ has_type =}
+{=# has_type =}
+{= type =} {= name =} = {= value =};
+{=/ has_type =}
+{=/ has_value =}
+{=^ has_value =}
+{=^ has_type =}
+#define {= name =}
+{=/ has_type =}
+{=# has_type =}
+{= type =} {= name =}{= argv =};
+{=/ has_type =}
+{=/ has_value =}
 {=/ consts =}
 {=# inits =}
 {=& code =}
@@ -40,7 +55,7 @@ unsigned long auth_timer_ms = 0;
 #endif
 
 #ifndef SENDED_DELAY_MS
-#define SENDED_DELAY_MS 200
+#define SENDED_DELAY_MS 100
 #endif
 
 unsigned long pong_timer_ms = 0;
@@ -67,7 +82,7 @@ uint8_t ping_failed = 0;
 #define MAX_TMPL_LENGTH {= max_tpl_len =}
 #endif
 
-#ifdef ARDUINO_RPI_PICO
+#ifdef ARDUINO_ARCH_RP2040
 #define EEPROM_NEED_COMMIT
 #ifndef EEPROM_SIZE
 #define EEPROM_SIZE 1024
@@ -97,8 +112,12 @@ uint16_t readedLen = 0;
 uint8_t  readedPayload[MAX_GL_PAYLOAD_LENGTH];
 {=^ low_memory =}
 uint8_t  sendedPayload[MAX_GL_PAYLOAD_LENGTH];
+{=# auto_retry =}
 uint8_t  retryPayload[MAX_GL_PAYLOAD_LENGTH];
 uint16_t retryLen = 0;
+bool need_retry = false;
+unsigned long retry_timer_ms = 0;
+{=/ auto_retry =}
 {=/ low_memory =}
 
 
@@ -118,13 +137,8 @@ char tempSendData[MAX_TMPL_LENGTH];
 unsigned long metric_timer_ms = 0;
 
 {=/ has_metric =}
-{=# use_eeprom =}
 bool requireReportAttribute = true;
 bool requireReportMetric = true;
-bool retry_payload = false;
-unsigned long retry_timer_ms = 0;
-
-{=/ use_eeprom =}
 {=/ has_app =}
 {=# attrs =}
 {= type =} attr_{= name =} = {= default =};
@@ -232,16 +246,20 @@ unsigned long current_time_ms = 0;
 unsigned long get_current_time_ms();
 unsigned long get_cache_time_ms();
 
+{=# has_app =}
+// -1 non num
+//  0 int
+//  1 float
+int isnum(const char *buf);
 {=# has_float =}
 bool is_valid_float(float number, float min, float max);
 {=/ has_float =}
-{=# has_app =}
 void mainAction();
 void noop();
 void send_packet_raw(uint8_t * buf, uint16_t length);
 void send_packet();
 void send_packet_0(const uint8_t type);
-void send_packet_1(const uint8_t type, const char *data);
+void send_packet_1(const uint8_t type, const char *data, const int length);
 void send_packet_rsp(const char *data);
 void next_packet(const uint8_t type);
 char * ltrim(char *s);
@@ -249,7 +267,10 @@ bool jsoneq(const char *json, jsmntok_t *token, const char *s);
 int jsonfind(const char *json, jsmntok_t *tokens, int num_tokens, const char *name);
 
 bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char *name, char *value);
+{=^ low_memory =}
 void merge_json(char *dst, char *src, int *total_length);
+{=/ low_memory =}
+int get_json_length(const char *src);
 {=# attrs =}
 void set_attr_{= name =}_raw({= type =} unscaled_value);
 bool set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
@@ -287,24 +308,24 @@ void toggle_gpio_{= name =}();
 {=/ gpios =}
 {=# functions =}
 {=# has_argv =}
-bool {= name =}({= argv =});
+{= type =} {= name =}({= argv =});
 {=/ has_argv =}
 {=^ has_argv =}
 {=# flag =}
 {=# retval =}
 {=# json =}
-bool {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
+{= type =} {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
 {=/ json =}
 {=^ json =}
-bool {= name =}(char *retval);
+{= type =} {= name =}(char *retval);
 {=/ json =}
 {=/ retval =}
 {=^ retval =}
 {=# json =}
-bool {= name =}(const char *json, jsmntok_t *tokens, int num_tokens);
+{= type =} {= name =}(const char *json, jsmntok_t *tokens, int num_tokens);
 {=/ json =}
 {=^ json =}
-bool {= name =}();
+{= type =} {= name =}();
 {=/ json =}
 {=/ retval =}
 {=/ flag =}
@@ -316,9 +337,7 @@ bool processRequest(const char *json, int length, char *retval);
 {=# has_metric =}
 bool reportMetric(bool force);
 {=/ has_metric =}
-{=# use_eeprom =}
 bool reportAttribute(bool force);
-{=/ use_eeprom =}
 {=/ has_app =}
 {=# uarts =}
 {=# writers =}
@@ -326,10 +345,6 @@ void {= name =}_write_{= wname =}();
 {=/ writers =}
 void {= name =}_write();
 {=/ uarts =}
-// -1 non num
-//  0 int
-//  1 float
-int isnum(const char *buf);
 {=# has_timer =}
 void swap_timer_event(uint32_t delta_ms);
 uint32_t get_value(const char *json, jsmntok_t *tokens, int num_tokens, const char * name);
@@ -361,8 +376,6 @@ void setup() {
     givelink_init(&obj, obj_buff);
     {=/ app =}
 
-    {=/ has_app =}
-    {=# use_eeprom =}
     #ifdef EEPROM_SIZE
     EEPROM_begin(EEPROM_SIZE);
     #endif
@@ -390,7 +403,6 @@ void setup() {
 
     {=/ keep =}
     {=/ attrs =}
-    {=# has_app =}
     {=# metrics =}
     {=# auto =}
     {=# onebyte =}
@@ -415,9 +427,8 @@ void setup() {
 
     {=/ auto =}
     {=/ metrics =}
-    {=/ has_app =}
 
-    {=/ use_eeprom =}
+    {=/ has_app =}
     {=# has_gpio =}
     {=# gpios =}
     {=# bind =}
@@ -576,7 +587,11 @@ void loop() {
                 }
                 if (obj.type == SUCCESS) {
                     ponged = true;
-                    retry_payload = false;
+                    {=^ low_memory =}
+                    {=# auto_retry =}
+                    need_retry = false;
+                    {=/ auto_retry =}
+                    {=/ low_memory =}
                 }
                 {=# has_timer =}
                 if (obj.type == SYNCTIME) {
@@ -591,9 +606,13 @@ void loop() {
                     send_packet_0(CTRLRES);
                 }
                 if (obj.type == CTRLREQ1) {
-                    if (!retry_payload) {
+                    {=^ low_memory =}
+                    {=# auto_retry =}
+                    if (!need_retry) {
                         send_packet_0(PING);
                     }
+                    {=/ auto_retry =}
+                    {=/ low_memory =}
                     {=# ctrl_mode =}
                     mainAction();
                     {=/ ctrl_mode =}
@@ -613,9 +632,9 @@ void loop() {
     }
 
     if (!givelink_context_authed()) {
-        {=# use_eeprom =}
+        {=# has_app =}
         requireReportAttribute = true;
-        {=/ use_eeprom =}
+        {=/ has_app =}
         if (auth_timer_ms + AUTH_DELAY_MS < get_cache_time_ms()) {
             send_packet_0(AUTHREQ);
             auth_timer_ms = get_cache_time_ms();
@@ -727,6 +746,7 @@ unsigned long get_cache_time_ms() {
     return current_time_ms;
 }
 
+{=# has_app =}
 // -1 non num
 //  0 int
 //  1 float
@@ -779,21 +799,23 @@ bool is_valid_float(float number, float min, float max) {
 }
 
 {=/ has_float =}
-{=# has_app =}
 void mainAction() {
-    if (retry_payload) {
+    {=^ low_memory =}
+    {=# auto_retry =}
+    if (need_retry) {
         if (retry_timer_ms + 1000 < get_cache_time_ms()) {
             retry_timer_ms = get_cache_time_ms();
             send_packet_raw(retryPayload, retryLen);
         }
         return;
     }
-    {=# use_eeprom =}
+    {=/ auto_retry =}
+    {=/ low_memory =}
+    {=# has_app =}
     reportAttribute(requireReportAttribute);
     if (requireReportAttribute) {
         requireReportAttribute = false;
     }
-    {=/ use_eeprom =}
     {=# has_metric =}
     if (metric_timer_ms + METRIC_DELAY_MS < get_cache_time_ms()) {
         requireReportMetric = true;
@@ -803,6 +825,7 @@ void mainAction() {
         requireReportMetric = false;
     }
     {=/ has_metric =}
+    {=/ has_app =}
 
     if (ping_timer_ms + PING_DELAY_MS < get_cache_time_ms()) {
         send_packet_0(PING);
@@ -871,10 +894,11 @@ void send_packet() {
     send_packet_raw(readedPayload, givelink_get_length());
     {=/ low_memory =}
     {=^ low_memory =}
+    {=# auto_retry =}
     if (obj.type == ATTRIBUTE || obj.type == TELEMETRY) {
         givelink_to_binary(retryPayload);
         retryLen = givelink_get_length();
-        retry_payload = true;
+        need_retry = true;
         retry_timer_ms = get_cache_time_ms();
 
         send_packet_raw(retryPayload, retryLen);
@@ -882,6 +906,11 @@ void send_packet() {
         givelink_to_binary(sendedPayload);
         send_packet_raw(sendedPayload, givelink_get_length());
     }
+    {=/ auto_retry =}
+    {=^ auto_retry =}
+    givelink_to_binary(sendedPayload);
+    send_packet_raw(sendedPayload, givelink_get_length());
+    {=/ auto_retry =}
     {=/ low_memory =}
 }
 
@@ -890,15 +919,15 @@ void send_packet_0(const uint8_t type) {
     send_packet();
 }
 
-void send_packet_1(const uint8_t type, const char *data) {
+void send_packet_1(const uint8_t type, const char *data, const int length) {
     next_packet(type);
-    givelink_set_data((const uint8_t*)data, strlen(data));
+    givelink_set_data((const uint8_t*)data, length);
     send_packet();
 }
 
 void send_packet_rsp(const char *data) {
     givelink_set_type(RESPONSE);
-    givelink_set_data((const uint8_t*)wantSendData, strlen(data));
+    givelink_set_data((const uint8_t*)wantSendData, get_json_length(data));
     send_packet();
 }
 
@@ -947,13 +976,25 @@ bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char 
     return false;
 }
 
+{=^ low_memory =}
 void merge_json(char *dst, char *src, int *total_length) {
     src[0] = ' ';
-    while (*src != '\0') {
+    while (*src != '}') {
         dst[*total_length]=*src++;
         *total_length += 1;
     }
-    dst[*total_length-1] = ',';
+    dst[*total_length] = ',';
+    *total_length += 1;
+}
+
+{=/ low_memory =}
+int get_json_length(const char *src) {
+    int length = 1;
+    while (*src != '}') {
+        *src++;
+        length += 1;
+    }
+    return length;
 }
 
 {=# attrs =}
@@ -1186,24 +1227,24 @@ void toggle_gpio_{= name =}() {
 {=/ gpios =}
 {=# functions =}
 {=# has_argv =}
-bool {= name =}({= argv =}) {
+{= type =} {= name =}({= argv =}) {
 {=/ has_argv =}
 {=^ has_argv =}
 {=# flag =}
 {=# retval =}
 {=# json =}
-bool {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
+{= type =} {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) {
 {=/ json =}
 {=^ json =}
-bool {= name =}(char *retval) {
+{= type =} {= name =}(char *retval) {
 {=/ json =}
 {=/ retval =}
 {=^ retval =}
 {=# json =}
-bool {= name =}(const char *json, jsmntok_t *tokens, int num_tokens) {
+{= type =} {= name =}(const char *json, jsmntok_t *tokens, int num_tokens) {
 {=/ json =}
 {=^ json =}
-bool {= name =}() {
+{= type =} {= name =}() {
 {=/ json =}
 {=/ retval =}
 {=/ flag =}
@@ -1252,6 +1293,7 @@ void {= name =}_write_{= wname =}() {
 {=/ writers =}
 bool {= name =}_is_valid_index() {
     {=# writers =}
+    {=# auto =}
     {=# has_on =}
     if ({= on =}) {
         if ({= name =}_write_index == {= index =}) {
@@ -1264,6 +1306,7 @@ bool {= name =}_is_valid_index() {
         return true;
     }
     {=/ has_on =}
+    {=/ auto =}
     {=/ writers =}
     return false;
 }
@@ -1282,9 +1325,12 @@ void {= name =}_write_next_index() {
 
 void {= name =}_write() {
     {=# writers =}
+    {=# auto =}
     is_{= name =}_write_{= wname =} = false;
+    {=/ auto =}
     {=/ writers =}
     {=# writers =}
+    {=# auto =}
     {=# has_on =}
     if ({= on =}) {
         if ({= name =}_write_index == {= index =}) {
@@ -1297,6 +1343,7 @@ void {= name =}_write() {
         {= name =}_write_{= wname =}();
     }
     {=/ has_on =}
+    {=/ auto =}
     {=/ writers =}
     {= name =}_write_next_index();
 }
@@ -1405,14 +1452,14 @@ bool reportMetric(bool force) {
         wantSendData[total_length-1] = '}';
         wantSendData[total_length] = '\0';
 
-        send_packet_1(TELEMETRY, wantSendData);
+        send_packet_1(TELEMETRY, wantSendData, total_length);
         return true;
     }
     return false;
 }
 
 {=/ has_metric =}
-{=# use_eeprom =}
+{=# has_app =}
 bool reportAttribute(bool force) {
     int total_length = 0;
     bool wantSend = false;
@@ -1449,12 +1496,12 @@ bool reportAttribute(bool force) {
         wantSendData[total_length-1] = '}';
         wantSendData[total_length] = '\0';
 
-        send_packet_1(ATTRIBUTE, wantSendData);
+        send_packet_1(ATTRIBUTE, wantSendData, total_length);
         return true;
     }
     return false;
 }
-{=/ use_eeprom =}
+{=/ has_app =}
 {=/ low_memory =}
 {=# low_memory =}
 {=# has_metric =}
@@ -1466,7 +1513,7 @@ bool reportMetric(bool force) {
         wantSendData[0] = '\0';
         if (get_metric_{= name =}(wantSendData)) {
             last_metric_{= name =} = metric_{= name =};
-            send_packet_1(TELEMETRY, wantSendData);
+            send_packet_1(TELEMETRY, wantSendData, get_json_length(wantSendData));
             sended = true;
         }
     }
@@ -1477,7 +1524,7 @@ bool reportMetric(bool force) {
 }
 
 {=/ has_metric =}
-{=# use_eeprom =}
+{=# has_app =}
 bool reportAttribute(bool force) {
     bool sended = true;
     {=# attrs =}
@@ -1486,7 +1533,7 @@ bool reportAttribute(bool force) {
         if (get_attr_{= name =}(wantSendData)) {
             sended = true;
             last_attr_{= name =} = attr_{= name =};
-            send_packet_1(ATTRIBUTE, wantSendData);
+            send_packet_1(ATTRIBUTE, wantSendData, get_json_length(wantSendData));
         }
     }
 
@@ -1498,7 +1545,7 @@ bool reportAttribute(bool force) {
         if (get_metric_{= name =}_threshold(wantSendData)) {
             sended = true;
             last_metric_{= name =}_threshold = metric_{= name =}_threshold;
-            send_packet_1(ATTRIBUTE, wantSendData);
+            send_packet_1(ATTRIBUTE, wantSendData, get_json_length(wantSendData));
         }
     }
 
@@ -1506,7 +1553,7 @@ bool reportAttribute(bool force) {
     {=/ metrics =}
     return sended;
 }
-{=/ use_eeprom =}
+{=/ has_app =}
 {=/ low_memory =}
 {=/ has_app =}
 

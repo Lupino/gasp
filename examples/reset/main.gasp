@@ -11,30 +11,15 @@ setup {
     while (!GL_SERIAL) {;}
 }
 
-init {
-int blink_state = LOW;
-}
+gpio blink LED_BUILTIN
 
-setup {
-    pinMode(LED_BUILTIN, OUTPUT);
-}
+every toggle_gpio_blink 1000
 
-func toggle_blink {
-    if (blink_state == LOW) {
-        blink_state = HIGH;
-    } else {
-        blink_state = LOW;
-    }
-    digitalWrite(LED_BUILTIN, blink_state);
-}
+import <avr/wdt.h>
 
-every toggle_blink 1000
+want_reboot bool = false
 
-init {
-#include <avr/wdt.h>
-bool want_reboot = false;
-#define PING_FAILED_CB reset
-}
+PING_FAILED_CB = reset
 
 setup {
     // wdt init

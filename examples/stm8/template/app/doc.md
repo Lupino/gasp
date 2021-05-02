@@ -251,7 +251,9 @@ bool jsoneq(const char *json, jsmntok_t *token, const char *s);
 int jsonfind(const char *json, jsmntok_t *tokens, int num_tokens, const char *name);
 
 bool jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char *name, char *value);
+{=^ low_memory =}
 void merge_json(char *dst, char *src, int *total_length);
+{=/ low_memory =}
 {=# attrs =}
 void set_attr_{= name =}_raw({= type =} unscaled_value);
 bool set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);

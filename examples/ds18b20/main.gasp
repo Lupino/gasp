@@ -24,23 +24,12 @@ attr delay {
 
 
 ONE_WIRE_BUS = 9
-
-init {
-#include <Wire.h>
-// https://github.com/PaulStoffregen/OneWire.git
-#include <OneWire.h>
-// https://github.com/milesburton/Arduino-Temperature-Control-Library.git
-#include <DallasTemperature.h>
-
-// Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
-OneWire oneWire(ONE_WIRE_BUS);
-
-// Pass our oneWire reference to Dallas Temperature.
-DallasTemperature sensors(&oneWire);
-
-// arrays to hold device address
-DeviceAddress insideThermometer;
-}
+import <Wire.h>
+import <OneWire.h> https://github.com/PaulStoffregen/OneWire.git
+import <DallasTemperature.h> https://github.com/milesburton/Arduino-Temperature-Control-Library.git
+oneWire(ONE_WIRE_BUS) OneWire
+sensors(&oneWire) DallasTemperature
+insideThermometer DeviceAddress
 
 setup {
     sensors.begin();
