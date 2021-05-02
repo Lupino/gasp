@@ -4,17 +4,22 @@ module Parser.Constant
 
 import           Gasp.Constant
 import           Lexer
-import           Text.Parsec        ((<|>))
+import           Text.Parsec        (many, noneOf, (<|>))
 import           Text.Parsec.String (Parser)
 
--- | name = value
+tpParser :: Parser String
+tpParser = strip <$> many (noneOf "=")
+
+-- | name [type] = value
 constant :: Parser Constant
 constant = do
   name <- identifier
+  tp   <- tpParser
   _ <- symbol "="
   value <- identifier <|> (show <$> float)
 
   return Constant
     { constName  = name
     , constValue = value
+    , constType  = tp
     }

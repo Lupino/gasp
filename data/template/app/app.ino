@@ -6,6 +6,12 @@
 
 {=/ has_app =}
 {=# consts =}
+{=^ has_type =}
+#define {= name =} {= value =}
+{=/ has_type =}
+{=# has_type =}
+{= type =} {= name =} = {= value =};
+{=/ has_type =}
 #define {= name =} {= value =}
 {=/ consts =}
 {=# inits =}
