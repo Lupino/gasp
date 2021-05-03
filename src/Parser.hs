@@ -1,30 +1,35 @@
 module Parser
-    ( parseGasp
-    ) where
+  ( parseGasp
+  ) where
 
-import qualified Gasp
+
+import           Control.Monad.Except (ExceptT (..), runExceptT)
+import           Gasp                 (Expr (..), Gasp, Require (..),
+                                       fromGaspExprs)
 import           Lexer
-import           Parser.AGpio       (agpio)
-import           Parser.App         (app)
-import           Parser.Attr        (attr)
-import           Parser.Command     (command)
-import           Parser.Common      (runGaspParser)
-import           Parser.Constant    (constant)
-import           Parser.Every       (every)
-import           Parser.Function    (function)
-import           Parser.Gpio        (gpio)
-import           Parser.Import      (importParser)
-import           Parser.Loop        (loop)
-import           Parser.Metric      (metric)
-import           Parser.Require     (require)
-import           Parser.Rule        (rule)
-import           Parser.Setup       (setup)
-import           Parser.Timer       (timer)
-import           Parser.Uart        (uart)
-import           Text.Parsec        (ParseError, eof, many1, (<|>))
-import           Text.Parsec.String (Parser)
+import           Parser.AGpio         (agpio)
+import           Parser.App           (app)
+import           Parser.Attr          (attr)
+import           Parser.Command       (command)
+import           Parser.Common        (runGaspParser)
+import           Parser.Constant      (constant)
+import           Parser.Every         (every)
+import           Parser.Function      (function)
+import           Parser.Gpio          (gpio)
+import           Parser.Import        (importParser)
+import           Parser.Loop          (loop)
+import           Parser.Metric        (metric)
+import           Parser.Require       (require)
+import           Parser.Rule          (rule)
+import           Parser.Setup         (setup)
+import           Parser.Timer         (timer)
+import           Parser.Uart          (uart)
+import           Path                 (Abs, Dir, File, Path, parent, toFilePath)
+import           Path.IO              (resolveFile)
+import           Text.Parsec          (ParseError, eof, many1, (<|>))
+import           Text.Parsec.String   (Parser)
 
-expr :: Parser Gasp.Expr
+expr :: Parser Expr
 expr
     =   exprApp
     <|> exprCmd
@@ -43,56 +48,56 @@ expr
     <|> exprImport
     <|> exprTimer
 
-exprApp :: Parser Gasp.Expr
-exprApp = Gasp.ExprApp <$> app
+exprApp :: Parser Expr
+exprApp = ExprApp <$> app
 
-exprCmd :: Parser Gasp.Expr
-exprCmd = Gasp.ExprCmd <$> command
+exprCmd :: Parser Expr
+exprCmd = ExprCmd <$> command
 
-exprFunction :: Parser Gasp.Expr
-exprFunction = Gasp.ExprFunction <$> function
+exprFunction :: Parser Expr
+exprFunction = ExprFunction <$> function
 
-exprLoop :: Parser Gasp.Expr
-exprLoop = Gasp.ExprLoop <$> loop
+exprLoop :: Parser Expr
+exprLoop = ExprLoop <$> loop
 
-exprSetup :: Parser Gasp.Expr
-exprSetup = Gasp.ExprSetup <$> setup
+exprSetup :: Parser Expr
+exprSetup = ExprSetup <$> setup
 
-exprAttr :: Parser Gasp.Expr
-exprAttr = Gasp.ExprAttr <$> attr
+exprAttr :: Parser Expr
+exprAttr = ExprAttr <$> attr
 
-exprMetric :: Parser Gasp.Expr
-exprMetric = Gasp.ExprMetric <$> metric
+exprMetric :: Parser Expr
+exprMetric = ExprMetric <$> metric
 
-exprEvery :: Parser Gasp.Expr
-exprEvery = Gasp.ExprEvery <$> every
+exprEvery :: Parser Expr
+exprEvery = ExprEvery <$> every
 
-exprGpio :: Parser Gasp.Expr
-exprGpio = Gasp.ExprGpio <$> gpio
+exprGpio :: Parser Expr
+exprGpio = ExprGpio <$> gpio
 
-exprAGpio :: Parser Gasp.Expr
-exprAGpio = Gasp.ExprAGpio <$> agpio
+exprAGpio :: Parser Expr
+exprAGpio = ExprAGpio <$> agpio
 
-exprUart :: Parser Gasp.Expr
-exprUart = Gasp.ExprUart <$> uart
+exprUart :: Parser Expr
+exprUart = ExprUart <$> uart
 
-exprRule :: Parser Gasp.Expr
-exprRule = Gasp.ExprRule <$> rule
+exprRule :: Parser Expr
+exprRule = ExprRule <$> rule
 
-exprConst :: Parser Gasp.Expr
-exprConst = Gasp.ExprConst <$> constant
+exprConst :: Parser Expr
+exprConst = ExprConst <$> constant
 
-exprRequire :: Parser Gasp.Expr
-exprRequire = Gasp.ExprRequire <$> require
+exprRequire :: Parser Expr
+exprRequire = ExprRequire <$> require
 
-exprImport :: Parser Gasp.Expr
-exprImport = Gasp.ExprImport <$> importParser
+exprImport :: Parser Expr
+exprImport = ExprImport <$> importParser
 
-exprTimer :: Parser Gasp.Expr
-exprTimer = Gasp.ExprTimer <$> timer
+exprTimer :: Parser Expr
+exprTimer = ExprTimer <$> timer
 
--- | Top level parser, produces Gasp.
-gaspParser :: Parser Gasp.Gasp
+-- | Top level parser, produces Expr.
+gaspParser :: Parser [Expr]
 gaspParser = do
     -- NOTE(matija): this is the only place we need to use whiteSpace, to skip empty lines
     -- and comments in the beginning of file. All other used parsers are lexeme parsers
@@ -107,8 +112,33 @@ gaspParser = do
     -- e.g. check there is only 1 title - if not, throw a meaningful error.
     -- Also, check there is at least one Page defined.
 
-    return $ Gasp.fromGaspExprs exprs
+    return exprs
 
--- | Top level parser executor.
-parseGasp :: FilePath -> IO (Either ParseError Gasp.Gasp)
-parseGasp = runGaspParser gaspParser
+type GaspParser = ExceptT ParseError IO
+
+parseFile :: Path Abs File -> GaspParser [Expr]
+parseFile = ExceptT . runGaspParser gaspParser . toFilePath
+
+parseWithRequired :: Path Abs Dir -> [Expr] -> GaspParser [Expr]
+parseWithRequired _ [] = return []
+parseWithRequired rootDir (ExprRequire (Require path) : xs) = do
+  fp <- resolveFile rootDir path
+  expr0 <- parseFile fp
+  expr1 <- parseWithRequired (parent fp) expr0
+  expr2 <- parseWithRequired rootDir xs
+  return $ expr1 ++ expr2
+
+parseWithRequired rootDir (x : xs) = (x:) <$> parseWithRequired rootDir xs
+
+parseExpr :: Path Abs File -> GaspParser [Expr]
+parseExpr fp = parseWithRequired (parent fp) =<< parseFile fp
+
+parseExprList :: [Path Abs File] -> GaspParser [Expr]
+parseExprList [] = return []
+parseExprList (x:xs) = do
+  expr0 <- parseExpr x
+  expr1 <- parseExprList xs
+  return $ expr0 ++ expr1
+
+parseGasp :: [Path Abs File] -> IO (Either ParseError Gasp)
+parseGasp fps = runExceptT $ fromGaspExprs <$> parseExprList fps

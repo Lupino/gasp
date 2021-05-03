@@ -45,13 +45,8 @@
 {=/ retval =}
 {=/ flag =}
 {=/ has_argv =}
-
 {=/ functions =}
-// end defined
 void setup() {
-    #ifdef EEPROM_SIZE
-    EEPROM.begin(EEPROM_SIZE);
-    #endif
     {=# setups =}
     {=& code =}
 

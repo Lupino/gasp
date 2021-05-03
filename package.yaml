@@ -65,6 +65,7 @@ library:
     - uuid
     - binary
     - hexstring
+    - mtl
 
 executables:
   gasp:
