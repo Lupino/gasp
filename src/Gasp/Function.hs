@@ -33,23 +33,8 @@ instance ToJSON Function where
         , "flag"     .= funcFlag func
         , "argv"     .= funcArgv func
         , "has_argv" .= not (null $ funcArgv func)
-        , "return"   .= lastReturn (funcCode func)
         , "type"     .= funcType func
         ]
-
-lastReturn :: Text -> Bool
-lastReturn = go . T.lines
-  where go :: [Text] -> Bool
-        go [] = False
-        go xs | T.length lstv > 0 = go1 (init xs) (T.words lstv)
-              | otherwise = go $ init xs
-          where lstv = T.strip $ last xs
-
-        go1 :: [Text] -> [Text] -> Bool
-        go1 _ ("return":_) = True
-        go1 xs ("//":_)    = go xs
-        go1 _ _            = False
-
 
 hasToken :: Text -> Text -> Bool
 hasToken tok txt

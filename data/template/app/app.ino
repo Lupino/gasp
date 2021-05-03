@@ -112,9 +112,6 @@ int get_json_length(const char *src) {
 {=/ flag =}
 {=/ has_argv =}
     {=& code =}
-    {=^ return =}
-    return true;
-    {=/ return =}
 }
 
 {=/ functions =}
