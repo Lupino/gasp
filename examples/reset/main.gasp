@@ -44,8 +44,9 @@ func reset {
     }
 }
 
-func reset_system {
+func reset_system bool {
     want_reboot = true;
+    return true;
 }
 
 command reset_system {

@@ -50,11 +50,11 @@ attr relay_state {
   keep: false
 }
 
-func try_set_attr_relay_state {
+func try_set_attr_relay_state bool {
     if (attr_relay_mode == 1) {
         return set_attr_relay_state(json, tokens, num_tokens, retval);
     }
-    return RET_ERR;
+    return true;
 }
 
 command set_relay_state {

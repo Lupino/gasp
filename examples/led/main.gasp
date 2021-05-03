@@ -18,21 +18,21 @@ attr led_state {
   gen_set: false
 }
 
-func toggle_led {
+func toggle_led bool {
     toggle_gpio_blinker();
-    get_attr_led_state(retval);
+    return get_attr_led_state(retval);
 }
 
 
-func open_led {
+func open_led bool {
     attr_led_state = HIGH;
-    get_attr_led_state(retval);
+    return get_attr_led_state(retval);
 }
 
 
-func close_led {
+func close_led bool {
     attr_led_state = LOW;
-    get_attr_led_state(retval);
+    return get_attr_led_state(retval);
 }
 
 command toggle {
