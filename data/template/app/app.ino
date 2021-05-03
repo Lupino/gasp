@@ -21,6 +21,13 @@
 {=/ has_value =}
 {=/ consts =}
 
+#ifdef ARDUINO_ARCH_RP2040
+#define EEPROM_NEED_COMMIT
+#ifndef EEPROM_SIZE
+#define EEPROM_SIZE 1024
+#endif
+#endif
+
 {=# functions =}
 {=# has_argv =}
 {= type =} {= name =}({= argv =});
