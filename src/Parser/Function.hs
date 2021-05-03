@@ -13,7 +13,7 @@ import           Text.Parsec        (many1, noneOf, option)
 
 tpParser :: Parser String
 tpParser = fixed . strip <$> many1 (noneOf "{}")
-  where fixed [] = "bool"
+  where fixed [] = "void"
         fixed v  = v
 
 -- func funcName [(argv)] [rettp] do
@@ -25,7 +25,7 @@ function = do
     reserved reservedNameFunction
     name  <- identifier
     argv  <- option ""     $ block "(" ")"
-    tp    <- option "bool" tpParser
+    tp    <- option "void" tpParser
     code  <- gaspBlockClosure
 
 
