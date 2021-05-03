@@ -1,7 +1,7 @@
 {{={= =}=}}
 {=# has_app =}
-import <givelink.h>
-import <jsmn.h>
+import <givelink.h> https://github.com/Lupino/givelink.git
+import <jsmn.h> https://github.com/zserge/jsmn.git
 import <EEPROM.h>
 
 {=/ has_app =}
@@ -97,10 +97,24 @@ metric_{= name =}_threshold_force bool = true
 
 {=/ metrics =}
 {=# actions =}
+// start actions
 {= fn =}_timer_ms unsigned long = 0
+loop {
+    {=# has_on =}
+    if ({= on =} && {= fn =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
+    {=/ has_on =}
+    {=^ has_on =}
+    if ({= fn =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
+    {=/ has_on =}
+        {= fn =}();
+        {= fn =}_timer_ms = get_cache_time_ms();
+    }
+}
+// end actions
 {=/ actions =}
 
 {=# has_rule =}
+// start rules
 rule_depends_checked bool = false
 {=# rules =}
 {=# has_later =}
@@ -113,12 +127,86 @@ rule_{= id =}_do_yes bool = true
 {=# has_else =}
 rule_{= id =}_do_else bool = true
 {=/ has_else =}
+loop {
+    rule_depends_checked = true;
+    {=# depends =}
+    if (!check_metric_{= . =}()) {
+        rule_depends_checked = false;
+    }
+    {=/ depends =}
+    {=# has_on =}
+    if (rule_depends_checked && {=& on_condition =}) {
+    {=/ has_on =}
+    {=^ has_on =}
+    if (rule_depends_checked) {
+    {=/ has_on =}
+        {=# has_later =}
+        if ({=& condition =}) {
+            if (rule_{= id =}_do_yes && rule_{= id =}_{= action =}_timer_ms + {= later =} < get_cache_time_ms()) {
+                rule_{= id =}_do_yes = false;
+                {= action =}();
+            }
+            {=# has_else =}
+            rule_{= id =}_do_else = true;
+            {=# has_else_later =}
+            rule_{= id =}_{= else_action =}_timer_ms = get_cache_time_ms();
+            {=/ has_else_later =}
+            {=/ has_else =}
+        } else {
+            rule_{= id =}_do_yes = true;
+            rule_{= id =}_{= action =}_timer_ms = get_cache_time_ms();
+            {=# has_else =}
+            {=# has_else_later =}
+            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_cache_time_ms()) {
+                rule_{= id =}_do_else = false;
+                {= else_action =}();
+            }
+            {=/ has_else_later =}
+            {=^ has_else_later =}
+            {= else_action =}();
+            {=/ has_else_later =}
+            {=/ has_else =}
+        }
+        {=/ has_later =}
+        {=^ has_later =}
+        if ({=& condition =}) {
+            if (rule_{= id =}_do_yes) {
+                rule_{= id =}_do_yes = false;
+                {= action =}();
+            }
+            {=# has_else =}
+            rule_{= id =}_do_else = true;
+            {=# has_else_later =}
+            rule_{= id =}_{= else_action =}_timer_ms = get_cache_time_ms();
+            {=/ has_else_later =}
+            {=/ has_else =}
+        } else {
+            rule_{= id =}_do_yes = true;
+            {=# has_else =}
+            {=# has_else_later =}
+            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_cache_time_ms()) {
+                rule_{= id =}_do_else = false;
+                {= else_action =}();
+            }
+            {=/ has_else_later =}
+            {=^ has_else_later =}
+            rule_{= id =}_do_else = false;
+            {= else_action =}();
+            {=/ has_else_later =}
+            {=/ has_else =}
+        }
+        {=/ has_later =}
+    }
+}
 {=/ rules =}
+// end rules
 {=/ has_rule =}
+
 {=# has_input =}
 DEBOUNCE_DELAY_MS = 50
 gpio_reading uint8_t = 0
 {=/ has_input =}
+
 {=# has_gpio =}
 {=# gpios =}
 {=# bind =}
@@ -137,15 +225,153 @@ gpio_{= name =}_state uint8_t = {= state =}
 gpio_{= name =}_state uint8_t = {= state =}
 {=/ is_pwm =}
 {=/ bind =}
+setup {
+    {=# bind =}
+    {=# is_link =}
+    pinMode({= pin =}, OUTPUT);
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+    {=/ is_link =}
+    {=# is_fn =}
+    pinMode({= pin =}, INPUT);
+    {=/ is_fn =}
+    {=# is_pwm =}
+    analogWrite({= pin =}, gpio_{= name =}_state);
+    {=/ is_pwm =}
+    {=# is_no_bind =}
+    pinMode({= pin =}, OUTPUT);
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+    {=/ is_no_bind =}
+    {=/ bind =}
+}
+loop {
+    {=# bind =}
+    {=# is_fn =}
+    gpio_reading = digitalRead({= pin =});
+    if (gpio_reading != last_gpio_{= name =}_state) {
+        last_gpio_{= name =}_debounce_time_ms = get_cache_time_ms();
+    }
+    if ((get_cache_time_ms() - last_gpio_{= name =}_debounce_time_ms) > DEBOUNCE_DELAY_MS) {
+        if (gpio_reading != gpio_{= name =}_state) {
+          gpio_{= name =}_state = gpio_reading;
+          if (gpio_{= name =}_state == {= emit =}) {
+            {= fn =}();
+          }
+        }
+    }
+    last_gpio_{= name =}_state = gpio_reading;
+
+    {=/ is_fn =}
+    {=# is_link =}
+    {=# reverse =}
+    if (attr_{= link =} == gpio_{= name =}_state) {
+        if (attr_{= link =} == {= open =}) {
+            close_gpio_{= name =}_raw();
+        } else {
+            open_gpio_{= name =}_raw();
+        }
+    }
+    {=/ reverse =}
+    {=^ reverse =}
+    if (attr_{= link =} != gpio_{= name =}_state) {
+        if (attr_{= link =} == {= open =}) {
+            open_gpio_{= name =}_raw();
+        } else {
+            close_gpio_{= name =}_raw();
+        }
+    }
+    {=/ reverse =}
+
+    {=/ is_link =}
+    {=# is_pwm =}
+    if (attr_{= link =} != gpio_{= name =}_state) {
+      gpio_{= name =}_state = attr_{= link =};
+      analogWrite({= pin =}, gpio_{= name =}_state);
+    }
+    {=/ is_pwm =}
+    {=/ bind =}
+}
+{=# bind =}
+{=# is_link =}
+func open_gpio_{= name =}_raw() void {
+    gpio_{= name =}_state = {= open =};
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+}
+
+func close_gpio_{= name =}_raw() void {
+    gpio_{= name =}_state = {= close =};
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+}
+
+func open_gpio_{= name =}() void {
+    {=# reverse =}
+    set_attr_{= link =}_raw({= close =});
+    {=/ reverse =}
+    {=^ reverse =}
+    set_attr_{= link =}_raw({= open =});
+    {=/ reverse =}
+}
+
+func close_gpio_{= name =}() void {
+    {=# reverse =}
+    set_attr_{= link =}_raw({= open =});
+    {=/ reverse =}
+    {=^ reverse =}
+    set_attr_{= link =}_raw({= close =});
+    {=/ reverse =}
+}
+
+func toggle_gpio_{= name =}() void {
+    if (attr_{= link =} == {= open =}) {
+        set_attr_{= link =}_raw({= close =});
+    } else {
+        set_attr_{= link =}_raw({= open =});
+    }
+}
+
+{=/ is_link =}
+{=# is_no_bind =}
+func open_gpio_{= name =}() void {
+    gpio_{= name =}_state = {= open =};
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+}
+
+func close_gpio_{= name =}() void {
+    gpio_{= name =}_state = {= close =};
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+}
+
+func toggle_gpio_{= name =}() void {
+    if (gpio_{= name =}_state == {= open =}) {
+        close_gpio_{= name =}();
+    } else {
+        open_gpio_{= name =}();
+    }
+}
+
+{=/ is_no_bind =}
+{=/ bind =}
 {=/ gpios =}
 {=/ has_gpio =}
+
 {=# agpios =}
 {=# bind =}
 {=# is_no_bind =}
 agpio_{= name =}_value uint16_t = 0
 {=/ is_no_bind =}
 {=/ bind =}
+loop {
+    {=# bind =}
+    {=# is_link =}
+    metric_{= link =} = analogRead({= pin =});
+    {=/ is_link =}
+    {=# is_no_bind =}
+    agpio_{= name =}_value = analogRead({= pin =});
+    {=/ is_no_bind =}
+    {=/ bind =}
+}
 {=/ agpios =}
+
+
 {=# uarts =}
 is_{= name =}_readed bool = false
 {=# readers =}
@@ -156,7 +382,105 @@ is_{= name =}_readed bool = false
 is_{= name =}_write_{= wname =} bool = false
 {=/ writers =}
 {= name =}_write_index uint8_t = 0
+setup {
+    {= name =}.begin({= speed =});
+}
+loop {
+    {= name =}_poll();
+}
+func {= name =}_poll() void {
+    while ({= name =}.available() > 0) {
+        uint8_t outByte = {= name =}.read();
+        {=# readers =}
+        {=# has_on =}
+        if ({= on =}) {
+            if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
+                {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
+                {= name =}_read_{= index =}_buffer_len = 0;
+                is_{= name =}_readed = true;
+            }
+        }
+        {=/ has_on =}
+        {=^ has_on =}
+        if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
+            {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
+            {= name =}_read_{= index =}_buffer_len = 0;
+            is_{= name =}_readed = true;
+        }
+        {=/ has_on =}
+        {=/ readers =}
+    }
+}
+
+{=# writers =}
+func {= name =}_write_{= wname =}() void {
+    is_{= name =}_write_{= wname =} = true;
+    is_{= name =}_readed = false;
+    {=# bytes =}
+    {= name =}.write((uint8_t)0x{= . =});
+    {=/ bytes =}
+}
+
+{=/ writers =}
+func {= name =}_is_valid_index() bool {
+    {=# writers =}
+    {=# auto =}
+    {=# has_on =}
+    if ({= on =}) {
+        if ({= name =}_write_index == {= index =}) {
+            return true;
+        }
+    }
+    {=/ has_on =}
+    {=^ has_on =}
+    if ({= name =}_write_index == {= index =}) {
+        return true;
+    }
+    {=/ has_on =}
+    {=/ auto =}
+    {=/ writers =}
+    return false;
+}
+
+func {= name =}_write_next_index() void {
+    for (int i = 0; i < {= wcount =}; i ++) {
+        {= name =}_write_index += 1;
+        if ({= name =}_write_index >= {= wcount =}) {
+            {= name =}_write_index = 0;
+        }
+        if ({= name =}_is_valid_index()) {
+            break;
+        }
+    }
+}
+
+func {= name =}_write() void {
+    {=# writers =}
+    {=# auto =}
+    is_{= name =}_write_{= wname =} = false;
+    {=/ auto =}
+    {=/ writers =}
+    {=# writers =}
+    {=# auto =}
+    {=# has_on =}
+    if ({= on =}) {
+        if ({= name =}_write_index == {= index =}) {
+            {= name =}_write_{= wname =}();
+        }
+    }
+    {=/ has_on =}
+    {=^ has_on =}
+    if ({= name =}_write_index == {= index =}) {
+        {= name =}_write_{= wname =}();
+    }
+    {=/ has_on =}
+    {=/ auto =}
+    {=/ writers =}
+    {= name =}_write_next_index();
+}
+
 {=/ uarts =}
+
 {=# has_timer =}
 sys_timer_s         uint32_t = 0
 sys_timer_sync_ms   uint32_t = 0
@@ -249,33 +573,6 @@ setup {
     {=/ metrics =}
 
     {=/ has_app =}
-    {=# has_gpio =}
-    {=# gpios =}
-    {=# bind =}
-    {=# is_link =}
-    pinMode({= pin =}, OUTPUT);
-    digitalWrite({= pin =}, gpio_{= name =}_state);
-    {=/ is_link =}
-    {=# is_fn =}
-    pinMode({= pin =}, INPUT);
-    {=/ is_fn =}
-    {=# is_pwm =}
-    analogWrite({= pin =}, gpio_{= name =}_state);
-    {=/ is_pwm =}
-    {=# is_no_bind =}
-    pinMode({= pin =}, OUTPUT);
-    digitalWrite({= pin =}, gpio_{= name =}_state);
-    {=/ is_no_bind =}
-    {=/ bind =}
-    {=/ gpios =}
-    {=/ has_gpio =}
-    {=# setups =}
-    {=& code =}
-
-    {=/ setups =}
-    {=# uarts =}
-    {= name =}.begin({= speed =});
-    {=/ uarts =}
     {=# has_app =}
     {=# has_debug =}
     #ifdef DEBUG_SERIAL
@@ -286,77 +583,6 @@ setup {
 }
 
 loop {
-    {=# rules =}
-    rule_depends_checked = true;
-    {=# depends =}
-    if (!check_metric_{= . =}()) {
-        rule_depends_checked = false;
-    }
-    {=/ depends =}
-    {=# has_on =}
-    if (rule_depends_checked && {=& on_condition =}) {
-    {=/ has_on =}
-    {=^ has_on =}
-    if (rule_depends_checked) {
-    {=/ has_on =}
-        {=# has_later =}
-        if ({=& condition =}) {
-            if (rule_{= id =}_do_yes && rule_{= id =}_{= action =}_timer_ms + {= later =} < get_cache_time_ms()) {
-                rule_{= id =}_do_yes = false;
-                {= action =}();
-            }
-            {=# has_else =}
-            rule_{= id =}_do_else = true;
-            {=# has_else_later =}
-            rule_{= id =}_{= else_action =}_timer_ms = get_cache_time_ms();
-            {=/ has_else_later =}
-            {=/ has_else =}
-        } else {
-            rule_{= id =}_do_yes = true;
-            rule_{= id =}_{= action =}_timer_ms = get_cache_time_ms();
-            {=# has_else =}
-            {=# has_else_later =}
-            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_cache_time_ms()) {
-                rule_{= id =}_do_else = false;
-                {= else_action =}();
-            }
-            {=/ has_else_later =}
-            {=^ has_else_later =}
-            {= else_action =}();
-            {=/ has_else_later =}
-            {=/ has_else =}
-        }
-        {=/ has_later =}
-        {=^ has_later =}
-        if ({=& condition =}) {
-            if (rule_{= id =}_do_yes) {
-                rule_{= id =}_do_yes = false;
-                {= action =}();
-            }
-            {=# has_else =}
-            rule_{= id =}_do_else = true;
-            {=# has_else_later =}
-            rule_{= id =}_{= else_action =}_timer_ms = get_cache_time_ms();
-            {=/ has_else_later =}
-            {=/ has_else =}
-        } else {
-            rule_{= id =}_do_yes = true;
-            {=# has_else =}
-            {=# has_else_later =}
-            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_cache_time_ms()) {
-                rule_{= id =}_do_else = false;
-                {= else_action =}();
-            }
-            {=/ has_else_later =}
-            {=^ has_else_later =}
-            rule_{= id =}_do_else = false;
-            {= else_action =}();
-            {=/ has_else_later =}
-            {=/ has_else =}
-        }
-        {=/ has_later =}
-    }
-    {=/ rules =}
     {=# has_app =}
     while (GL_SERIAL.available() > 0) {
         if (givelink_recv(readedPayload, &readedLen, GL_SERIAL.read(), &crcFlag)) {
@@ -462,79 +688,6 @@ loop {
     }
 
     {=/ has_app =}
-    {=# actions =}
-    {=# has_on =}
-    if ({= on =} && {= fn =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
-    {=/ has_on =}
-    {=^ has_on =}
-    if ({= fn =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
-    {=/ has_on =}
-        {= fn =}();
-        {= fn =}_timer_ms = get_cache_time_ms();
-    }
-    {=/ actions =}
-    {=# has_gpio =}
-    {=# gpios =}
-    {=# bind =}
-    {=# is_fn =}
-    gpio_reading = digitalRead({= pin =});
-    if (gpio_reading != last_gpio_{= name =}_state) {
-        last_gpio_{= name =}_debounce_time_ms = get_cache_time_ms();
-    }
-    if ((get_cache_time_ms() - last_gpio_{= name =}_debounce_time_ms) > DEBOUNCE_DELAY_MS) {
-        if (gpio_reading != gpio_{= name =}_state) {
-          gpio_{= name =}_state = gpio_reading;
-          if (gpio_{= name =}_state == {= emit =}) {
-            {= fn =}();
-          }
-        }
-    }
-    last_gpio_{= name =}_state = gpio_reading;
-
-    {=/ is_fn =}
-    {=# is_link =}
-    {=# reverse =}
-    if (attr_{= link =} == gpio_{= name =}_state) {
-        if (attr_{= link =} == {= open =}) {
-            close_gpio_{= name =}_raw();
-        } else {
-            open_gpio_{= name =}_raw();
-        }
-    }
-    {=/ reverse =}
-    {=^ reverse =}
-    if (attr_{= link =} != gpio_{= name =}_state) {
-        if (attr_{= link =} == {= open =}) {
-            open_gpio_{= name =}_raw();
-        } else {
-            close_gpio_{= name =}_raw();
-        }
-    }
-    {=/ reverse =}
-
-    {=/ is_link =}
-    {=# is_pwm =}
-    if (attr_{= link =} != gpio_{= name =}_state) {
-      gpio_{= name =}_state = attr_{= link =};
-      analogWrite({= pin =}, gpio_{= name =}_state);
-    }
-    {=/ is_pwm =}
-    {=/ bind =}
-    {=/ gpios =}
-    {=/ has_gpio =}
-    {=# agpios =}
-    {=# bind =}
-    {=# is_link =}
-    metric_{= link =} = analogRead({= pin =});
-    {=/ is_link =}
-    {=# is_no_bind =}
-    agpio_{= name =}_value = analogRead({= pin =});
-    {=/ is_no_bind =}
-    {=/ bind =}
-    {=/ agpios =}
-    {=# uarts =}
-    {= name =}_poll();
-    {=/ uarts =}
 
     {=# has_timer =}
     if (sys_timer_s > 0 && next_timer_event_ms <= get_cache_time_ms()) {
@@ -970,161 +1123,6 @@ func get_metric_{= name =}(char *retval) bool {
 
 {=/ metrics =}
 {=/ has_app =}
-{=# gpios =}
-{=# bind =}
-{=# is_link =}
-func open_gpio_{= name =}_raw() void {
-    gpio_{= name =}_state = {= open =};
-    digitalWrite({= pin =}, gpio_{= name =}_state);
-}
-
-func close_gpio_{= name =}_raw() void {
-    gpio_{= name =}_state = {= close =};
-    digitalWrite({= pin =}, gpio_{= name =}_state);
-}
-
-func open_gpio_{= name =}() void {
-    {=# reverse =}
-    set_attr_{= link =}_raw({= close =});
-    {=/ reverse =}
-    {=^ reverse =}
-    set_attr_{= link =}_raw({= open =});
-    {=/ reverse =}
-}
-
-func close_gpio_{= name =}() void {
-    {=# reverse =}
-    set_attr_{= link =}_raw({= open =});
-    {=/ reverse =}
-    {=^ reverse =}
-    set_attr_{= link =}_raw({= close =});
-    {=/ reverse =}
-}
-
-func toggle_gpio_{= name =}() void {
-    if (attr_{= link =} == {= open =}) {
-        set_attr_{= link =}_raw({= close =});
-    } else {
-        set_attr_{= link =}_raw({= open =});
-    }
-}
-
-{=/ is_link =}
-{=# is_no_bind =}
-func open_gpio_{= name =}() void {
-    gpio_{= name =}_state = {= open =};
-    digitalWrite({= pin =}, gpio_{= name =}_state);
-}
-
-func close_gpio_{= name =}() void {
-    gpio_{= name =}_state = {= close =};
-    digitalWrite({= pin =}, gpio_{= name =}_state);
-}
-
-func toggle_gpio_{= name =}() void {
-    if (gpio_{= name =}_state == {= open =}) {
-        close_gpio_{= name =}();
-    } else {
-        open_gpio_{= name =}();
-    }
-}
-
-{=/ is_no_bind =}
-{=/ bind =}
-{=/ gpios =}
-{=# uarts =}
-func {= name =}_poll() void {
-    while ({= name =}.available() > 0) {
-        uint8_t outByte = {= name =}.read();
-        {=# readers =}
-        {=# has_on =}
-        if ({= on =}) {
-            if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
-                {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
-                {= name =}_read_{= index =}_buffer_len = 0;
-                is_{= name =}_readed = true;
-            }
-        }
-        {=/ has_on =}
-        {=^ has_on =}
-        if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
-            {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
-            {= name =}_read_{= index =}_buffer_len = 0;
-            is_{= name =}_readed = true;
-        }
-        {=/ has_on =}
-        {=/ readers =}
-    }
-}
-
-{=# writers =}
-func {= name =}_write_{= wname =}() void {
-    is_{= name =}_write_{= wname =} = true;
-    is_{= name =}_readed = false;
-    {=# bytes =}
-    {= name =}.write((uint8_t)0x{= . =});
-    {=/ bytes =}
-}
-
-{=/ writers =}
-func {= name =}_is_valid_index() bool {
-    {=# writers =}
-    {=# auto =}
-    {=# has_on =}
-    if ({= on =}) {
-        if ({= name =}_write_index == {= index =}) {
-            return true;
-        }
-    }
-    {=/ has_on =}
-    {=^ has_on =}
-    if ({= name =}_write_index == {= index =}) {
-        return true;
-    }
-    {=/ has_on =}
-    {=/ auto =}
-    {=/ writers =}
-    return false;
-}
-
-func {= name =}_write_next_index() void {
-    for (int i = 0; i < {= wcount =}; i ++) {
-        {= name =}_write_index += 1;
-        if ({= name =}_write_index >= {= wcount =}) {
-            {= name =}_write_index = 0;
-        }
-        if ({= name =}_is_valid_index()) {
-            break;
-        }
-    }
-}
-
-func {= name =}_write() void {
-    {=# writers =}
-    {=# auto =}
-    is_{= name =}_write_{= wname =} = false;
-    {=/ auto =}
-    {=/ writers =}
-    {=# writers =}
-    {=# auto =}
-    {=# has_on =}
-    if ({= on =}) {
-        if ({= name =}_write_index == {= index =}) {
-            {= name =}_write_{= wname =}();
-        }
-    }
-    {=/ has_on =}
-    {=^ has_on =}
-    if ({= name =}_write_index == {= index =}) {
-        {= name =}_write_{= wname =}();
-    }
-    {=/ has_on =}
-    {=/ auto =}
-    {=/ writers =}
-    {= name =}_write_next_index();
-}
-
-{=/ uarts =}
 {=# has_app =}
 func processRequest(const char *json, int length, char *retval) bool {
     /* Prepare parser */
