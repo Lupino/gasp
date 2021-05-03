@@ -8,8 +8,8 @@ module Gasp.Function
 
 import           Data.Aeson (ToJSON (..), object, (.=))
 import           Data.Text  (Text)
-import qualified Data.Text  as T (breakOnEnd, dropEnd, length, lines, null,
-                                  strip, take, takeEnd, takeWhileEnd, words)
+import qualified Data.Text  as T (breakOnEnd, dropEnd, length, null, take,
+                                  takeEnd, takeWhileEnd)
 import           Gasp.Flag  (Flag)
 
 newtype FuncName = FuncName String

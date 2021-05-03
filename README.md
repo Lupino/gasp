@@ -77,7 +77,7 @@ attr relay_state {
   keep: false
 }
 
-func try_set_attr_relay_state {
+func try_set_attr_relay_state bool {
     if (attr_relay_mode == 1) {
         return set_attr_relay_state(json, tokens, num_tokens, retval);
     }
@@ -163,15 +163,14 @@ attr close_delay {
   max: 3600,
   scale: 1000
 }
+
 rule metric_temperature < attr_high_temperature && metric_temperature > attr_low_temperature
   do later attr_open_delay open_gpio_relay
   else later attr_close_delay close_gpio_relay
   on attr_relay_mode == 0
 
-init {
-#include <avr/wdt.h>
-bool want_reboot = false;
-}
+import <avr/wdt.h>
+want_reboot bool = false
 
 setup {
     MCUSR = 0;
@@ -194,34 +193,23 @@ func reset {
     }
 }
 
-func reset_system {
+func reset_system bool {
     want_reboot = true;
+    return true;
 }
 
 command reset_system {
   fn: reset_system
 }
 
-init {
-bool can_emit_givelink_unauth = false;
-}
-
 func emit_givelink_unauth {
-    if (can_emit_givelink_unauth) {
-        can_emit_givelink_unauth = false;
-        givelink_context_set_auth(false);
-    }
-}
-
-func allow_emit_givelink_unauth {
-    can_emit_givelink_unauth = true;
+    givelink_context_set_auth(false);
 }
 
 gpio auth 9 LOW -> click noop
 
 rule gpio_auth_state == HIGH
   do later 2000 emit_givelink_unauth
-  else allow_emit_givelink_unauth
   on givelink_context_authed()
 ```
 
