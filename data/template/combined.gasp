@@ -753,7 +753,6 @@ func isnum(const char *buf) int {
     return f;
 }
 
-{=# has_float =}
 func is_valid_float(float number, float min, float max) bool {
     if (isnan(number)) return false;
     if (isinf(number)) return false;
@@ -762,7 +761,6 @@ func is_valid_float(float number, float min, float max) bool {
     return true;
 }
 
-{=/ has_float =}
 func mainAction() void {
     {=^ low_memory =}
     {=# auto_retry =}

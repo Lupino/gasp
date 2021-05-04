@@ -147,24 +147,10 @@ constDebug (x:xs)
 getAttrs:: Gasp -> [Attr]
 getAttrs gasp = [attr | (ExprAttr attr) <- gaspExprs gasp]
 
-
-hasFloatAttr :: [Attr] -> Bool
-hasFloatAttr [] = False
-hasFloatAttr (x:xs)
-  | isFloatAttr x = True
-  | otherwise     = hasFloatAttr xs
-
 -- * Metrics
 
 getMetrics:: Gasp -> [Metric]
 getMetrics gasp = [metric | (ExprMetric metric) <- gaspExprs gasp]
-
-
-hasFloatMetric :: [Metric] -> Bool
-hasFloatMetric [] = False
-hasFloatMetric (x:xs)
-  | isFloatMetric x = True
-  | otherwise     = hasFloatMetric xs
 
 -- * Everys
 
@@ -345,7 +331,6 @@ instance ToJSON Gasp where
         , "has_input"   .= hasInput gpios
         , "has_debug"   .= constDebug consts
         , "has_rule"    .= not (null rules)
-        , "has_float"   .= (hasFloatAttr attrs || hasFloatMetric metrics)
         , "low_memory"  .= isLowMemory
         , "consts"      .= requiredConsts
         , "vars"        .= requiredVars
