@@ -347,7 +347,7 @@ instance ToJSON Gasp where
         , "has_rule"    .= not (null rules)
         , "has_float"   .= (hasFloatAttr attrs || hasFloatMetric metrics)
         , "low_memory"  .= isLowMemory
-        , "consts"      .= consts
+        , "consts"      .= requiredConsts
         , "vars"        .= requiredVars
         , "uarts"       .= uarts
         , "has_uart"    .= not (null uarts)
@@ -374,6 +374,8 @@ instance ToJSON Gasp where
               funcs = getRequiredFunction requiredText $ getFunctions gasp
               funcText = T.intercalate "\n" $ map funcCode funcs
               requiredVars = getRequiredConstant (requiredText <> "\n" <> funcText) vars
+              varText = T.intercalate "\n" $ map (\(Constant a b c) -> T.pack $ concat [a, " ", b, " ", c]) requiredVars
+              requiredConsts = getRequiredConstant (requiredText <> "\n" <> funcText <> "\n" <> varText) consts
               hasMetric = not (null metrics)
               hasAttr = not (null attrs)
               app = getApp gasp0
