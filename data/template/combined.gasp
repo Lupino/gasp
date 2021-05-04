@@ -3,75 +3,6 @@
 import <givelink.h> https://github.com/Lupino/givelink.git
 import <jsmn.h> https://github.com/zserge/jsmn.git
 import <EEPROM.h>
-
-auth_timer_ms unsigned long = 0
-
-AUTH_DELAY_MS = 1000
-PONG_DELAY_MS = 6000
-PING_DELAY_MS = 300000
-PING_FAILED_CB = noop
-MAX_PING_FAILED = 10
-SENDED_DELAY_MS = 100
-MAX_GL_PAYLOAD_LENGTH = {= max_gl_len =}
-MAX_BUFFER_LENGTH = {= max_buf_len =}
-MAX_NUM_TOKENS = 12
-MAX_REQUEST_VALUE_LENGTH = {= max_req_len =}
-MAX_TMPL_LENGTH = {= max_tpl_len =}
-
-// EEPROM_SIZE = 1024
-// EEPROM_NEED_COMMIT
-
-pong_timer_ms unsigned long = 0
-ping_timer_ms unsigned long = 0
-ponged bool = true
-ping_failed uint8_t = 0
-
-ctx givelink_context_t
-{=# app =}
-ctx_buff[{= context_len =}] uint8_t
-key[{= key_len =}] const uint8_t = {{= key_hex_array =}}
-{=# production =}
-token[{= token_len =}] uint8_t
-addr[{= addr_len =}] uint8_t
-{=/ production =}
-{=^ production =}
-token[{= token_len =}] uint8_t = {{= token_hex_array =}}
-addr[{= addr_len =}] uint8_t = {{= addr_hex_array =}};
-{=/ production =}
-{=/ app =}
-
-obj givelink_t
-obj_buff[MAX_BUFFER_LENGTH] uint8_t
-
-crcFlag bool = false
-lastPayloadId uint16_t = 0
-readedLen uint16_t = 0
- readedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
-{=^ low_memory =}
-sendedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
-{=# auto_retry =}
-retryPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
-retryLen uint16_t = 0
-need_retry bool = false
-retry_timer_ms unsigned long = 0
-{=/ auto_retry =}
-{=/ low_memory =}
-
-
-requestJsmnParser jsmn_parser
-requestJsmnTokens[MAX_NUM_TOKENS] jsmntok_t
-requestValue[MAX_REQUEST_VALUE_LENGTH] char
-wantSendData[MAX_BUFFER_LENGTH] char
-{=^ low_memory =}
-tempSendData[MAX_TMPL_LENGTH] char
-{=/ low_memory =}
-wantSendDataTpl[MAX_TMPL_LENGTH] char
-
-METRIC_DELAY_MS = 1800000
-metric_timer_ms unsigned long = 0
-requireReportAttribute bool = true
-requireReportMetric bool = true
-
 setup {
     {=# app =}
     givelink_context_init(&ctx, ctx_buff);
@@ -254,6 +185,75 @@ loop {
     }
 
 }
+{=/ has_app =}
+
+auth_timer_ms unsigned long = 0
+
+AUTH_DELAY_MS = 1000
+PONG_DELAY_MS = 6000
+PING_DELAY_MS = 300000
+MAX_PING_FAILED = 10
+SENDED_DELAY_MS = 100
+MAX_GL_PAYLOAD_LENGTH = {= max_gl_len =}
+MAX_BUFFER_LENGTH = {= max_buf_len =}
+MAX_NUM_TOKENS = 12
+MAX_REQUEST_VALUE_LENGTH = {= max_req_len =}
+MAX_TMPL_LENGTH = {= max_tpl_len =}
+
+// EEPROM_SIZE = 1024
+// EEPROM_NEED_COMMIT
+
+pong_timer_ms unsigned long = 0
+ping_timer_ms unsigned long = 0
+ponged bool = true
+ping_failed uint8_t = 0
+
+ctx givelink_context_t
+{=# app =}
+ctx_buff[{= context_len =}] uint8_t
+key[{= key_len =}] const uint8_t = {{= key_hex_array =}}
+{=# production =}
+token[{= token_len =}] uint8_t
+addr[{= addr_len =}] uint8_t
+{=/ production =}
+{=^ production =}
+token[{= token_len =}] uint8_t = {{= token_hex_array =}}
+addr[{= addr_len =}] uint8_t = {{= addr_hex_array =}};
+{=/ production =}
+{=/ app =}
+
+obj givelink_t
+obj_buff[MAX_BUFFER_LENGTH] uint8_t
+
+crcFlag bool = false
+lastPayloadId uint16_t = 0
+readedLen uint16_t = 0
+ readedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
+{=^ low_memory =}
+sendedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
+{=# auto_retry =}
+retryPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
+retryLen uint16_t = 0
+need_retry bool = false
+retry_timer_ms unsigned long = 0
+{=/ auto_retry =}
+{=/ low_memory =}
+
+
+requestJsmnParser jsmn_parser
+requestJsmnTokens[MAX_NUM_TOKENS] jsmntok_t
+requestValue[MAX_REQUEST_VALUE_LENGTH] char
+wantSendData[MAX_BUFFER_LENGTH] char
+{=^ low_memory =}
+tempSendData[MAX_TMPL_LENGTH] char
+{=/ low_memory =}
+wantSendDataTpl[MAX_TMPL_LENGTH] char
+
+METRIC_DELAY_MS = 1800000
+metric_timer_ms unsigned long = 0
+requireReportAttribute bool = true
+requireReportMetric bool = true
+
 
 // -1 non num
 //  0 int
@@ -365,7 +365,7 @@ func mainAction() void {
     {=/ has_timer =}
 }
 
-func noop() void {}
+func PING_FAILED_CB() void {}
 
 func send_packet_raw(uint8_t * buf, uint16_t length) void {
     delay(SENDED_DELAY_MS);
@@ -758,7 +758,6 @@ func processRequest(const char *json, int length, char *retval) bool {
 }
 
 {=^ low_memory =}
-{=# has_metric =}
 func reportMetric(bool force) bool {
     bool wantSend = false;
     int total_length = 0;
@@ -788,7 +787,6 @@ func reportMetric(bool force) bool {
     return false;
 }
 
-{=/ has_metric =}
 func reportAttribute(bool force) bool {
     int total_length = 0;
     bool wantSend = false;
@@ -832,7 +830,6 @@ func reportAttribute(bool force) bool {
 }
 {=/ low_memory =}
 {=# low_memory =}
-{=# has_metric =}
 func reportMetric(bool force) bool {
     bool sended = false;
     {=# metrics =}
@@ -851,7 +848,6 @@ func reportMetric(bool force) bool {
     return sended;
 }
 
-{=/ has_metric =}
 func reportAttribute(bool force) bool {
     bool sended = true;
     {=# attrs =}
@@ -881,9 +877,7 @@ func reportAttribute(bool force) bool {
     return sended;
 }
 {=/ low_memory =}
-{=/ has_app =}
 
-{=# has_timer =}
 sys_timer_s         uint32_t = 0
 sys_timer_sync_ms   uint32_t = 0
 next_timer_event_ms uint32_t = 0
@@ -1034,8 +1028,6 @@ func processTimer0(int addr0, int addr1, int addr2, bool * sched) void {
         timer_action = 1;
     }
 }
-
-{=/ has_timer =}
 
 func get_cache_time_ms() unsigned long {
     return current_time_ms;
