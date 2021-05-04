@@ -172,12 +172,6 @@ getConstants gasp = [c | (ExprConst c) <- gaspExprs gasp]
 getGpios :: Gasp -> [Gpio]
 getGpios gasp = [gpio | (ExprGpio gpio) <- gaspExprs gasp]
 
-hasInput :: [Gpio] -> Bool
-hasInput [] = False
-hasInput (x:xs)
-  | isInput (gpioBind x) = True
-  | otherwise = hasInput xs
-
 
 -- * AGpios
 
@@ -316,7 +310,6 @@ instance ToJSON Gasp where
         , "loops"       .= getLoops gasp
         , "setups"      .= getSetups gasp
         , "attrs"       .= attrs
-        , "has_attr"    .= hasAttr
         , "metrics"     .= metrics
         , "has_metric"  .= hasMetric
         , "max_req_len" .= (getMaxRequestValueLength gasp + 1)
@@ -327,15 +320,11 @@ instance ToJSON Gasp where
         , "gpios"       .= gpios
         , "agpios"      .= agpios
         , "rules"       .= rules
-        , "has_gpio"    .= not (null gpios)
-        , "has_input"   .= hasInput gpios
         , "has_debug"   .= constDebug consts
-        , "has_rule"    .= not (null rules)
         , "low_memory"  .= isLowMemory
         , "consts"      .= requiredConsts
         , "vars"        .= requiredVars
         , "uarts"       .= uarts
-        , "has_uart"    .= not (null uarts)
         , "ctrl_mode"   .= ctrlMode
         , "production"  .= prod
         , "timers"      .= timers
@@ -362,7 +351,6 @@ instance ToJSON Gasp where
               varText = T.intercalate "\n" $ map (\(Constant a b c) -> T.pack $ concat [a, " ", b, " ", c]) requiredVars
               requiredConsts = getRequiredConstant (requiredText <> "\n" <> funcText <> "\n" <> varText) consts
               hasMetric = not (null metrics)
-              hasAttr = not (null attrs)
               app = getApp gasp0
               rules = getRules gasp
               timers = getTimers gasp

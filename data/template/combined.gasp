@@ -113,7 +113,6 @@ loop {
 // end actions
 {=/ actions =}
 
-{=# has_rule =}
 // start rules
 rule_depends_checked bool = false
 {=# rules =}
@@ -200,14 +199,10 @@ loop {
 }
 {=/ rules =}
 // end rules
-{=/ has_rule =}
 
-{=# has_input =}
 DEBOUNCE_DELAY_MS = 50
 gpio_reading uint8_t = 0
-{=/ has_input =}
 
-{=# has_gpio =}
 {=# gpios =}
 {=# bind =}
 {=# is_link =}
@@ -351,7 +346,6 @@ func toggle_gpio_{= name =}() void {
 {=/ is_no_bind =}
 {=/ bind =}
 {=/ gpios =}
-{=/ has_gpio =}
 
 {=# agpios =}
 {=# bind =}

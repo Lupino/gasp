@@ -3,7 +3,6 @@ module Gasp.Gpio
     , State (..)
     , GpioBind (..)
     , Pin (..)
-    , isInput
     ) where
 
 
@@ -63,12 +62,6 @@ instance ToJSON GpioBind where
         , "is_pwm"     .= False
         , "is_fn"      .= False
         ]
-
-isInput :: GpioBind -> Bool
-isInput (LinkAttr _ _) = False
-isInput (CallFn _ _)   = True
-isInput (PwmAttr _)    = False
-isInput NoBind         = False
 
 data Gpio = Gpio
     { gpioName  :: !String -- Identifier
