@@ -2,25 +2,26 @@
 {=# imports =}
 #include {=& name =}
 {=/ imports =}
+
 {=# consts =}
 {=# has_value =}
-{=^ has_type =}
 #define {= name =} {= value =}
-{=/ has_type =}
-{=# has_type =}
-{= type =} {= name =} = {= value =};
-{=/ has_type =}
 {=/ has_value =}
 {=^ has_value =}
-{=^ has_type =}
 #define {= name =}
-{=/ has_type =}
-{=# has_type =}
-{= type =} {= name =};
-{=/ has_type =}
 {=/ has_value =}
 {=/ consts =}
 
+{=# vars =}
+{=# has_value =}
+{= type =} {= name =} = {= value =};
+{=/ has_value =}
+{=^ has_value =}
+{= type =} {= name =};
+{=/ has_value =}
+{=/ vars =}
+
+{=# has_app =}
 #ifdef ARDUINO_ARCH_RP2040
 #define EEPROM_NEED_COMMIT
 #ifndef EEPROM_SIZE
@@ -28,6 +29,8 @@
 #endif
 #endif
 
+{=/ has_app =}
+unsigned long get_current_time_ms();
 {=# functions =}
 {=# has_argv =}
 {= type =} {= name =}({= argv =});
@@ -53,6 +56,7 @@
 {=/ flag =}
 {=/ has_argv =}
 {=/ functions =}
+
 void setup() {
     {=# setups =}
     {=& code =}
@@ -67,26 +71,10 @@ void loop() {
     {=/ loops =}
 }
 
-{=^ low_memory =}
-void merge_json(char *dst, char *src, int *total_length) {
-    src[0] = ' ';
-    while (*src != '}') {
-        dst[*total_length]=*src++;
-        *total_length += 1;
-    }
-    dst[*total_length] = ',';
-    *total_length += 1;
+unsigned long get_current_time_ms() {
+    return millis();
 }
 
-{=/ low_memory =}
-int get_json_length(const char *src) {
-    int length = 1;
-    while (*src != '}') {
-        *src++;
-        length += 1;
-    }
-    return length;
-}
 {=# functions =}
 {=# has_argv =}
 {= type =} {= name =}({= argv =}) {

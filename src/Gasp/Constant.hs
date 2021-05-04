@@ -1,9 +1,14 @@
 module Gasp.Constant
   ( Constant (..)
-  , combineConstant
+  , splitConstant
+  , getRequiredConstant
   ) where
 
-import           Data.Aeson (ToJSON (..), object, (.=))
+import           Data.Aeson    (ToJSON (..), object, (.=))
+import           Data.List     (partition)
+import           Data.Text     (Text)
+import qualified Data.Text     as T (pack, takeWhile)
+import           Gasp.Function (hasToken)
 
 data Constant = Constant
   { constName  :: !String
@@ -24,8 +29,12 @@ instance ToJSON Constant where
       ]
 
 
-combineConstant :: [Constant] -> [Constant] -> [Constant]
-combineConstant combined []  = combined
-combineConstant combined (x:xs)
-  | x `elem` combined = combineConstant combined xs
-  | otherwise = combineConstant (combined ++ [x]) xs
+splitConstant :: [Constant] -> ([Constant], [Constant])
+splitConstant = partition (null . constType)
+
+getRequiredConstant :: Text -> [Constant] -> [Constant]
+getRequiredConstant txt = filter isRequired
+  where isRequired :: Constant -> Bool
+        isRequired var = hasToken (getToken var) txt
+
+        getToken = T.takeWhile (/='[') . T.takeWhile (/='(') . T.pack . constName

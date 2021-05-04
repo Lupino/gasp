@@ -4,12 +4,15 @@ module Gasp.Function
     , hasRetval
     , hasToken
     , FuncName (..)
+    , getRequiredFunction
     ) where
 
+
 import           Data.Aeson (ToJSON (..), object, (.=))
+import           Data.List  (partition)
 import           Data.Text  (Text)
-import qualified Data.Text  as T (breakOnEnd, dropEnd, length, null, take,
-                                  takeEnd, takeWhileEnd)
+import qualified Data.Text  as T (breakOnEnd, dropEnd, intercalate, length,
+                                  null, pack, take, takeEnd, takeWhileEnd)
 import           Gasp.Flag  (Flag)
 
 newtype FuncName = FuncName String
@@ -24,7 +27,10 @@ data Function = Function
     , funcFlag :: !Flag
     , funcArgv :: !String
     , funcType :: !String
-    } deriving (Show, Eq)
+    } deriving (Show)
+
+instance Eq Function where
+  c0 == c1 = funcName c0 == funcName c1
 
 instance ToJSON Function where
     toJSON func = object
@@ -46,9 +52,8 @@ hasToken tok txt
         prevLen = T.length prev
         endC = T.take 1 next
         startC = T.take 1 $ T.takeEnd (tokLen + 1) prev
-        validEndC = [" ", ",", ")", "="]
-        validStartC = [" ", ",", "("]
-        isToken = endC `elem` validEndC && startC `elem` validStartC
+        validC = [" ", ",", "=", "(", ")", "[", "]", ";", "\n", "!", ".", "+", "-", "*", "/", "&", ">", "<"]
+        isToken = endC `elem` validC && startC `elem` validC
         prevLine = T.takeWhileEnd (/='\n') prev
         (comment, _) = T.breakOnEnd "//" prevLine
         isNotComment = T.null comment
@@ -58,3 +63,18 @@ hasRetval = hasToken "retval" . funcCode
 
 hasJson :: Function -> Bool
 hasJson = hasToken "tokens" . funcCode
+
+
+isRequired :: Text -> Function -> Bool
+isRequired txt func = hasToken (T.pack fn) txt
+  where FuncName fn = funcName func
+
+splitRequired :: Text -> [Function] -> ([Function], [Function])
+splitRequired = partition . isRequired
+
+getRequiredFunction :: Text -> [Function] -> [Function]
+getRequiredFunction txt funcs
+  | null required = []
+  | otherwise     = required ++ getRequiredFunction nextText unrequired
+  where (required, unrequired) = splitRequired txt funcs
+        nextText = T.intercalate "\n" $ map funcCode required

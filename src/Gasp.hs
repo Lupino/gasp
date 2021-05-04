@@ -23,7 +23,9 @@ import           Data.Binary.Put       (Put, putByteString, putFloatle,
                                         putInt32le)
 import           Data.ByteString.Char8 as BC (pack)
 import           Data.HexString        (hexString, toBytes)
+import           Data.List             (nub)
 import           Data.Maybe            (isJust)
+import qualified Data.Text             as T (intercalate, pack)
 import qualified ExternalCode
 import           Gasp.AGpio
 import           Gasp.App
@@ -346,6 +348,7 @@ instance ToJSON Gasp where
         , "has_float"   .= (hasFloatAttr attrs || hasFloatMetric metrics)
         , "low_memory"  .= isLowMemory
         , "consts"      .= consts
+        , "vars"        .= requiredVars
         , "uarts"       .= uarts
         , "has_uart"    .= not (null uarts)
         , "ctrl_mode"   .= ctrlMode
@@ -362,8 +365,15 @@ instance ToJSON Gasp where
               agpios = getAGpios gasp
               uarts = getUarts gasp
               cmds = getCmds gasp
-              funcs = getFunctions gasp
-              consts = combineConstant [] $ getConstants gasp
+              (consts, vars) = splitConstant $ nub $ getConstants gasp
+              requiredText
+                =  T.intercalate "\n"
+                $  map loopCode (getLoops gasp)
+                ++ map setupCode (getSetups gasp)
+                ++ map (T.pack . constValue) consts
+              funcs = getRequiredFunction requiredText $ getFunctions gasp
+              funcText = T.intercalate "\n" $ map funcCode funcs
+              requiredVars = getRequiredConstant (requiredText <> "\n" <> funcText) vars
               hasMetric = not (null metrics)
               hasAttr = not (null attrs)
               app = getApp gasp0

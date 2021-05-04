@@ -707,10 +707,6 @@ loop {
     {=/ has_timer =}
 }
 
-func get_current_time_ms() unsigned long {
-    return millis();
-}
-
 func get_cache_time_ms() unsigned long {
     return current_time_ms;
 }
@@ -955,6 +951,29 @@ func jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char 
         return true;
     }
     return false;
+}
+
+{=^ low_memory =}
+func merge_json(char *dst, char *src, int *total_length) void {
+    src[0] = ' ';
+    // fix compile error {
+    while (*src != '}') {
+        dst[*total_length]=*src++;
+        *total_length += 1;
+    }
+    dst[*total_length] = ',';
+    *total_length += 1;
+}
+
+{=/ low_memory =}
+func get_json_length(const char *src) int {
+    int length = 1;
+    // fix compile error {
+    while (*src != '}') {
+        *src++;
+        length += 1;
+    }
+    return length;
 }
 
 {=# attrs =}
