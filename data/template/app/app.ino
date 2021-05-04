@@ -20,6 +20,7 @@
 {= type =} {= name =};
 {=/ has_value =}
 {=/ vars =}
+unsigned long current_time_ms = 0;
 
 {=# has_app =}
 #ifdef ARDUINO_ARCH_RP2040

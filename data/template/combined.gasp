@@ -497,7 +497,6 @@ sys_timer_can_sync bool = true
 {=# timers =}
 timer_{= name =}_sched bool = false
 {=/ timers =}
-current_time_ms unsigned long = 0
 
 setup {
     {=# has_app =}
