@@ -8,60 +8,6 @@ setup {
     #ifdef EEPROM_SIZE
     EEPROM.begin(EEPROM_SIZE);
     #endif
-    {=# attrs =}
-    {=# keep =}
-    {=# onebyte =}
-    attr_{= name =} = EEPROM.read({= addr =});
-    {=/ onebyte =}
-    {=^ onebyte =}
-    EEPROM.get({= addr =}, attr_{= name =});
-    {=/ onebyte =}
-    {=# is_float =}
-    if (!is_valid_float(attr_{= name =}, {= scaled_min =}, {= scaled_max =})) {
-    {=/ is_float =}
-    {=^ is_float =}
-    {=# uncheckmin =}
-    if (attr_{= name =} > {= scaled_max =}) {
-    {=/ uncheckmin =}
-    {=^ uncheckmin =}
-    if (attr_{= name =} < {= scaled_min =} || attr_{= name =} > {= scaled_max =}) {
-    {=/ uncheckmin =}
-    {=/ is_float =}
-        attr_{= name =} = {= default =};
-    }
-
-    {=/ keep =}
-    {=/ attrs =}
-    {=# metrics =}
-    {=# auto =}
-    {=# onebyte =}
-    metric_{= name =}_threshold = EEPROM.read({= addr =});
-    {=/ onebyte =}
-    {=^ onebyte =}
-    EEPROM.get({= addr =}, metric_{= name =}_threshold);
-    {=/ onebyte =}
-    {=# is_float =}
-    if (!is_valid_float(metric_{= name =}_threshold, {= min_threshold =}, {= max_threshold =})) {
-    {=/ is_float =}
-    {=^ is_float =}
-    {=# uncheckmin =}
-    if (metric_{= name =}_threshold > {= max_threshold =}) {
-    {=/ uncheckmin =}
-    {=^ uncheckmin =}
-    if (metric_{= name =}_threshold < {= min_threshold =} || metric_{= name =}_threshold > {= max_threshold =}) {
-    {=/ uncheckmin =}
-    {=/ is_float =}
-        metric_{= name =}_threshold = {= threshold =};
-    }
-
-    {=/ auto =}
-    {=/ metrics =}
-
-    {=# has_debug =}
-    #ifdef DEBUG_SERIAL
-    DEBUG_SERIAL.println(F("Setup"));
-    #endif
-    {=/ has_debug =}
 }
 
 loop {
@@ -161,6 +107,24 @@ loop {
 
 }
 {=/ has_app =}
+
+{=# has_debug =}
+setup {
+    #ifdef DEBUG_SERIAL
+    DEBUG_SERIAL.println(F("Setup"));
+    #endif
+}
+{=/ has_debug =}
+
+current_time_ms unsigned long = 0
+
+func get_current_time_ms() unsigned long {
+    return millis();
+}
+
+loop {
+    current_time_ms = get_current_time_ms();
+}
 
 auth_timer_ms unsigned long = 0
 
@@ -519,6 +483,37 @@ func get_json_length(const char *src) int {
 }
 
 {=# attrs =}
+
+attr_{= name =} {= type =} = {= default =}
+last_attr_{= name =} {= type =} = {= default =}
+attr_{= name =}_force bool = true
+
+{=# has_app =}
+{=# keep =}
+setup {
+    {=# onebyte =}
+    attr_{= name =} = EEPROM.read({= addr =});
+    {=/ onebyte =}
+    {=^ onebyte =}
+    EEPROM.get({= addr =}, attr_{= name =});
+    {=/ onebyte =}
+    {=# is_float =}
+    if (!is_valid_float(attr_{= name =}, {= scaled_min =}, {= scaled_max =})) {
+    {=/ is_float =}
+    {=^ is_float =}
+    {=# uncheckmin =}
+    if (attr_{= name =} > {= scaled_max =}) {
+    {=/ uncheckmin =}
+    {=^ uncheckmin =}
+    if (attr_{= name =} < {= scaled_min =} || attr_{= name =} > {= scaled_max =}) {
+    {=/ uncheckmin =}
+    {=/ is_float =}
+        attr_{= name =} = {= default =};
+    }
+}
+{=/ keep =}
+{=/ has_app =}
+
 func set_attr_{= name =}_raw({= type =} unscaled_value) void {
     attr_{= name =}_force = true;
     attr_{= name =} = unscaled_value * {= scale =};
@@ -586,8 +581,40 @@ func get_attr_{= name =}(char *retval) bool {
 }
 
 {=/ attrs =}
+
 {=# metrics =}
+metric_{= name =} {= type =} = 0
+last_metric_{= name =} {= type =} = 0
+
 {=# auto =}
+metric_{= name =}_threshold {= type =} = {= threshold =}
+last_metric_{= name =}_threshold {= type =} = {= threshold =}
+metric_{= name =}_threshold_force bool = true
+
+{=# has_app =}
+setup {
+    {=# onebyte =}
+    metric_{= name =}_threshold = EEPROM.read({= addr =});
+    {=/ onebyte =}
+    {=^ onebyte =}
+    EEPROM.get({= addr =}, metric_{= name =}_threshold);
+    {=/ onebyte =}
+    {=# is_float =}
+    if (!is_valid_float(metric_{= name =}_threshold, {= min_threshold =}, {= max_threshold =})) {
+    {=/ is_float =}
+    {=^ is_float =}
+    {=# uncheckmin =}
+    if (metric_{= name =}_threshold > {= max_threshold =}) {
+    {=/ uncheckmin =}
+    {=^ uncheckmin =}
+    if (metric_{= name =}_threshold < {= min_threshold =} || metric_{= name =}_threshold > {= max_threshold =}) {
+    {=/ uncheckmin =}
+    {=/ is_float =}
+        metric_{= name =}_threshold = {= threshold =};
+    }
+}
+{=/ has_app =}
+
 func set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) bool {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
         int tp = isnum(requestValue);
@@ -1036,22 +1063,6 @@ func get_cache_time_ms() unsigned long {
     return current_time_ms;
 }
 
-{=# attrs =}
-attr_{= name =} {= type =} = {= default =}
-last_attr_{= name =} {= type =} = {= default =}
-attr_{= name =}_force bool = true
-
-{=/ attrs =}
-{=# metrics =}
-metric_{= name =} {= type =} = 0
-last_metric_{= name =} {= type =} = 0
-{=# auto =}
-metric_{= name =}_threshold {= type =} = {= threshold =}
-last_metric_{= name =}_threshold {= type =} = {= threshold =}
-metric_{= name =}_threshold_force bool = true
-{=/ auto =}
-
-{=/ metrics =}
 {=# actions =}
 // start actions
 {= fn =}_timer_ms unsigned long = 0

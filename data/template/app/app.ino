@@ -20,7 +20,6 @@
 {= type =} {= name =};
 {=/ has_value =}
 {=/ vars =}
-unsigned long current_time_ms = 0;
 
 {=# has_app =}
 #ifdef ARDUINO_ARCH_RP2040
@@ -31,7 +30,6 @@ unsigned long current_time_ms = 0;
 #endif
 
 {=/ has_app =}
-unsigned long get_current_time_ms();
 {=# functions =}
 {=# has_argv =}
 {= type =} {= name =}({= argv =});
@@ -66,14 +64,9 @@ void setup() {
 }
 
 void loop() {
-    current_time_ms = get_current_time_ms();
     {=# loops =}
     {=& code =}
     {=/ loops =}
-}
-
-unsigned long get_current_time_ms() {
-    return millis();
 }
 
 {=# functions =}
