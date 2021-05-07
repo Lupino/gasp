@@ -3,26 +3,8 @@
 import <givelink.h> https://github.com/Lupino/givelink.git
 import <jsmn.h> https://github.com/zserge/jsmn.git
 import <EEPROM.h>
-setup {
-    {=# app =}
-    givelink_context_init(&ctx, ctx_buff);
-    givelink_context_set_key(key, {= key_len =});
-    {=# production =}
-    for (int i = 0; i < {= token_len =}; i ++) {
-        token[i] = EEPROM.read({= token_addr =} + i);
-    }
-    {=/ production =}
-    givelink_context_set_token(token, {= token_len =});
-    {=# production =}
-    for (int i = 0; i < {= addr_len =}; i ++) {
-        addr[i] = EEPROM.read({= addr_addr =} + i);
-    }
-    givelink_context_set_addr(addr, {= addr_len =});
-    givelink_context_set_auth(true);
-    {=/ production =}
-    givelink_init(&obj, obj_buff);
-    {=/ app =}
 
+setup {
     #ifdef EEPROM_SIZE
     EEPROM.begin(EEPROM_SIZE);
     #endif
@@ -104,14 +86,7 @@ loop {
                 {=/ has_debug =}
                 if (obj.type == AUTHRES && crcFlag) {
                     {=# production =}
-                    {=# app =}
-                    for (int i = 0; i < {= addr_len =}; i ++) {
-                        EEPROM.write({= addr_addr =} + i, obj.data[i]);
-                    }
-                    #ifdef EEPROM_NEED_COMMIT
-                    EEPROM.commit();
-                    #endif
-                    {=/ app =}
+                    save_addr();
                     {=/ production =}
                 }
                 if (obj.type == REQUEST && crcFlag) {
@@ -220,6 +195,34 @@ addr[{= addr_len =}] uint8_t
 token[{= token_len =}] uint8_t = {{= token_hex_array =}}
 addr[{= addr_len =}] uint8_t = {{= addr_hex_array =}};
 {=/ production =}
+
+setup {
+    givelink_context_init(&ctx, ctx_buff);
+    givelink_context_set_key(key, {= key_len =});
+    {=# production =}
+    for (int i = 0; i < {= token_len =}; i ++) {
+        token[i] = EEPROM.read({= token_addr =} + i);
+    }
+    {=/ production =}
+    givelink_context_set_token(token, {= token_len =});
+    {=# production =}
+    for (int i = 0; i < {= addr_len =}; i ++) {
+        addr[i] = EEPROM.read({= addr_addr =} + i);
+    }
+    givelink_context_set_addr(addr, {= addr_len =});
+    givelink_context_set_auth(true);
+    {=/ production =}
+    givelink_init(&obj, obj_buff);
+}
+
+func save_addr {
+    for (int i = 0; i < {= addr_len =}; i ++) {
+        EEPROM.write({= addr_addr =} + i, obj.data[i]);
+    }
+    #ifdef EEPROM_NEED_COMMIT
+    EEPROM.commit();
+    #endif
+}
 {=/ app =}
 
 obj givelink_t
