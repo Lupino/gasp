@@ -1329,9 +1329,6 @@ is_{= name =}_readed bool = false
 is_{= name =}_write_{= wname =} bool = false
 {=/ writers =}
 {= name =}_write_index uint8_t = 0
-setup {
-    {= name =}.begin({= speed =});
-}
 loop {
     {= name =}_poll();
 }

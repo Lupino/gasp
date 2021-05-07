@@ -148,7 +148,7 @@ rule condition do [later do_later_ms ]action [else [later do_later_ms ]elseActio
 ## uart
 
 ```
-uart uartName speed {
+uart uartName {
     write writeName "1234" [on condition]  // hex command
     read bufLen fnReadName fnParseName [on condition]
 }
