@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7366626657b5504ca24d45aefc330857a3ede701e1416eda4d9ea9e4a2668be4
+-- hash: ddfc2e20368c89dec3bd6e196b9b12bead4e755b17a6460236dfc152337310b4
 
 name:           gasp
 version:        0.1.0.0
@@ -146,10 +146,10 @@ executable gasp
     , filepath
     , fsnotify
     , gasp
-    , http-conduit
     , mtl
     , path
     , path-io
+    , text
     , time
     , utf8-string
     , uuid

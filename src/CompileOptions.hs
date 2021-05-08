@@ -4,7 +4,8 @@ module CompileOptions
     , isCompile
     ) where
 
-import           Path (Abs, Dir, Path)
+import           Gasp.Flag (Flag)
+import           Path      (Abs, Dir, Path)
 
 data CompileType = Syntax | Compile | Eeprom
 
@@ -22,4 +23,5 @@ data CompileOptions = CompileOptions
     , projectRootDir      :: !(Path Abs Dir)
     , templateDir         :: !(Path Abs Dir)
     , isProd              :: !Bool
+    , argvFlags           :: ![Flag]
     }

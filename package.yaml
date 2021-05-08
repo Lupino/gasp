@@ -90,4 +90,4 @@ executables:
       - cryptonite
       - aeson
       - utf8-string
-      - http-conduit
+      - text

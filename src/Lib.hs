@@ -16,8 +16,9 @@ import           Data.Yaml                  (encode)
 import qualified ExternalCode
 import           Gasp                       (App (..), Attr (..), Expr (..),
                                              Gasp, Metric (..), filterFlag,
-                                             getGaspExprs, setExternalCodeFiles,
-                                             setGaspExprs, setProd)
+                                             getGaspExprs, setArgvFlags,
+                                             setExternalCodeFiles, setGaspExprs,
+                                             setProd)
 import           Gasp.Function
 import           Gasp.Loop
 import           Gasp.Setup
@@ -139,4 +140,5 @@ enrichGaspASTBasedOnCompileOptions :: Gasp -> CompileOptions -> IO Gasp
 enrichGaspASTBasedOnCompileOptions gasp options = do
     externalCodeFiles <- ExternalCode.readFiles (CompileOptions.externalCodeDirPath options)
     return (gasp `setExternalCodeFiles` externalCodeFiles
-                 `setProd` CompileOptions.isProd options)
+                 `setProd` CompileOptions.isProd options
+                 `setArgvFlags` CompileOptions.argvFlags options)

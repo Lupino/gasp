@@ -6,6 +6,7 @@ module Gasp
     , getGaspExprs
     , setProd
     , getProd
+    , setArgvFlags
     , getRequires
     , filterFlag
 
@@ -53,6 +54,7 @@ data Gasp = Gasp
     { gaspExprs         :: ![Expr]
     , externalCodeFiles :: ![ExternalCode.File]
     , isProd            :: !Bool
+    , argvFlags         :: ![Flag]
     } deriving (Show, Eq)
 
 data Expr
@@ -80,6 +82,7 @@ fromGaspExprs exprs = Gasp
     { gaspExprs         = exprs
     , externalCodeFiles = []
     , isProd            = False
+    , argvFlags         = []
     }
 
 setGaspExprs :: Gasp -> [Expr] -> Gasp
@@ -103,6 +106,11 @@ setProd gasp prod = gasp { isProd = prod }
 
 getProd :: Gasp -> Bool
 getProd = isProd
+
+-- * ArgvFlags
+
+setArgvFlags :: Gasp -> [Flag] -> Gasp
+setArgvFlags gasp flags = gasp { argvFlags = flags }
 
 -- * App
 
@@ -331,7 +339,7 @@ instance ToJSON Gasp where
         ] ++ map (\(Flag k v) -> k .= v) flags
         where gasp = prepareGasp (maybe 0 (startAddr prod) app) (getFuncFlags gasp0) gasp0
               prod = getProd gasp0
-              flags = nub $ getFlags gasp ++ defaultFlags
+              flags = nub $ argvFlags gasp0 ++ getFlags gasp ++ defaultFlags
               attrs = getAttrs gasp
               metrics = getMetrics gasp
               gpios = getGpios gasp
