@@ -18,6 +18,9 @@ app appName {
 flag flagName true|false
 ```
 
+Avaliable flags:
+- has_debug
+
 ## Constant or Variable
 
 ```

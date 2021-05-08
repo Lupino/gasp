@@ -15,7 +15,6 @@ loop {
         if (givelink_recv(readedPayload, &readedLen, GL_SERIAL.read(), &crcFlag)) {
             if (givelink_from_binary(readedPayload, readedLen)) {
                 {=# has_debug =}
-                #ifdef DEBUG_SERIAL
                 DEBUG_SERIAL.print(F("Recv Id: "));
                 DEBUG_SERIAL.print(obj.id);
                 DEBUG_SERIAL.print(F(" Type: "));
@@ -27,7 +26,6 @@ loop {
                     }
                 }
                 DEBUG_SERIAL.println();
-                #endif
 
                 {=/ has_debug =}
                 if (obj.type == AUTHRES && crcFlag) {
@@ -85,9 +83,7 @@ loop {
         }
         if (readedLen > MAX_GL_PAYLOAD_LENGTH) {
             {=# has_debug =}
-            #ifdef DEBUG_SERIAL
             DEBUG_SERIAL.println(F("Error: payload to large"));
-            #endif
             {=/ has_debug =}
             readedLen = 0;
         }
@@ -110,9 +106,7 @@ loop {
 
 {=# has_debug =}
 setup {
-    #ifdef DEBUG_SERIAL
     DEBUG_SERIAL.println(F("Setup"));
-    #endif
 }
 {=/ has_debug =}
 
@@ -346,7 +340,6 @@ func send_packet_raw(uint8_t * buf, uint16_t length) void {
 
 func send_packet() void {
     {=# has_debug =}
-    #ifdef DEBUG_SERIAL
     DEBUG_SERIAL.print(F("Send Id: "));
     DEBUG_SERIAL.print(obj.id);
     DEBUG_SERIAL.print(F(" Type: "));
@@ -358,7 +351,6 @@ func send_packet() void {
         }
     }
     DEBUG_SERIAL.println();
-    #endif
     {=/ has_debug =}
     {=# low_memory =}
     givelink_to_binary(readedPayload);

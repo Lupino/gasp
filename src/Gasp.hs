@@ -137,12 +137,6 @@ getLoops gasp = [loop | (ExprLoop loop) <- gaspExprs gasp]
 getSetups:: Gasp -> [Setup]
 getSetups gasp = [setup | (ExprSetup setup) <- gaspExprs gasp]
 
-constDebug :: [Constant] -> Bool
-constDebug [] = False
-constDebug (x:xs)
-  | constName x == "DEBUG_SERIAL" = True
-  | otherwise = constDebug xs
-
 -- * Attrs
 
 getAttrs:: Gasp -> [Attr]
@@ -327,7 +321,6 @@ instance ToJSON Gasp where
         , "gpios"       .= gpios
         , "agpios"      .= agpios
         , "rules"       .= rules
-        , "has_debug"   .= constDebug consts
         , "low_memory"  .= isLowMemory
         , "consts"      .= requiredConsts
         , "vars"        .= requiredVars
