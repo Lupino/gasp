@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ddfc2e20368c89dec3bd6e196b9b12bead4e755b17a6460236dfc152337310b4
+-- hash: 500e3815b12d6d4de1d57ade5cb3c6529a2b9453dd6414da910d028322f48ab1
 
 name:           gasp
 version:        0.1.0.0
@@ -95,14 +95,10 @@ library
   ghc-options: -Wall -optP-Wno-nonportable-include-path
   build-depends:
       aeson
-    , async
     , base >=4.7 && <5
     , binary
     , bytestring
-    , conduit
-    , conduit-extra
     , directory
-    , exceptions
     , filepath
     , hexstring
     , mtl
@@ -110,13 +106,7 @@ library
     , parsec
     , path
     , path-io
-    , process
-    , regex-tdfa
-    , split
     , text
-    , time
-    , unordered-containers
-    , utf8-string
     , uuid
     , yaml
   default-language: Haskell2010
@@ -137,12 +127,8 @@ executable gasp
   default-extensions: OverloadedStrings TemplateHaskell QuasiQuotes ScopedTypeVariables
   ghc-options: -Wall -optP-Wno-nonportable-include-path -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      aeson
-    , async
-    , base >=4.7 && <5
-    , cryptonite
+      base >=4.7 && <5
     , directory
-    , exceptions
     , filepath
     , fsnotify
     , gasp
@@ -151,6 +137,4 @@ executable gasp
     , path-io
     , text
     , time
-    , utf8-string
-    , uuid
   default-language: Haskell2010
