@@ -16,9 +16,6 @@ data AppProperty
     | Token     !String
     | Addr      !String
     | StartAddr !Int
-    | Ctrl      !Bool
-    | Retry     !Bool
-    | LowMemory !Bool
     deriving (Show, Eq)
 
 -- | Parses supported app properties, expects format "key1: value1, key2: value2, ..."
@@ -28,10 +25,7 @@ appProperties =
   $ appPropertyKey
   <|> appPropertyToken
   <|> appPropertyStartAddr
-  <|> appPropertyCtrl
   <|> try appPropertyAddr
-  <|> try appPropertyRetry
-  <|> try appPropertyLowMemory
 
 appPropertyKey :: Parser AppProperty
 appPropertyKey = Key <$> gaspPropertyStringLiteral "key"
@@ -45,15 +39,6 @@ appPropertyAddr = Addr <$> gaspPropertyStringLiteral "addr"
 appPropertyStartAddr :: Parser AppProperty
 appPropertyStartAddr = StartAddr . fromIntegral <$> gaspPropertyInteger "start_addr"
 
-appPropertyCtrl :: Parser AppProperty
-appPropertyCtrl = Ctrl <$> gaspPropertyBool "ctrl_mode"
-
-appPropertyRetry :: Parser AppProperty
-appPropertyRetry = Retry <$> gaspPropertyBool "auto_retry"
-
-appPropertyLowMemory :: Parser AppProperty
-appPropertyLowMemory = LowMemory <$> gaspPropertyBool "low_memory"
-
 getAppKey :: [AppProperty] -> String
 getAppKey ps = head $ [t | Key t <- ps]
 
@@ -66,15 +51,6 @@ getAppAddr ps = fromMaybe "00000000" $ listToMaybe $ [t | Addr t <- ps]
 getAppStartAddr :: [AppProperty] -> Int
 getAppStartAddr ps = fromMaybe 0 $ listToMaybe $ [t | StartAddr t <- ps]
 
-getAppCtrl :: [AppProperty] -> Bool
-getAppCtrl ps = fromMaybe False $ listToMaybe $ [t | Ctrl t <- ps]
-
-getAppRetry :: [AppProperty] -> Bool
-getAppRetry ps = fromMaybe True $ listToMaybe $ [t | Retry t <- ps]
-
-getAppLowMemory :: [AppProperty] -> Bool
-getAppLowMemory ps = fromMaybe False $ listToMaybe $ [t | LowMemory t <- ps]
-
 -- | Top level parser, parses App.
 app :: Parser App.App
 app = do
@@ -86,7 +62,4 @@ app = do
         , App.appToken     = getAppToken appProps
         , App.appAddr      = getAppAddr appProps
         , App.appStartAddr = getAppStartAddr appProps
-        , App.appCtrl      = getAppCtrl appProps
-        , App.appRetry     = getAppRetry appProps
-        , App.appLowMemory = getAppLowMemory appProps
         }

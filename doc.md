@@ -6,9 +6,7 @@ app appName {
     key: "you_key",
     token: "you_token",
     addr: "00000000",
-    start_addr: 0,
-    ctrl_mode: false,
-    low_memory: false
+    start_addr: 0
 }
 ```
 
@@ -20,6 +18,9 @@ flag flagName true|false
 
 Avaliable flags:
 - has_debug
+- ctrl_mode
+- auto_retry
+- low_memory
 
 ## Constant or Variable
 

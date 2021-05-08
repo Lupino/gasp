@@ -321,18 +321,16 @@ instance ToJSON Gasp where
         , "gpios"       .= gpios
         , "agpios"      .= agpios
         , "rules"       .= rules
-        , "low_memory"  .= isLowMemory
         , "consts"      .= requiredConsts
         , "vars"        .= requiredVars
         , "uarts"       .= uarts
-        , "ctrl_mode"   .= ctrlMode
         , "production"  .= prod
         , "timers"      .= timers
         , "has_timer"   .= hasTimer
-        , "auto_retry"  .= maybe True appRetry app
-        ] ++ map (\(Flag k v) -> k .= v) (getFlags gasp)
+        ] ++ map (\(Flag k v) -> k .= v) flags
         where gasp = prepareGasp (maybe 0 (startAddr prod) app) (getFuncFlags gasp0) gasp0
               prod = getProd gasp0
+              flags = nub $ getFlags gasp ++ defaultFlags
               attrs = getAttrs gasp
               metrics = getMetrics gasp
               gpios = getGpios gasp
@@ -358,10 +356,9 @@ instance ToJSON Gasp where
               maxCmdLen = getMaxCommandLength gasp
               maxTmplLen = getMaxTmplLength gasp
               bufLen0 = getTotalMetricThresholdLength (getTotalAttrLength 0 attrs) metrics
-              isLowMemory = maybe False appLowMemory app
+              isLowMemory = getFlag False flags "low_memory"
               bufLen = if isLowMemory then max maxCmdLen maxTmplLen else max maxCmdLen bufLen0
               contextLen = maybe 0 appContexLen app
-              ctrlMode = maybe False appCtrl app
 
 putExpr :: Expr -> Put
 putExpr (ExprAttr x)

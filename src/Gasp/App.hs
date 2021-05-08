@@ -14,9 +14,6 @@ data App = App
   , appToken     :: !String
   , appAddr      :: !String
   , appStartAddr :: !Int
-  , appCtrl      :: !Bool
-  , appRetry     :: !Bool
-  , appLowMemory :: !Bool
   } deriving (Show, Eq)
 
 instance ToJSON App where
