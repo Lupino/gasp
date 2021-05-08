@@ -17,6 +17,7 @@ module Lexer
   , reservedNameRequire
   , reservedNameImport
   , reservedNameTimer
+  , reservedNameFlag
   , braces
   , brackets
   , symbol
@@ -109,6 +110,9 @@ reservedNameImport = "import"
 reservedNameTimer :: String
 reservedNameTimer = "timer"
 
+reservedNameFlag :: String
+reservedNameFlag = "flag"
+
 -- * Data types.
 
 reservedNameBooleanTrue :: String
@@ -138,6 +142,7 @@ reservedNames =
     , reservedNameRequire
     , reservedNameImport
     , reservedNameTimer
+    , reservedNameFlag
     -- * Data types
     , reservedNameBooleanTrue
     , reservedNameBooleanFalse

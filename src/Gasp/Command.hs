@@ -12,7 +12,7 @@ import           Data.Text            (Text)
 import qualified Data.Text            as T (lines, strip, unlines)
 import           Data.Text.Encoding   (decodeUtf8)
 import qualified Data.Yaml            as Y (encode)
-import           Gasp.Flag            (Flag)
+import           Gasp.Function        (FuncFlag, FuncName)
 
 data DocItem = DocItem
   { itemDocs :: [String]
@@ -48,10 +48,10 @@ instance ToJSON Doc where
 
 data Command = Command
   { cmdName :: !String -- Identifier
-  , cmdFunc :: !String
+  , cmdFunc :: !FuncName
   , cmdErrS :: !String
   , cmdDocS :: !Doc
-  , cmdFlag :: !Flag
+  , cmdFlag :: !FuncFlag
   } deriving (Show, Eq)
 
 instance ToJSON Command where

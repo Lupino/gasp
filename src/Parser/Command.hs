@@ -6,7 +6,7 @@ module Parser.Command
 import           Data.Aeson         (Value (Null), object, (.=))
 import           Data.Maybe         (fromMaybe, listToMaybe)
 import           Gasp.Command
-import           Gasp.Flag          (initFlag)
+import           Gasp.Function      (FuncName (..), genFuncFlag)
 import           Lexer
 import           Parser.Common
 import           Text.Parsec
@@ -120,7 +120,7 @@ updateDocErr _ d = d
 
 -- | A type that describes supported app properties.
 data CommandProperty
-    = Func !String
+    = Func !FuncName
     | ErrS !String
     | DocS !Doc
     deriving (Show, Eq)
@@ -130,7 +130,7 @@ cmdProperties :: Parser [CommandProperty]
 cmdProperties = commaSep1 $ cmdPropertyFunc <|> cmdPropertyErrS <|> cmdPropertyDocS
 
 cmdPropertyFunc :: Parser CommandProperty
-cmdPropertyFunc = Func <$> gaspProperty "fn" identifier
+cmdPropertyFunc = Func . FuncName <$> gaspProperty "fn" identifier
 
 cmdPropertyErrS :: Parser CommandProperty
 cmdPropertyErrS = ErrS <$> gaspPropertyStringLiteral "error"
@@ -143,7 +143,7 @@ command :: Parser Command
 command = do
   (name, props) <- gaspElementNameAndClosureContent reservedNameCommand cmdProperties
 
-  let func = getFromList name [t | Func t <- props]
+  let func = getFromList (FuncName name) [t | Func t <- props]
       errS = getFromList ("call %s failed" `printf` name) [t | ErrS t <- props]
       d = updateDocErr errS
         $ updateDocCmd name
@@ -153,7 +153,7 @@ command = do
   return Command
     { cmdName = name
     , cmdFunc = func
-    , cmdFlag = initFlag func
+    , cmdFlag = genFuncFlag func
     , cmdErrS = errS
     , cmdDocS = d
     }

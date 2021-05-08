@@ -14,6 +14,7 @@ import           Parser.Command       (command)
 import           Parser.Common        (runGaspParser)
 import           Parser.Constant      (constant)
 import           Parser.Every         (every)
+import           Parser.Flag          (flag)
 import           Parser.Function      (function)
 import           Parser.Gpio          (gpio)
 import           Parser.Import        (importParser)
@@ -47,6 +48,7 @@ expr
     <|> exprRequire
     <|> exprImport
     <|> exprTimer
+    <|> exprFlag
 
 exprApp :: Parser Expr
 exprApp = ExprApp <$> app
@@ -95,6 +97,9 @@ exprImport = ExprImport <$> importParser
 
 exprTimer :: Parser Expr
 exprTimer = ExprTimer <$> timer
+
+exprFlag :: Parser Expr
+exprFlag = ExprFlag <$> flag
 
 -- | Top level parser, produces Expr.
 gaspParser :: Parser [Expr]

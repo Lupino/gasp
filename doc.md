@@ -12,6 +12,12 @@ app appName {
 }
 ```
 
+## flag
+
+```
+flag flagName true|false
+```
+
 ## Constant or Variable
 
 ```

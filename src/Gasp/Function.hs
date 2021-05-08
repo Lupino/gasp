@@ -1,11 +1,13 @@
 module Gasp.Function
-    ( Function (..)
-    , hasJson
-    , hasRetval
-    , hasToken
-    , FuncName (..)
-    , getRequiredFunction
-    ) where
+  ( Function (..)
+  , hasJson
+  , hasRetval
+  , hasToken
+  , FuncName (..)
+  , getRequiredFunction
+  , FuncFlag (..)
+  , genFuncFlag
+  ) where
 
 
 import           Data.Aeson (ToJSON (..), object, (.=))
@@ -13,7 +15,28 @@ import           Data.List  (partition)
 import           Data.Text  (Text)
 import qualified Data.Text  as T (breakOnEnd, dropEnd, intercalate, length,
                                   null, pack, take, takeEnd, takeWhileEnd)
-import           Gasp.Flag  (Flag)
+
+data FuncFlag = FuncFlag
+  { flagJson   :: !Bool
+  , flagFunc   :: !FuncName
+  , flagRetval :: !Bool
+  } deriving (Show)
+
+instance Eq FuncFlag where
+  x == y = flagFunc x == flagFunc y
+
+genFuncFlag :: FuncName -> FuncFlag
+genFuncFlag func = FuncFlag
+  { flagJson   = False
+  , flagFunc   = func
+  , flagRetval = False
+  }
+
+instance ToJSON FuncFlag where
+  toJSON flag = object
+    [ "json"   .= flagJson flag
+    , "retval" .= flagRetval flag
+    ]
 
 newtype FuncName = FuncName String
   deriving (Show, Eq)
@@ -24,7 +47,7 @@ instance ToJSON FuncName where
 data Function = Function
     { funcName :: !FuncName
     , funcCode :: !Text
-    , funcFlag :: !Flag
+    , funcFlag :: !FuncFlag
     , funcArgv :: !String
     , funcType :: !String
     } deriving (Show)

@@ -55,22 +55,23 @@ data Gasp = Gasp
     } deriving (Show, Eq)
 
 data Expr
-    = ExprApp !App
-    | ExprCmd !Command
+    = ExprApp      !App
+    | ExprCmd      !Command
     | ExprFunction !Function
-    | ExprSetup !Setup
-    | ExprLoop !Loop
-    | ExprAttr !Attr
-    | ExprMetric !Metric
-    | ExprEvery !Every
-    | ExprGpio !Gpio
-    | ExprAGpio !AGpio
-    | ExprRule !Rule
-    | ExprConst !Constant
-    | ExprUart !Uart
-    | ExprRequire !Require
-    | ExprImport !Import
-    | ExprTimer !Timer
+    | ExprSetup    !Setup
+    | ExprLoop     !Loop
+    | ExprAttr     !Attr
+    | ExprMetric   !Metric
+    | ExprEvery    !Every
+    | ExprGpio     !Gpio
+    | ExprAGpio    !AGpio
+    | ExprRule     !Rule
+    | ExprConst    !Constant
+    | ExprUart     !Uart
+    | ExprRequire  !Require
+    | ExprImport   !Import
+    | ExprTimer    !Timer
+    | ExprFlag     !Flag
     deriving (Show, Eq)
 
 fromGaspExprs :: [Expr] -> Gasp
@@ -197,7 +198,7 @@ getImports :: Gasp -> [Import]
 getImports gasp = [imp | (ExprImport imp) <- gaspExprs gasp]
 
 
--- * Timer
+-- * Timers
 
 getTimers :: Gasp -> [Timer]
 getTimers gasp = [r | (ExprTimer r) <- gaspExprs gasp]
@@ -205,32 +206,38 @@ getTimers gasp = [r | (ExprTimer r) <- gaspExprs gasp]
 
 -- * Flags
 
-getFlags:: Gasp -> [Flag]
-getFlags gasp = map (`guessFlag` exprs) (collectFlags [] exprs)
+getFlags :: Gasp -> [Flag]
+getFlags gasp = [r | (ExprFlag r) <- gaspExprs gasp]
+
+
+-- * FuncFlags
+
+getFuncFlags:: Gasp -> [FuncFlag]
+getFuncFlags gasp = map (`guessFuncFlag` exprs) (collectFuncFlags [] exprs)
   where exprs = gaspExprs gasp
 
 
-getFlag :: [Flag] -> Flag -> Flag
-getFlag [] flag = flag
-getFlag (x:xs) flag
+getFuncFlag :: [FuncFlag] -> FuncFlag -> FuncFlag
+getFuncFlag [] flag = flag
+getFuncFlag (x:xs) flag
   | x == flag = x
-  | otherwise = getFlag xs flag
+  | otherwise = getFuncFlag xs flag
 
 
-setFunctionFlag :: [Flag] -> Function -> Function
+setFunctionFlag :: [FuncFlag] -> Function -> Function
 setFunctionFlag flags func = func
-  { funcFlag = getFlag flags (funcFlag func)
+  { funcFlag = getFuncFlag flags (funcFlag func)
   }
 
 
-setCommandFlag :: [Flag] -> Command -> Command
+setCommandFlag :: [FuncFlag] -> Command -> Command
 setCommandFlag flags cmd = cmd
-  { cmdFlag = getFlag flags (cmdFlag cmd)
+  { cmdFlag = getFuncFlag flags (cmdFlag cmd)
   }
 
 
 getCommandLength :: Expr -> Int
-getCommandLength (ExprCmd cmd)   = length $ cmdFunc cmd
+getCommandLength (ExprCmd cmd)   = length $ cmdName cmd
 getCommandLength (ExprAttr attr) = setAttrLength attr
 getCommandLength (ExprMetric m)  = setMetricThresholdLength m
 getCommandLength (ExprTimer t)   = setTimerLength t
@@ -262,7 +269,7 @@ getMaxTmplLength :: Gasp -> Int
 getMaxTmplLength = maximum . map getTmplLength . gaspExprs
 
 
-prepareGasp :: Int -> [Flag] -> Gasp -> Gasp
+prepareGasp :: Int -> [FuncFlag] -> Gasp -> Gasp
 prepareGasp sAddr flags gasp = setGaspExprs gasp . go 1 sAddr $ gaspExprs gasp
   where go :: Int -> Int -> [Expr] -> [Expr]
         go _ _ []        = []
@@ -278,30 +285,30 @@ prepareGasp sAddr flags gasp = setGaspExprs gasp . go 1 sAddr $ gaspExprs gasp
         go ri addr (ExprRule x:xs) = ExprRule x {ruleIndex=ri} : go (ri + 1) addr xs
         go ri addr (x:xs) = x : go ri addr xs
 
-guessFlag :: Flag -> [Expr] -> Flag
-guessFlag flag [] = flag
-guessFlag flag (ExprFunction x:xs)
+guessFuncFlag :: FuncFlag -> [Expr] -> FuncFlag
+guessFuncFlag flag [] = flag
+guessFuncFlag flag (ExprFunction x:xs)
   | funcFlag x == flag = flag
     { flagRetval = hasRetval x
     , flagJson = hasJson x
     }
-  | otherwise = guessFlag flag xs
-guessFlag flag (_:xs) = guessFlag flag xs
+  | otherwise = guessFuncFlag flag xs
+guessFuncFlag flag (_:xs) = guessFuncFlag flag xs
 
-collectFlags :: [Flag] -> [Expr] -> [Flag]
-collectFlags flags [] = flags
-collectFlags flags (ExprCmd x:xs)
-  | cmdFlag x `elem` flags = collectFlags flags xs
-  | otherwise = collectFlags (cmdFlag x : flags) xs
-collectFlags flags (ExprFunction x:xs)
-  | funcFlag x `elem` flags = collectFlags flags xs
-  | otherwise = collectFlags (funcFlag x : flags) xs
-collectFlags flags (_:xs) = collectFlags flags xs
+collectFuncFlags :: [FuncFlag] -> [Expr] -> [FuncFlag]
+collectFuncFlags flags [] = flags
+collectFuncFlags flags (ExprCmd x:xs)
+  | cmdFlag x `elem` flags = collectFuncFlags flags xs
+  | otherwise = collectFuncFlags (cmdFlag x : flags) xs
+collectFuncFlags flags (ExprFunction x:xs)
+  | funcFlag x `elem` flags = collectFuncFlags flags xs
+  | otherwise = collectFuncFlags (funcFlag x : flags) xs
+collectFuncFlags flags (_:xs) = collectFuncFlags flags xs
 
 -- * ToJSON instances.
 
 instance ToJSON Gasp where
-    toJSON gasp0 = object
+    toJSON gasp0 = object $
         [ "app"         .= app
         , "has_app"     .= isJust app
         , "commands"    .= cmds
@@ -330,8 +337,8 @@ instance ToJSON Gasp where
         , "timers"      .= timers
         , "has_timer"   .= hasTimer
         , "auto_retry"  .= maybe True appRetry app
-        ]
-        where gasp = prepareGasp (maybe 0 (startAddr prod) app) (getFlags gasp0) gasp0
+        ] ++ map (\(Flag k v) -> k .= v) (getFlags gasp)
+        where gasp = prepareGasp (maybe 0 (startAddr prod) app) (getFuncFlags gasp0) gasp0
               prod = getProd gasp0
               attrs = getAttrs gasp
               metrics = getMetrics gasp
