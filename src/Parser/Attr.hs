@@ -2,7 +2,6 @@ module Parser.Attr
     ( attr
     ) where
 
-import           Data.Maybe         (fromMaybe, listToMaybe)
 import qualified Gasp.Attr          as Attr
 import           Gasp.Common        (DataType (..), maxValue, minValue)
 import           Lexer
@@ -41,39 +40,15 @@ cusL = do
 attrProperties :: Parser [AttrProperty]
 attrProperties = commaSep1 cusL
 
-getAttrType :: DataType -> [AttrProperty] -> DataType
-getAttrType def ps = fromMaybe def . listToMaybe $ [t | Type t <- ps]
-
-getAttrMax :: Double -> [AttrProperty] -> Double
-getAttrMax def ps = fromMaybe def . listToMaybe $ [t | Max t <- ps]
-
-getAttrMin :: Double -> [AttrProperty] -> Double
-getAttrMin def ps = fromMaybe def . listToMaybe $ [t | Min t <- ps]
-
-getAttrDef :: Double -> [AttrProperty] -> Double
-getAttrDef def ps = fromMaybe def . listToMaybe $ [t | Def t <- ps]
-
-getAttrScale :: Double -> [AttrProperty] -> Double
-getAttrScale def ps = fromMaybe def . listToMaybe $ [t | Scale t <- ps]
-
-getAttrGenSet :: [AttrProperty] -> Bool
-getAttrGenSet ps = fromMaybe True . listToMaybe $ [t | GenSet t <- ps]
-
-getAttrKeep :: [AttrProperty] -> Bool
-getAttrKeep ps = fromMaybe True . listToMaybe $ [t | Keep t <- ps]
-
-getAttrPrec :: Integer -> [AttrProperty] -> Integer
-getAttrPrec def ps = fromMaybe def . listToMaybe $ [t | Prec t <- ps]
-
 -- | Top level parser, parses Attr.
 attr :: Parser Attr.Attr
 attr = do
-    (attrName, attrProps) <- gaspElementNameAndClosureContent reservedNameAttr attrProperties
+    (attrName, props) <- gaspElementNameAndClosureContent reservedNameAttr attrProperties
 
-    let tp = getAttrType (DataType "int") attrProps
+    let tp = getFromList (DataType "int") [t | Type t <- props]
         tpMax = maxValue tp
         tpMin = minValue tp
-        scale = getAttrScale 1 attrProps
+        scale = getFromList 1 [t | Scale t <- props]
         unScaledMax = tpMax / scale
         unScaledMin = tpMin / scale
 
@@ -81,11 +56,11 @@ attr = do
         { Attr.attrName   = Attr.AttrName attrName
         , Attr.attrAddr   = 0
         , Attr.attrType   = tp
-        , Attr.attrMax    = min unScaledMax (getAttrMax unScaledMax attrProps)
-        , Attr.attrMin    = max unScaledMin (getAttrMin unScaledMin attrProps)
-        , Attr.attrDef    = getAttrDef 0 attrProps
-        , Attr.attrGenSet = getAttrGenSet attrProps
-        , Attr.attrKeep   = getAttrKeep attrProps
+        , Attr.attrMax    = min unScaledMax (getFromList unScaledMax [t | Max t <- props])
+        , Attr.attrMin    = max unScaledMin (getFromList unScaledMin [t | Min t <- props])
+        , Attr.attrDef    = getFromList 0 [t | Def t <- props]
+        , Attr.attrGenSet = getFromList True [t | GenSet t <- props]
+        , Attr.attrKeep   = getFromList True [t | Keep t <- props]
         , Attr.attrScale  = scale
-        , Attr.attrPrec   = fromIntegral $ getAttrPrec 2 attrProps
+        , Attr.attrPrec   = fromIntegral $ getFromList 2 [t | Prec t <- props]
         }

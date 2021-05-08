@@ -2,13 +2,11 @@ module Parser.Metric
     ( metric
     ) where
 
-import           Text.Parsec.String (Parser)
-
-import           Data.Maybe         (fromMaybe, listToMaybe)
 import           Gasp.Common        (DataType (..), maxValue, minValue)
 import qualified Gasp.Metric        as Metric
 import           Lexer
 import           Parser.Common
+import           Text.Parsec.String (Parser)
 
 -- | A type that describes supported app properties.
 data MetricProperty
@@ -40,27 +38,6 @@ cusL = do
 metricProperties :: Parser [MetricProperty]
 metricProperties = commaSep1 cusL
 
-getMetricType :: DataType -> [MetricProperty] -> DataType
-getMetricType def ps = fromMaybe def . listToMaybe $ [t | Type t <- ps]
-
-getMetricMax :: Double -> [MetricProperty] -> Double
-getMetricMax def ps = fromMaybe def . listToMaybe $ [t | Max t <- ps]
-
-getMetricMin :: Double -> [MetricProperty] -> Double
-getMetricMin def ps = fromMaybe def . listToMaybe $ [t | Min t <- ps]
-
-getMetricMinThreshold :: Double -> [MetricProperty] -> Double
-getMetricMinThreshold def ps = fromMaybe def . listToMaybe $ [t | MinThreshold t <- ps]
-
-getMetricMaxThreshold :: Double -> [MetricProperty] -> Double
-getMetricMaxThreshold def ps = fromMaybe def . listToMaybe $ [t | MaxThreshold t <- ps]
-
-getMetricThreshold :: Double -> [MetricProperty] -> Double
-getMetricThreshold def ps = fromMaybe def . listToMaybe $ [t | Threshold t <- ps]
-
-getMetricPrec :: Integer -> [MetricProperty] -> Integer
-getMetricPrec def ps = fromMaybe def . listToMaybe $ [t | Prec t <- ps]
-
 
 isAuto :: [MetricProperty] -> Bool
 isAuto []                 = False
@@ -72,13 +49,13 @@ isAuto (_:xs)             = isAuto xs
 -- | Top level parser, parses Metric.
 metric :: Parser Metric.Metric
 metric = do
-    (metricName, metricProps) <- gaspElementNameAndClosureContent reservedNameMetric metricProperties
+    (metricName, props) <- gaspElementNameAndClosureContent reservedNameMetric metricProperties
 
-    let tp = getMetricType (DataType "float") metricProps
+    let tp = getFromList (DataType "float") [t | Type t <- props]
         tpMax = maxValue tp
         tpMin = minValue tp
-        maxv = min tpMax $ getMetricMax (maxValue tp) metricProps
-        minv = max tpMin $ getMetricMin (minValue tp) metricProps
+        maxv = min tpMax $ getFromList (maxValue tp) [t | Max t <- props]
+        minv = max tpMin $ getFromList (minValue tp) [t | Min t <- props]
         maxt = (maxv - minv) / 2
         mint = maxt / 50
 
@@ -87,10 +64,10 @@ metric = do
         , Metric.metricType         = tp
         , Metric.metricMax          = maxv
         , Metric.metricMin          = minv
-        , Metric.metricMaxThreshold = min maxv $ getMetricMaxThreshold maxt metricProps
-        , Metric.metricMinThreshold = max minv $ getMetricMinThreshold mint metricProps
-        , Metric.metricThreshold    = getMetricThreshold mint metricProps
-        , Metric.metricPrec         = fromIntegral $ getMetricPrec 2 metricProps
+        , Metric.metricMaxThreshold = min maxv $ getFromList maxt [t | MaxThreshold t <- props]
+        , Metric.metricMinThreshold = max minv $ getFromList mint [t | MinThreshold t <- props]
+        , Metric.metricThreshold    = getFromList mint [t | Threshold t <- props]
+        , Metric.metricPrec         = fromIntegral $ getFromList 2 [t | Prec t <- props]
         , Metric.metricAddr         = 0
-        , Metric.metricAuto         = isAuto metricProps
+        , Metric.metricAuto         = isAuto props
         }

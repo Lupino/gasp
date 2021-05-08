@@ -4,7 +4,6 @@ module Parser.Command
 
 
 import           Data.Aeson         (Value (Null), object, (.=))
-import           Data.Maybe         (fromMaybe, listToMaybe)
 import           Gasp.Command
 import           Gasp.Function      (FuncName (..), genFuncFlag)
 import           Lexer
@@ -12,9 +11,6 @@ import           Parser.Common
 import           Text.Parsec
 import           Text.Parsec.String (Parser)
 import           Text.Printf        (printf)
-
-getFromList :: a -> [a] -> a
-getFromList def = fromMaybe def . listToMaybe
 
 data DocItemProperty = ItemDocs ![String] | Payload !Value
 

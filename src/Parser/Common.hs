@@ -14,10 +14,13 @@ module Parser.Common
   , gaspClosure
   , gaspList
 
+  , getFromList
+
   , dataType
   ) where
 
 
+import           Data.Maybe         (fromMaybe, listToMaybe)
 import           Gasp.Common        (DataType (..))
 import qualified Lexer              as L
 import           Text.Parsec        (ParseError, try, (<|>))
@@ -109,3 +112,6 @@ dataType =
           <|> try (L.symbol "uint8_t")
           <|> try (L.symbol "uint16_t")
           <|> try (L.symbol "uint32_t"))
+
+getFromList :: a -> [a] -> a
+getFromList def = fromMaybe def . listToMaybe

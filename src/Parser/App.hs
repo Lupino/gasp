@@ -2,13 +2,11 @@ module Parser.App
     ( app
     ) where
 
-import           Text.Parsec
-import           Text.Parsec.String (Parser)
-
-import           Data.Maybe         (fromMaybe, listToMaybe)
 import qualified Gasp.App           as App
 import           Lexer
 import           Parser.Common
+import           Text.Parsec
+import           Text.Parsec.String (Parser)
 
 -- | A type that describes supported app properties.
 data AppProperty
@@ -39,27 +37,15 @@ appPropertyAddr = Addr <$> gaspPropertyStringLiteral "addr"
 appPropertyStartAddr :: Parser AppProperty
 appPropertyStartAddr = StartAddr . fromIntegral <$> gaspPropertyInteger "start_addr"
 
-getAppKey :: [AppProperty] -> String
-getAppKey ps = head $ [t | Key t <- ps]
-
-getAppToken :: [AppProperty] -> String
-getAppToken ps = fromMaybe "" $ listToMaybe $ [t | Token t <- ps]
-
-getAppAddr :: [AppProperty] -> String
-getAppAddr ps = fromMaybe "00000000" $ listToMaybe $ [t | Addr t <- ps]
-
-getAppStartAddr :: [AppProperty] -> Int
-getAppStartAddr ps = fromMaybe 0 $ listToMaybe $ [t | StartAddr t <- ps]
-
 -- | Top level parser, parses App.
 app :: Parser App.App
 app = do
-    (appName, appProps) <- gaspElementNameAndClosureContent reservedNameApp appProperties
+    (appName, props) <- gaspElementNameAndClosureContent reservedNameApp appProperties
 
     return App.App
         { App.appName      = appName
-        , App.appKey       = getAppKey appProps
-        , App.appToken     = getAppToken appProps
-        , App.appAddr      = getAppAddr appProps
-        , App.appStartAddr = getAppStartAddr appProps
+        , App.appKey       = getFromList "" [t | Key t <- props]
+        , App.appToken     = getFromList "" [t | Token t <- props]
+        , App.appAddr      = getFromList "00000000" [t | Addr t <- props]
+        , App.appStartAddr = getFromList 0 [t | StartAddr t <- props]
         }
