@@ -2,9 +2,11 @@ module Lib
     ( compile
     ) where
 
+
 import           CompileOptions             (CompileOptions, CompileType (..))
 import qualified CompileOptions
 import           Control.Monad              (unless)
+import           Data.Aeson                 (toJSON)
 import qualified Data.Binary                as Bin (encode)
 import qualified Data.ByteString.Char8      as BC (putStrLn)
 import qualified Data.ByteString.Lazy.Char8 as BL (putStrLn)
@@ -13,10 +15,14 @@ import           Data.UUID.V4               (nextRandom)
 import           Data.Yaml                  (encode)
 import qualified ExternalCode
 import           Gasp                       (App (..), Attr (..), Expr (..),
-                                             Gasp, Metric (..), getGaspExprs,
-                                             setExternalCodeFiles, setGaspExprs,
-                                             setProd)
+                                             Gasp, Metric (..), filterFlag,
+                                             getGaspExprs, setExternalCodeFiles,
+                                             setGaspExprs, setProd)
+import           Gasp.Function
+import           Gasp.Loop
+import           Gasp.Setup
 import           Generator                  (writeAppCode)
+import           Generator.Template         (compileAndRenderTextTemplate)
 import           Parser                     (parseGasp)
 import           Path                       (Abs, File, Path)
 import           Text.Printf                (printf)
@@ -110,7 +116,14 @@ preprocessGasp gasp = setGaspExprs gasp <$> mapM mapFunc (getGaspExprs gasp)
         mapFunc (ExprApp app@App{appToken=""}) = do
           token <-  filter (/='-') . toString <$> nextRandom
           return $ ExprApp app {appToken = token}
+        mapFunc (ExprSetup (Setup code)) = return . ExprSetup . Setup $ render code
+        mapFunc (ExprLoop (Loop code)) = return . ExprLoop . Loop $ render code
+        mapFunc (ExprFunction func) = return $ ExprFunction func
+          { funcCode = render $ funcCode func
+          }
         mapFunc v = return v
+
+        render =  (`compileAndRenderTextTemplate` (toJSON $ filterFlag gasp))
 
 getCenterValue :: (Ord a) => (a, a) -> a -> (Bool, a)
 getCenterValue (minv, maxv) defv =

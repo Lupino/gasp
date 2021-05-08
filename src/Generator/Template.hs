@@ -1,6 +1,7 @@
 module Generator.Template
   ( getTemplateFileAbsPath
   , compileAndRenderTemplate
+  , compileAndRenderTextTemplate
   ) where
 
 import qualified Data.Aeson           as Aeson
@@ -23,9 +24,8 @@ compileAndRenderTemplate
     -> Path Rel File  -- ^ Path to the template file.
     -> Aeson.Value  -- ^ JSON to be provided as template data.
     -> IO Text
-compileAndRenderTemplate tmplDir relTmplPath tmplData = do
-    mustacheTemplate <- compileMustacheTemplate tmplDir relTmplPath
-    renderMustacheTemplate mustacheTemplate tmplData
+compileAndRenderTemplate tmplDir relTmplPath tmplData =
+  (`renderMustacheTemplate` tmplData) <$> compileMustacheTemplate tmplDir relTmplPath
 
 compileMustacheTemplate
     :: Path Abs Dir
@@ -49,16 +49,26 @@ areAllErrorsSectionDataNotFound = all isSectionDataNotFoundError
         SectionTargetNotFound _ -> True
         _                       -> False
 
-renderMustacheTemplate :: Mustache.Template -> Aeson.Value -> IO Text
-renderMustacheTemplate mustacheTemplate templateData = do
-    let mustacheTemplateData = Mustache.toMustache templateData
-    let (errors, fileText) =
-            Mustache.checkedSubstituteValue mustacheTemplate mustacheTemplateData
 
-    -- NOTE(matija): Mustache reports errors when object does
-    -- not have a property specified in the template, which we use to implement
-    -- conditionals. This is why we ignore these errors.
-    if null errors || areAllErrorsSectionDataNotFound errors
-        then return fileText
-        else error $ "Unexpected errors occured while rendering template: "
-            ++ show errors
+-- NOTE(matija): Mustache reports errors when object does
+-- not have a property specified in the template, which we use to implement
+-- conditionals. This is why we ignore these errors.
+renderMustacheTemplate :: Mustache.Template -> Aeson.Value -> Text
+renderMustacheTemplate mustacheTemplate templateData
+  | null errors || areAllErrorsSectionDataNotFound errors = fileText
+  | otherwise =
+    error $ "Unexpected errors occured while rendering template: "
+          ++ show errors
+
+
+  where (errors, fileText) =
+            Mustache.checkedSubstitute mustacheTemplate templateData
+
+compileAndRenderTextTemplate
+  :: Text
+  -> Aeson.Value  -- ^ JSON to be provided as template data.
+  -> Text
+compileAndRenderTextTemplate tmplCode tmplData =
+  case Mustache.compileTemplate "inline" tmplCode of
+    Left err   -> error $ show err
+    Right tmpl -> renderMustacheTemplate tmpl tmplData

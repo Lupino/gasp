@@ -7,6 +7,7 @@ module Gasp
     , setProd
     , getProd
     , getRequires
+    , filterFlag
 
     , module Gasp.App
     , module Gasp.Attr
@@ -382,3 +383,7 @@ instance Binary Gasp where
           addr = maybe "00000000" appAddr app
 
   put Gasp {gaspExprs=exprs} = mapM_ putExpr exprs
+
+
+filterFlag :: Gasp -> Gasp
+filterFlag gasp = setGaspExprs gasp [ExprFlag flag | ExprFlag flag <- gaspExprs gasp]
