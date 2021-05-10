@@ -5,7 +5,7 @@
 
 {=# consts =}
 {=# has_value =}
-#define {= name =} {= value =}
+#define {= name =} {=& value =}
 {=/ has_value =}
 {=^ has_value =}
 #define {= name =}
@@ -14,7 +14,7 @@
 
 {=# vars =}
 {=# has_value =}
-{= type =} {= name =} = {= value =};
+{= type =} {= name =} = {=& value =};
 {=/ has_value =}
 {=^ has_value =}
 {= type =} {= name =};
