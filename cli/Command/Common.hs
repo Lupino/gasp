@@ -1,13 +1,11 @@
 module Command.Common
     ( findGaspProjectRootDirFromCwd
-    , findGaspProjectRoot
     , findGaspTemplateDir
     , gaspSaysC
     ) where
 
 import           Command                (Command, CommandError (..))
-import           Common                 (buildGaspRootFileInGaspProjectDir,
-                                         gaspSays)
+import           Common                 (gaspSays, mainGaspFile)
 import           Control.Monad          (unless, when)
 import           Control.Monad.Except   (throwError)
 import           Control.Monad.IO.Class (liftIO)
@@ -26,7 +24,7 @@ findGaspProjectRoot currentDir = do
     let absCurrentDirFp = toFilePath currentDir
     doesCurrentDirExist <- liftIO $ doesPathExist absCurrentDirFp
     unless doesCurrentDirExist (throwError notFoundError)
-    let buildGaspRootFilePath = absCurrentDirFp FP.</> toFilePath buildGaspRootFileInGaspProjectDir
+    let buildGaspRootFilePath = absCurrentDirFp FP.</> toFilePath mainGaspFile
     isCurrentDirRoot <- liftIO $ doesFileExist buildGaspRootFilePath
     if isCurrentDirRoot
         then return currentDir

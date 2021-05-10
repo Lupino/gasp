@@ -3,7 +3,6 @@ module Command.CreateNewProject
     ) where
 
 import           Command                (Command, CommandError (..))
-import qualified Common
 import           Control.Monad.Except   (throwError)
 import           Control.Monad.IO.Class (liftIO)
 import           Path                   (File, Path, Rel, parseAbsDir, relfile,
@@ -23,8 +22,6 @@ createNewProject projectName = do
         createDirectorySP gaspProjectDir
         writeFileSP (gaspProjectDir </> mainGaspFileInGaspProjectDir) mainGaspFileContent
         writeFileSP (gaspProjectDir </> gitignoreFileInGaspProjectDir) gitignoreFileContent
-        writeFileSP (gaspProjectDir </> Common.buildGaspRootFileInGaspProjectDir)
-            "File marking the root of Gasp project."
 
     liftIO $ do
         putStrLn $ Term.applyStyles [Term.Green] $ "Created new Gasp project in ./" ++ projectName ++ " directory!"

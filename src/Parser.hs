@@ -138,12 +138,5 @@ parseWithRequired rootDir (x : xs) = (x:) <$> parseWithRequired rootDir xs
 parseExpr :: Path Abs File -> GaspParser [Expr]
 parseExpr fp = parseWithRequired (parent fp) =<< parseFile fp
 
-parseExprList :: [Path Abs File] -> GaspParser [Expr]
-parseExprList [] = return []
-parseExprList (x:xs) = do
-  expr0 <- parseExpr x
-  expr1 <- parseExprList xs
-  return $ expr0 ++ expr1
-
-parseGasp :: [Path Abs File] -> IO (Either ParseError Gasp)
-parseGasp fps = runExceptT $ fromGaspExprs <$> parseExprList fps
+parseGasp :: Path Abs File -> IO (Either ParseError Gasp)
+parseGasp fp = runExceptT $ fromGaspExprs <$> parseExpr fp

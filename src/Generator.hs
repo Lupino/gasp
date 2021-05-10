@@ -12,7 +12,7 @@ import           Path                   (Abs, Dir, File, Path, Rel, relfile,
 writeAppCode :: Gasp -> Path Abs Dir -> Path Abs Dir -> IO ()
 writeAppCode gasp dstDir tmplDir = do
   writeFileDrafts dstDir [makeSimpleTemplateFD [relfile|combined.gasp|] tmplDir gasp ]
-  r <- parseGasp [combinedPath]
+  r <- parseGasp combinedPath
   case r of
     Left err       -> error (show err)
     Right combined -> do

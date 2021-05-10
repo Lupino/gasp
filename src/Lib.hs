@@ -33,11 +33,11 @@ import qualified Util.Terminal              as Term
 type CompileError = String
 
 compile
-  :: [Path Abs File]
+  :: Path Abs File
   -> CompileOptions
   -> IO (Either CompileError ())
-compile gaspFiles options = do
-    r <- parseGasp gaspFiles
+compile gaspFile options = do
+    r <- parseGasp gaspFile
 
     case r of
         Left err    -> return . Left $ show err

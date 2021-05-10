@@ -13,14 +13,11 @@ import           CompileOptions         (CompileOptions (..), CompileType,
 import           Control.Monad          (when)
 import           Control.Monad.Except   (throwError)
 import           Control.Monad.IO.Class (liftIO)
-import           Data.List              (isSuffixOf)
 import           Data.Maybe             (fromJust)
 import           Data.Text              (pack)
 import           Gasp.Flag
 import qualified Lib
-import           Path                   (Abs, Dir, File, Path, Rel, parseAbsDir,
-                                         toFilePath, (</>))
-import qualified Util.IO
+import           Path                   (Abs, Dir, Path, parseAbsDir, (</>))
 
 
 compile :: CompileType -> [String] -> Command ()
@@ -35,20 +32,8 @@ compile ctp argv = do
 -- | Compiles Gasp source code in gaspProjectDir directory and generates a project
 --   in given outDir directory.
 compileIO :: Path Abs Dir -> CompileOptions -> IO (Either String ())
-compileIO gaspProjectDir options = do
-    gaspFiles <- findGaspFile gaspProjectDir
-    case gaspFiles of
-      [] -> return $ Left "No *.gasp file present in the root of Gasp project."
-      _  -> Lib.compile gaspFiles options
-  where
-    findGaspFile :: Path Abs Dir -> IO [Path Abs File]
-    findGaspFile dir = do
-        (files, _) <- liftIO $ Util.IO.listDirectory dir
-        return $ map (dir </>) $ filter isGaspFile files
-
-    isGaspFile :: Path Rel File -> Bool
-    isGaspFile path = ".gasp" `isSuffixOf` toFilePath path
-                      && (length (toFilePath path) > length (".gasp" :: String))
+compileIO gaspProjectDir = Lib.compile gaspFile
+  where gaspFile = gaspProjectDir </> Common.mainGaspFile
 
 compileOptions :: CompileType -> [String] -> Command (Path Abs Dir, CompileOptions)
 compileOptions ctp argv = do
