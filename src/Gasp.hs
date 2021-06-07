@@ -352,7 +352,7 @@ instance ToJSON Gasp where
                 $  map loopCode (getLoops gasp)
                 ++ map setupCode (getSetups gasp)
                 ++ map (T.pack . constValue) consts
-              funcs = getRequiredFunction requiredText $ getFunctions gasp
+              funcs = getRequiredFunction requiredText $ nub $ getFunctions gasp
               funcText = T.intercalate "\n" $ map funcCode funcs
               requiredVars = getRequiredConstant (requiredText <> "\n" <> funcText) vars
               varText = T.intercalate "\n" $ map (\(Constant a b c) -> T.pack $ concat [a, " ", b, " ", c]) requiredVars
