@@ -916,6 +916,7 @@ sys_timer_can_sync bool = true
 timer_{= name =}_sched bool = false
 {=/ timers =}
 
+{=# has_timer =}
 loop {
     if (sys_timer_s > 0 && next_timer_event_ms <= get_cache_time_ms()) {
         {=# timers =}
@@ -932,6 +933,7 @@ loop {
         }
     }
 }
+{=/ has_timer =}
 
 func swap_timer_event(uint32_t delta_ms) void {
     if (delta_ms <= get_cache_time_ms()) {
