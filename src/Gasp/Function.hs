@@ -82,14 +82,14 @@ hasToken tok txt
         isNotComment = T.null comment
 
 hasRetval :: Function -> Bool
-hasRetval = hasToken "retval" . funcCode
+hasRetval = hasToken "retval" . (" " <>) . funcCode
 
 hasJson :: Function -> Bool
-hasJson = hasToken "tokens" . funcCode
+hasJson = hasToken "tokens" . (" " <>) . funcCode
 
 
 isRequired :: Text -> Function -> Bool
-isRequired txt func = hasToken (T.pack fn) txt
+isRequired txt func = hasToken (T.pack fn) (" " <> txt)
   where FuncName fn = funcName func
 
 splitRequired :: Text -> [Function] -> ([Function], [Function])
