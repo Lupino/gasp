@@ -1335,6 +1335,12 @@ is_{= name =}_readed bool = false
 {=/ readers =}
 {=# writers =}
 is_{= name =}_write_{= wname =} bool = false
+{=# action =}
+{=# is_gen =}
+{= name =}_write_{= wname =}_buffer[{= buf_len =}] uint8_t
+{= name =}_write_{= wname =}_buffer_len int = 0
+{=/ is_gen =}
+{=/ action =}
 {=/ writers =}
 {= name =}_write_index uint8_t = 0
 loop {
@@ -1368,9 +1374,19 @@ func {= name =}_poll() void {
 func {= name =}_write_{= wname =}() void {
     is_{= name =}_write_{= wname =} = true;
     is_{= name =}_readed = false;
+    {=# action =}
+    {=# is_cmd =}
     {=# bytes =}
     {= name =}.write((uint8_t)0x{= . =});
     {=/ bytes =}
+    {=/ is_cmd =}
+    {=# is_gen =}
+    {= gen =}({= name =}_write_{= wname =}_buffer, &{= name =}_write_{= wname =}_buffer_len);
+    for (int i = 0; i < {= name =}_write_{= wname =}_buffer_len; i ++) {
+      {= name =}.write({= name =}_write_{= wname =}_buffer[i]);
+    }
+    {=/ is_gen =}
+    {=/ action =}
 }
 
 {=/ writers =}

@@ -3,6 +3,7 @@ module Gasp.Uart
   , UartName (..)
   , UartWriter (..)
   , UartReader (..)
+  , GenOrCmd (..)
   ) where
 
 import           Data.Aeson    (ToJSON (..), object, (.=))
@@ -31,9 +32,25 @@ instance ToJSON Uart where
       where filterFunc :: UartWriter -> Bool
             filterFunc uw = uartWOn uw /= "false"
 
+data GenOrCmd = Cmd String | Gen FuncName Int
+  deriving (Show, Eq)
+
+instance ToJSON GenOrCmd where
+    toJSON (Cmd cmd) = object
+        [ "is_cmd" .= True
+        , "is_gen" .= False
+        , "bytes"  .= toHex cmd
+        ]
+    toJSON (Gen fn len) = object
+        [ "is_cmd"  .= False
+        , "is_gen"  .= True
+        , "gen"     .= fn
+        , "buf_len" .= len
+        ]
+
 data UartWriter = UartWriter
   { uartWName :: String
-  , uartWCmd  :: String
+  , uartWAct  :: GenOrCmd
   , uartWId   :: Int
   , uartWOn   :: !String
   } deriving (Show, Eq)
@@ -41,7 +58,7 @@ data UartWriter = UartWriter
 instance ToJSON UartWriter where
     toJSON uw = object
         [ "wname"  .= uartWName uw
-        , "bytes"  .= toHex (uartWCmd uw)
+        , "action" .= uartWAct uw
         , "index"  .= uartWId uw
         , "on"     .= uartWOn uw
         , "has_on" .= not (null $ uartWOn uw)

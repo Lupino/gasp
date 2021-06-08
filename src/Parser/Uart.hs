@@ -26,13 +26,24 @@ reader = do
     }
 
 
+gen :: Parser GenOrCmd
+gen = do
+  fn <- FuncName <$> identifier
+  v <- fromIntegral <$> decimal
+  whiteSpace
+  return $ Gen fn v
+
+cmd :: Parser GenOrCmd
+cmd = Cmd <$> stringLiteral
+
+
 writer :: Parser UartWriter
 writer = do
   reserved reservedNameUartWrite
   n <- identifier
-  cmd <- stringLiteral
+  act <- gen <|> cmd
   on <- option "" $ block "on" "\n"
-  return $ UartWriter n cmd 0 on
+  return $ UartWriter n act 0 on
 
 data ReadWrite
   = Read UartReader

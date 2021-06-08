@@ -159,7 +159,7 @@ rule condition do [later do_later_ms ]action [else [later do_later_ms ]elseActio
 
 ```
 uart uartName {
-    write writeName "1234" [on condition]  // hex command
+    write writeName ["1234"|fnGen bufLen] [on condition]  // hex command or gen function
     read bufLen fnReadName fnParseName [on condition]
 }
 ```
