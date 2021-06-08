@@ -25,8 +25,9 @@ import           Parser.Rule          (rule)
 import           Parser.Setup         (setup)
 import           Parser.Timer         (timer)
 import           Parser.Uart          (uart)
-import           Path                 (Abs, Dir, File, Path, parent, toFilePath)
-import           Path.IO              (resolveFile)
+import           Path                 (Abs, Dir, File, Path, addExtension,
+                                       parent, toFilePath)
+import           Path.IO              (doesFileExist, resolveFile)
 import           Text.Parsec          (ParseError, eof, many1, (<|>))
 import           Text.Parsec.String   (Parser)
 
@@ -127,7 +128,10 @@ parseFile = ExceptT . runGaspParser gaspParser . toFilePath
 parseWithRequired :: Path Abs Dir -> [Expr] -> GaspParser [Expr]
 parseWithRequired _ [] = return []
 parseWithRequired rootDir (ExprRequire (Require path) : xs) = do
-  fp <- resolveFile rootDir path
+  fp0 <- resolveFile rootDir path
+  exist <- doesFileExist fp0
+  fp <- if exist then pure fp0
+                 else addExtension ".gasp" fp0
   expr0 <- parseFile fp
   expr1 <- parseWithRequired (parent fp) expr0
   expr2 <- parseWithRequired rootDir xs
