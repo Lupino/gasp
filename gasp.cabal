@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 500e3815b12d6d4de1d57ade5cb3c6529a2b9453dd6414da910d028322f48ab1
+-- hash: 96848f94a9a81294fa8165b157d26b3236a5e8f311a103538734596ea861ac01
 
 name:           gasp
 version:        0.1.0.0
@@ -91,16 +91,20 @@ library
       Paths_gasp
   hs-source-dirs:
       src
-  default-extensions: OverloadedStrings TemplateHaskell QuasiQuotes ScopedTypeVariables
+  default-extensions:
+      OverloadedStrings
+      TemplateHaskell
+      QuasiQuotes
+      ScopedTypeVariables
   ghc-options: -Wall -optP-Wno-nonportable-include-path
   build-depends:
       aeson
     , base >=4.7 && <5
+    , base16-bytestring
     , binary
     , bytestring
     , directory
     , filepath
-    , hexstring
     , mtl
     , mustache
     , parsec
@@ -124,7 +128,11 @@ executable gasp
       Paths_gasp
   hs-source-dirs:
       cli
-  default-extensions: OverloadedStrings TemplateHaskell QuasiQuotes ScopedTypeVariables
+  default-extensions:
+      OverloadedStrings
+      TemplateHaskell
+      QuasiQuotes
+      ScopedTypeVariables
   ghc-options: -Wall -optP-Wno-nonportable-include-path -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5

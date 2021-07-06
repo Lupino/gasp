@@ -19,15 +19,15 @@ module Gasp
     , getExternalCodeFiles
     ) where
 
-import           Data.Aeson            (ToJSON (..), object, (.=))
-import           Data.Binary           (Binary (..))
-import           Data.Binary.Put       (Put, putByteString, putFloatle,
-                                        putInt32le)
-import           Data.ByteString.Char8 as BC (pack)
-import           Data.HexString        (hexString, toBytes)
-import           Data.List             (nub)
-import           Data.Maybe            (isJust)
-import qualified Data.Text             as T (intercalate, pack)
+import           Data.Aeson             (ToJSON (..), object, (.=))
+import           Data.Binary            (Binary (..))
+import           Data.Binary.Put        (Put, putByteString, putFloatle,
+                                         putInt32le)
+import           Data.ByteString.Base16 as B16 (decodeLenient)
+import           Data.ByteString.Char8  as BC (pack)
+import           Data.List              (nub)
+import           Data.Maybe             (isJust)
+import qualified Data.Text              as T (intercalate, pack)
 import qualified ExternalCode
 import           Gasp.AGpio
 import           Gasp.App
@@ -383,8 +383,8 @@ putExpr _ = return ()
 instance Binary Gasp where
   get = error "not implement"
   put gasp@Gasp {isProd=True, gaspExprs=exprs} = do
-    putByteString $ toBytes $ hexString $ BC.pack token
-    putByteString $ toBytes $ hexString $ BC.pack addr
+    putByteString $ B16.decodeLenient $ BC.pack token
+    putByteString $ B16.decodeLenient $ BC.pack addr
     mapM_ putExpr exprs
     where app = getApp gasp
           token = maybe "1234567890abcdef" appToken app

@@ -51,10 +51,10 @@ library:
     - path
     - path-io
     - bytestring
+    - base16-bytestring
     - yaml
     - uuid
     - binary
-    - hexstring
     - mtl
 
 executables:
