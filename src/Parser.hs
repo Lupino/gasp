@@ -3,33 +3,35 @@ module Parser
   ) where
 
 
-import           Control.Monad.Except (ExceptT (..), runExceptT)
-import           Gasp                 (Expr (..), Gasp, Require (..),
-                                       fromGaspExprs)
+import           Control.Monad.Except   (ExceptT (..), runExceptT)
+import           Control.Monad.IO.Class (liftIO)
+import           Gasp                   (Expr (..), Gasp, Require (..),
+                                         fromGaspExprs)
 import           Lexer
-import           Parser.AGpio         (agpio)
-import           Parser.App           (app)
-import           Parser.Attr          (attr)
-import           Parser.Command       (command)
-import           Parser.Common        (runGaspParser)
-import           Parser.Constant      (constant)
-import           Parser.Every         (every)
-import           Parser.Flag          (flag)
-import           Parser.Function      (function)
-import           Parser.Gpio          (gpio)
-import           Parser.Import        (importParser)
-import           Parser.Loop          (loop)
-import           Parser.Metric        (metric)
-import           Parser.Require       (require)
-import           Parser.Rule          (rule)
-import           Parser.Setup         (setup)
-import           Parser.Timer         (timer)
-import           Parser.Uart          (uart)
-import           Path                 (Abs, Dir, File, Path, addExtension,
-                                       parent, toFilePath)
-import           Path.IO              (doesFileExist, resolveFile)
-import           Text.Parsec          (ParseError, eof, many1, (<|>))
-import           Text.Parsec.String   (Parser)
+import           Parser.AGpio           (agpio)
+import           Parser.App             (app)
+import           Parser.Attr            (attr)
+import           Parser.Command         (command)
+import           Parser.Common          (runGaspParser)
+import           Parser.Constant        (constant)
+import           Parser.Every           (every)
+import           Parser.Flag            (flag)
+import           Parser.Function        (function)
+import           Parser.Gpio            (gpio)
+import           Parser.Import          (importParser)
+import           Parser.Loop            (loop)
+import           Parser.Metric          (metric)
+import           Parser.Require         (require)
+import           Parser.Rule            (rule)
+import           Parser.Setup           (setup)
+import           Parser.Timer           (timer)
+import           Parser.Uart            (uart)
+import           Path                   (Abs, Dir, File, Path, addExtension,
+                                         parent, parseAbsFile, toFilePath)
+import           System.Directory       (canonicalizePath, doesFileExist)
+import           System.FilePath        ((</>))
+import           Text.Parsec            (ParseError, eof, many1, (<|>))
+import           Text.Parsec.String     (Parser)
 
 expr :: Parser Expr
 expr
@@ -128,10 +130,10 @@ parseFile = ExceptT . runGaspParser gaspParser . toFilePath
 parseWithRequired :: Path Abs Dir -> [Expr] -> GaspParser [Expr]
 parseWithRequired _ [] = return []
 parseWithRequired rootDir (ExprRequire (Require path) : xs) = do
-  fp0 <- resolveFile rootDir path
-  exist <- doesFileExist fp0
-  fp <- if exist then pure fp0
-                 else addExtension ".gasp" fp0
+  fp0 <- liftIO $ canonicalizePath (toFilePath rootDir </> path)
+  exist <- liftIO $ doesFileExist fp0
+  fp <- if exist then parseAbsFile fp0
+                 else addExtension ".gasp" =<< parseAbsFile fp0
   expr0 <- parseFile fp
   expr1 <- parseWithRequired (parent fp) expr0
   expr2 <- parseWithRequired rootDir xs

@@ -49,7 +49,6 @@ library:
     - aeson
     - directory
     - path
-    - path-io
     - bytestring
     - base16-bytestring
     - yaml
@@ -73,5 +72,4 @@ executables:
       - mtl
       - fsnotify
       - time
-      - path-io
       - text

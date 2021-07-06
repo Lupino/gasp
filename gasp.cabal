@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 96848f94a9a81294fa8165b157d26b3236a5e8f311a103538734596ea861ac01
+-- hash: 42afd6416562feb5b109f7b28a511e81b136ef6768db9540226e4bff38c6400f
 
 name:           gasp
 version:        0.1.0.0
@@ -109,7 +109,6 @@ library
     , mustache
     , parsec
     , path
-    , path-io
     , text
     , uuid
     , yaml
@@ -142,7 +141,6 @@ executable gasp
     , gasp
     , mtl
     , path
-    , path-io
     , text
     , time
   default-language: Haskell2010
