@@ -9,8 +9,6 @@ import qualified Data.Aeson                            as Aeson
 import qualified Generator.FileDraft.CopyFileDraft     as CopyFD
 import qualified Generator.FileDraft.TemplateFileDraft as TmplFD
 import           Generator.FileDraft.Writeable
-import           Path                                  (Abs, Dir, File, Path,
-                                                        Rel)
 
 
 -- | FileDraft unites different file draft types into a single type,
@@ -26,9 +24,9 @@ instance Writeable FileDraft where
     write dstDir (FileDraftCopyFd draft)     = write dstDir draft
 
 
-createTemplateFileDraft :: Path Rel File
-                        -> Path Abs Dir
-                        -> Path Rel File
+createTemplateFileDraft :: FilePath
+                        -> FilePath
+                        -> FilePath
                         -> Maybe Aeson.Value
                         -> FileDraft
 createTemplateFileDraft dstPath tmplPath tmplSrcPath tmplData =
@@ -38,6 +36,6 @@ createTemplateFileDraft dstPath tmplPath tmplSrcPath tmplData =
                                                    , TmplFD._tmplData = tmplData
                                                    }
 
-createCopyFileDraft :: Path Rel File -> Path Abs File -> FileDraft
+createCopyFileDraft :: FilePath -> FilePath -> FileDraft
 createCopyFileDraft dstPath srcPath =
     FileDraftCopyFd $ CopyFD.CopyFileDraft { CopyFD._dstPath = dstPath, CopyFD._srcPath = srcPath}

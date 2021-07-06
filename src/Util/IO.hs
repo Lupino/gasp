@@ -1,14 +1,23 @@
 module Util.IO
-    ( listDirectoryDeep
-    , listDirectory
-    ) where
+  ( listDirectoryDeep
+  , listDirectory
+  , parent
+  ) where
 
 import           Control.Exception (catch, throw)
 import           Control.Monad     (filterM)
-import qualified Path              as P
-import qualified System.Directory  as Dir
-import qualified System.FilePath   as FilePath
+import           System.Directory  (doesDirectoryExist, doesFileExist)
+import qualified System.Directory  as Dir (listDirectory)
+import           System.FilePath   (addTrailingPathSeparator,
+                                    dropTrailingPathSeparator, takeBaseName,
+                                    takeDirectory, (</>))
 import           System.IO.Error   (isDoesNotExistError)
+
+parent :: FilePath -> FilePath
+parent = addTrailingPathSeparator . takeDirectory . dropTrailingPathSeparator
+
+dirname :: FilePath -> FilePath
+dirname = takeBaseName . dropTrailingPathSeparator
 
 
 -- TODO: write tests.
@@ -21,23 +30,23 @@ import           System.IO.Error   (isDoesNotExistError)
 -- >>> listDirectoryDeep "foo/"
 -- we should get
 -- >>> ["test.txt", "bar/text2.txt"]
-listDirectoryDeep :: P.Path P.Abs P.Dir -> IO [P.Path P.Rel P.File]
+listDirectoryDeep :: FilePath -> IO [FilePath]
 listDirectoryDeep absDirPath = do
     (relFilePaths, relSubDirPaths) <- listDirectory absDirPath
         `catch` \e -> if isDoesNotExistError e then return ([], []) else throw e
-    relSubDirFilesPaths <- mapM (listSubDirDeep . (absDirPath P.</>)) relSubDirPaths
+    relSubDirFilesPaths <- mapM (listSubDirDeep . (absDirPath </>)) relSubDirPaths
     return $ relFilePaths ++ concat relSubDirFilesPaths
   where
       -- | NOTE: Here, returned paths are relative to the main dir whose sub dir we are listing,
       --   which is one level above what you might intuitively expect.
-      listSubDirDeep :: P.Path P.Abs P.Dir -> IO [P.Path P.Rel P.File]
+      listSubDirDeep :: FilePath -> IO [FilePath]
       listSubDirDeep subDirPath = do
           files <- listDirectoryDeep subDirPath
-          return $ map (P.dirname subDirPath P.</>) files
+          return $ map (dirname subDirPath </>) files
 
 -- TODO: write tests.
 -- | Lists files and directories at top lvl of the directory.
-listDirectory :: P.Path P.Abs P.Dir -> IO ([P.Path P.Rel P.File], [P.Path P.Rel P.Dir])
+listDirectory :: FilePath -> IO ([FilePath], [FilePath])
 listDirectory absDirPath = do
     fpRelItemPaths <- Dir.listDirectory fpAbsDirPath
     relFilePaths <- filterFiles fpAbsDirPath fpRelItemPaths
@@ -45,12 +54,10 @@ listDirectory absDirPath = do
     return (relFilePaths, relDirPaths)
   where
       fpAbsDirPath :: FilePath
-      fpAbsDirPath = P.toFilePath absDirPath
+      fpAbsDirPath = absDirPath
 
-      filterFiles :: FilePath -> [FilePath] -> IO [P.Path P.Rel P.File]
-      filterFiles absDir relItems = filterM (Dir.doesFileExist . (absDir FilePath.</>)) relItems
-                                    >>= mapM P.parseRelFile
+      filterFiles :: FilePath -> [FilePath] -> IO [FilePath]
+      filterFiles absDir relItems = filterM (doesFileExist . (absDir </>)) relItems
 
-      filterDirs :: FilePath -> [FilePath] -> IO [P.Path P.Rel P.Dir]
-      filterDirs absDir relItems = filterM (Dir.doesDirectoryExist . (absDir FilePath.</>)) relItems
-                                   >>= mapM P.parseRelDir
+      filterDirs :: FilePath -> [FilePath] -> IO [FilePath]
+      filterDirs absDir relItems = filterM (doesDirectoryExist . (absDir </>)) relItems

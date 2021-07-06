@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 42afd6416562feb5b109f7b28a511e81b136ef6768db9540226e4bff38c6400f
+-- hash: 5c3467242fa6ad92fb57280350c4db3d31dfd3d4d4da63fbdf34a89f849636f4
 
 name:           gasp
-version:        0.1.0.0
+version:        0.1.0.1
 description:    Please see the README on GitHub at <https://github.com/Lupino/gasp#readme>
 homepage:       https://github.com/Lupino/gasp#readme
 bug-reports:    https://github.com/Lupino/gasp/issues
@@ -93,9 +93,6 @@ library
       src
   default-extensions:
       OverloadedStrings
-      TemplateHaskell
-      QuasiQuotes
-      ScopedTypeVariables
   ghc-options: -Wall -optP-Wno-nonportable-include-path
   build-depends:
       aeson
@@ -108,7 +105,6 @@ library
     , mtl
     , mustache
     , parsec
-    , path
     , text
     , uuid
     , yaml
@@ -123,15 +119,11 @@ executable gasp
       Command.Compile
       Command.CreateNewProject
       Command.Watch
-      Common
       Paths_gasp
   hs-source-dirs:
       cli
   default-extensions:
       OverloadedStrings
-      TemplateHaskell
-      QuasiQuotes
-      ScopedTypeVariables
   ghc-options: -Wall -optP-Wno-nonportable-include-path -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
@@ -140,7 +132,6 @@ executable gasp
     , fsnotify
     , gasp
     , mtl
-    , path
     , text
     , time
   default-language: Haskell2010

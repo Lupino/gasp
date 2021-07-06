@@ -9,13 +9,12 @@ module ExternalCode
 import           Data.Text         (Text)
 import qualified Data.Text.Lazy    as TextL
 import qualified Data.Text.Lazy.IO as TextL.IO
-import           Path              (Abs, Dir, Path, Rel, toFilePath, (</>))
-import qualified Path              as P (File)
+import           System.FilePath   ((</>))
 import qualified Util.IO
 
 data File = File
-    { _pathInExtCodeDir :: !(Path Rel P.File)
-    , _extCodeDirPath   :: !(Path Abs Dir)
+    { _pathInExtCodeDir :: !FilePath
+    , _extCodeDirPath   :: !FilePath
     , _text             :: TextL.Text  -- ^ File content. It will throw error when evaluated if file is not textual file.
     }
 
@@ -26,7 +25,7 @@ instance Eq File where
     f1 == f2 = _pathInExtCodeDir f1 == _pathInExtCodeDir f2
 
 -- | Returns path relative to the external code directory.
-filePathInExtCodeDir :: File -> Path Rel P.File
+filePathInExtCodeDir :: File -> FilePath
 filePathInExtCodeDir = _pathInExtCodeDir
 
 -- | Unsafe method: throws error if text could not be read (if file is not a textual file)!
@@ -34,11 +33,11 @@ fileText :: File -> Text
 fileText = TextL.toStrict . _text
 
 -- | Returns absolute path of the external code file.
-fileAbsPath :: File -> Path Abs P.File
+fileAbsPath :: File -> FilePath
 fileAbsPath file = _extCodeDirPath file </> _pathInExtCodeDir file
 
 -- | Returns all files contained in the specified external code dir, recursively.
-readFiles :: Path Abs Dir -> IO [File]
+readFiles :: FilePath -> IO [File]
 readFiles extCodeDirPath = do
     relFilePaths <- Util.IO.listDirectoryDeep extCodeDirPath
     let absFilePaths = map (extCodeDirPath </>) relFilePaths
@@ -55,7 +54,7 @@ readFiles extCodeDirPath = do
     --     or create new file draft that will support that.
     --     In generator, when creating TextFileDraft, give it function/logic for text transformation,
     --     and it will be taken care of when draft will be written to the disk.
-    fileTexts <- mapM (TextL.IO.readFile . toFilePath) absFilePaths
+    fileTexts <- mapM TextL.IO.readFile absFilePaths
     let files = zipWith (`File` extCodeDirPath) relFilePaths fileTexts
     return files
 

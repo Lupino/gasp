@@ -1,59 +1,72 @@
 module Command.Common
-    ( findGaspProjectRootDirFromCwd
-    , findGaspTemplateDir
-    , gaspSaysC
-    ) where
+  ( findGaspProjectRootDirFromCwd
+  , findGaspTemplateDir
+  , gaspSaysC
+  , gaspSays
+  , mainGaspFile
+  , buildGaspDirInGaspProjectDir
+  , extCodeDirInGaspProjectDir
+  ) where
 
 import           Command                (Command, CommandError (..))
-import           Common                 (gaspSays, mainGaspFile)
 import           Control.Monad          (unless, when)
 import           Control.Monad.Except   (throwError)
 import           Control.Monad.IO.Class (liftIO)
-import           Data.Maybe             (fromJust)
-import           Path                   (Abs, Dir, Path, parent, parseAbsDir,
-                                         toFilePath)
 import qualified Paths_gasp
 import           System.Directory       (doesFileExist, doesPathExist,
                                          getCurrentDirectory)
 import           System.Environment     (lookupEnv)
-import qualified System.FilePath        as FP
+import           System.FilePath        ((</>))
+import           Util.IO                (parent)
+import qualified Util.Terminal          as Term
 
+mainGaspFile :: FilePath
+mainGaspFile = "main.gasp"
 
-findGaspProjectRoot :: Path Abs Dir -> Command (Path Abs Dir)
+buildGaspDirInGaspProjectDir :: FilePath
+buildGaspDirInGaspProjectDir = "build"
+
+extCodeDirInGaspProjectDir :: FilePath
+extCodeDirInGaspProjectDir = "src"
+
+findGaspProjectRoot :: FilePath -> Command FilePath
 findGaspProjectRoot currentDir = do
-    let absCurrentDirFp = toFilePath currentDir
-    doesCurrentDirExist <- liftIO $ doesPathExist absCurrentDirFp
-    unless doesCurrentDirExist (throwError notFoundError)
-    let buildGaspRootFilePath = absCurrentDirFp FP.</> toFilePath mainGaspFile
-    isCurrentDirRoot <- liftIO $ doesFileExist buildGaspRootFilePath
-    if isCurrentDirRoot
-        then return currentDir
-        else do let parentDir = parent currentDir
-                when (parentDir == currentDir) (throwError notFoundError)
-                findGaspProjectRoot parentDir
+  let absCurrentDirFp = currentDir
+  doesCurrentDirExist <- liftIO $ doesPathExist absCurrentDirFp
+  unless doesCurrentDirExist (throwError notFoundError)
+  let buildGaspRootFilePath = absCurrentDirFp </> mainGaspFile
+  isCurrentDirRoot <- liftIO $ doesFileExist buildGaspRootFilePath
+  if isCurrentDirRoot
+    then return currentDir
+    else do let parentDir = parent currentDir
+            when (parentDir == currentDir) (throwError notFoundError)
+            findGaspProjectRoot parentDir
   where
-      notFoundError = CommandError ("Couldn't find gasp project root - make sure"
-                                    ++ " you are running this command from Gasp project.")
+    notFoundError = CommandError ("Couldn't find gasp project root - make sure"
+                                  ++ " you are running this command from Gasp project.")
 
-findGaspProjectRootDirFromCwd :: Command (Path Abs Dir)
+findGaspProjectRootDirFromCwd :: Command FilePath
 findGaspProjectRootDirFromCwd = do
-    absCurrentDir <- liftIO getCurrentDirectory
-    findGaspProjectRoot (fromJust $ parseAbsDir absCurrentDir)
+  absCurrentDir <- liftIO getCurrentDirectory
+  findGaspProjectRoot absCurrentDir
 
 
-findGaspTemplateDir :: Path Abs Dir -> Command (Path Abs Dir)
+findGaspTemplateDir :: FilePath -> Command FilePath
 findGaspTemplateDir outDir = do
   menvPath <- liftIO $ lookupEnv "GASP_TEMPLATE_PATH"
   case menvPath of
-    Just envPath -> return $ fromJust $ parseAbsDir envPath
+    Just envPath -> return envPath
     Nothing -> do
       doesTempDirExist <- liftIO $ doesPathExist tempDir
-      if doesTempDirExist then return $ fromJust $ parseAbsDir tempDir
-                          else liftIO $ Paths_gasp.getDataDir >>= parseAbsDir . (FP.</> "template")
+      if doesTempDirExist then return tempDir
+                          else liftIO $ (</> "template") <$> Paths_gasp.getDataDir
 
 
-  where dataDir = toFilePath outDir
-        tempDir = dataDir FP.</> "template"
+  where dataDir = outDir
+        tempDir = dataDir </> "template"
 
 gaspSaysC :: String -> Command ()
 gaspSaysC = liftIO . gaspSays
+
+gaspSays :: String -> IO ()
+gaspSays = putStrLn . Term.applyStyles [Term.Yellow]

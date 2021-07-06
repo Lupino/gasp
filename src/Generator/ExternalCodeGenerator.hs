@@ -6,7 +6,6 @@ import qualified ExternalCode        as EC
 import           Gasp                (Gasp)
 import qualified Gasp
 import qualified Generator.FileDraft as FD
-import           Path                (File, Path, Rel)
 
 
 -- | Takes external code files from Gasp and generates them in new location as part of the generated project.
@@ -22,5 +21,5 @@ generateFile file =
       absSrcPath = EC.fileAbsPath file
   in FD.createCopyFileDraft relDstPath absSrcPath
   where
-    dstPathInGenExtCodeDir :: Path Rel File
+    dstPathInGenExtCodeDir :: FilePath
     dstPathInGenExtCodeDir = EC.filePathInExtCodeDir file

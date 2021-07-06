@@ -4,14 +4,13 @@ module Command.Watch
     ) where
 
 import           Command                 (Command)
+import           Command.Common          (gaspSays)
 import           Command.Compile         (compile, compileIO, compileOptions)
-import           Common                  (gaspSays)
 import           CompileOptions          (CompileOptions (..), CompileType (..))
 import           Control.Concurrent.Chan (Chan, newChan, readChan)
 import           Control.Monad.IO.Class  (liftIO)
 import           Data.List               (isSuffixOf)
 import           Data.Time.Clock         (UTCTime, getCurrentTime)
-import           Path                    (Abs, Dir, Path, toFilePath)
 import qualified System.FSNotify         as FSN
 import qualified System.FilePath         as FP
 
@@ -37,13 +36,13 @@ compileAndWatch argv = do
 -- | Forever listens for any file changes in gaspProjectDir, and if there is a change,
 --   compiles Gasp source files in gaspProjectDir and regenerates files in outDir.
 watch
-  :: Path Abs Dir
+  :: FilePath
   -> CompileOptions
   -> IO ()
 watch gaspProjectDir options = FSN.withManager $ \mgr -> do
     currentTime <- getCurrentTime
     chan <- newChan
-    _ <- FSN.watchDirChan mgr (toFilePath gaspProjectDir) eventFilter chan
+    _ <- FSN.watchDirChan mgr gaspProjectDir eventFilter chan
     listenForEvents chan currentTime
   where
       listenForEvents :: Chan FSN.Event -> UTCTime -> IO ()

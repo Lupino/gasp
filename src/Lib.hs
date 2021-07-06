@@ -25,7 +25,6 @@ import           Gasp.Setup
 import           Generator                  (writeAppCode)
 import           Generator.Template         (compileAndRenderTextTemplate)
 import           Parser                     (parseGasp)
-import           Path                       (Abs, File, Path)
 import           Text.Printf                (printf)
 import qualified Util.Terminal              as Term
 
@@ -33,7 +32,7 @@ import qualified Util.Terminal              as Term
 type CompileError = String
 
 compile
-  :: Path Abs File
+  :: FilePath
   -> CompileOptions
   -> IO (Either CompileError ())
 compile gaspFile options = do

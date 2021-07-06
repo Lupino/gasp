@@ -5,19 +5,20 @@ module Command.Compile
     ) where
 
 import           Command                (Command, CommandError (..))
-import           Command.Common         (findGaspProjectRootDirFromCwd,
-                                         findGaspTemplateDir, gaspSaysC)
-import qualified Common
+import           Command.Common         (buildGaspDirInGaspProjectDir,
+                                         extCodeDirInGaspProjectDir,
+                                         findGaspProjectRootDirFromCwd,
+                                         findGaspTemplateDir, gaspSaysC,
+                                         mainGaspFile)
 import           CompileOptions         (CompileOptions (..), CompileType,
                                          isCompile)
 import           Control.Monad          (when)
 import           Control.Monad.Except   (throwError)
 import           Control.Monad.IO.Class (liftIO)
-import           Data.Maybe             (fromJust)
 import           Data.Text              (pack)
 import           Gasp.Flag
 import qualified Lib
-import           Path                   (Abs, Dir, Path, parseAbsDir, (</>))
+import           System.FilePath        ((</>))
 
 
 compile :: CompileType -> [String] -> Command ()
@@ -31,18 +32,18 @@ compile ctp argv = do
 
 -- | Compiles Gasp source code in gaspProjectDir directory and generates a project
 --   in given outDir directory.
-compileIO :: Path Abs Dir -> CompileOptions -> IO (Either String ())
+compileIO :: FilePath -> CompileOptions -> IO (Either String ())
 compileIO gaspProjectDir = Lib.compile gaspFile
-  where gaspFile = gaspProjectDir </> Common.mainGaspFile
+  where gaspFile = gaspProjectDir </> mainGaspFile
 
-compileOptions :: CompileType -> [String] -> Command (Path Abs Dir, CompileOptions)
+compileOptions :: CompileType -> [String] -> Command (FilePath, CompileOptions)
 compileOptions ctp argv = do
   gaspProjectDir <- findGaspProjectRootDirFromCwd
   gaspTemplateDir <- findGaspTemplateDir gaspProjectDir
   return (gaspProjectDir , parseCompileOptions CompileOptions
-    { externalCodeDirPath = gaspProjectDir </> Common.extCodeDirInGaspProjectDir
+    { externalCodeDirPath = gaspProjectDir </> extCodeDirInGaspProjectDir
     , compileType         = ctp
-    , projectRootDir      = gaspProjectDir </> Common.buildGaspDirInGaspProjectDir
+    , projectRootDir      = gaspProjectDir </> buildGaspDirInGaspProjectDir
     , templateDir         = gaspTemplateDir
     , isProd              = False
     , argvFlags           = []
@@ -50,7 +51,7 @@ compileOptions ctp argv = do
 
 parseCompileOptions :: CompileOptions -> [String] -> CompileOptions
 parseCompileOptions opts []                   = opts
-parseCompileOptions opts ("--template":v:xs) = parseCompileOptions opts {templateDir = fromJust $ parseAbsDir v} xs
+parseCompileOptions opts ("--template":v:xs) = parseCompileOptions opts {templateDir = v} xs
 parseCompileOptions opts ("--production":xs) = parseCompileOptions opts {isProd = True} xs
 parseCompileOptions opts ("--flag":k:v:xs)   = parseCompileOptions opts {argvFlags = Flag (pack k) (read v) : argvFlags opts} xs
 parseCompileOptions opts (_:xs) = parseCompileOptions opts xs

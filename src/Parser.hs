@@ -26,12 +26,11 @@ import           Parser.Rule            (rule)
 import           Parser.Setup           (setup)
 import           Parser.Timer           (timer)
 import           Parser.Uart            (uart)
-import           Path                   (Abs, Dir, File, Path, addExtension,
-                                         parent, parseAbsFile, toFilePath)
 import           System.Directory       (canonicalizePath, doesFileExist)
-import           System.FilePath        ((</>))
+import           System.FilePath        (addExtension, (</>))
 import           Text.Parsec            (ParseError, eof, many1, (<|>))
 import           Text.Parsec.String     (Parser)
+import           Util.IO                (parent)
 
 expr :: Parser Expr
 expr
@@ -124,16 +123,15 @@ gaspParser = do
 
 type GaspParser = ExceptT ParseError IO
 
-parseFile :: Path Abs File -> GaspParser [Expr]
-parseFile = ExceptT . runGaspParser gaspParser . toFilePath
+parseFile :: FilePath -> GaspParser [Expr]
+parseFile = ExceptT . runGaspParser gaspParser
 
-parseWithRequired :: Path Abs Dir -> [Expr] -> GaspParser [Expr]
+parseWithRequired :: FilePath -> [Expr] -> GaspParser [Expr]
 parseWithRequired _ [] = return []
 parseWithRequired rootDir (ExprRequire (Require path) : xs) = do
-  fp0 <- liftIO $ canonicalizePath (toFilePath rootDir </> path)
+  fp0 <- liftIO . canonicalizePath $ rootDir </> path
   exist <- liftIO $ doesFileExist fp0
-  fp <- if exist then parseAbsFile fp0
-                 else addExtension ".gasp" =<< parseAbsFile fp0
+  let fp = if exist then fp0 else addExtension fp0 ".gasp"
   expr0 <- parseFile fp
   expr1 <- parseWithRequired (parent fp) expr0
   expr2 <- parseWithRequired rootDir xs
@@ -141,8 +139,8 @@ parseWithRequired rootDir (ExprRequire (Require path) : xs) = do
 
 parseWithRequired rootDir (x : xs) = (x:) <$> parseWithRequired rootDir xs
 
-parseExpr :: Path Abs File -> GaspParser [Expr]
+parseExpr :: FilePath -> GaspParser [Expr]
 parseExpr fp = parseWithRequired (parent fp) =<< parseFile fp
 
-parseGasp :: Path Abs File -> IO (Either ParseError Gasp)
+parseGasp :: FilePath -> IO (Either ParseError Gasp)
 parseGasp fp = runExceptT $ fromGaspExprs <$> parseExpr fp
