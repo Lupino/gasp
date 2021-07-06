@@ -3,6 +3,7 @@
 import <givelink.h> https://github.com/Lupino/givelink.git
 import <jsmn.h> https://github.com/zserge/jsmn.git
 import <EEPROM.h>
+GL_SERIAL_availabled_timer unsigned long = 0
 
 setup {
     #ifdef EEPROM_SIZE
@@ -11,81 +12,84 @@ setup {
 }
 
 loop {
-    while (GL_SERIAL.available() > 0) {
-        if (givelink_recv(readedPayload, &readedLen, GL_SERIAL.read(), &crcFlag)) {
-            if (givelink_from_binary(readedPayload, readedLen)) {
-                {=# has_debug =}
-                DEBUG_SERIAL.print(F("Recv Id: "));
-                DEBUG_SERIAL.print(obj.id);
-                DEBUG_SERIAL.print(F(" Type: "));
-                DEBUG_SERIAL.print(obj.type);
-                if (obj.length > TYPE_LENGTH) {
-                    DEBUG_SERIAL.print(F(" Data: "));
-                    for (uint16_t i = 0; i < obj.length - TYPE_LENGTH; i ++) {
-                        DEBUG_SERIAL.write(obj.data[i]);
-                    }
-                }
-                DEBUG_SERIAL.println();
-
-                {=/ has_debug =}
-                if (obj.type == AUTHRES && crcFlag) {
-                    {=# production =}
-                    save_addr();
-                    {=/ production =}
-                }
-                if (obj.type == REQUEST && crcFlag) {
-                    wantSendData[0] = '\0';
-                    bool ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
-                    if (wantSendData[0] == '\0') {
-                        if (ret) {
-                            sprintf(wantSendData, FC(F("{\"result\": \"OK\"}")));
-                        } else {
-                            sprintf(wantSendData, FC(F("{\"err\": \"not support\"}")));
+    if (GL_SERIAL.available() > 0) {
+        GL_SERIAL_availabled_timer = get_current_time_ms();
+        while (GL_SERIAL.available() > 0) {
+            if (givelink_recv(readedPayload, &readedLen, GL_SERIAL.read(), &crcFlag)) {
+                if (givelink_from_binary(readedPayload, readedLen)) {
+                    {=# has_debug =}
+                    DEBUG_SERIAL.print(F("Recv Id: "));
+                    DEBUG_SERIAL.print(obj.id);
+                    DEBUG_SERIAL.print(F(" Type: "));
+                    DEBUG_SERIAL.print(obj.type);
+                    if (obj.length > TYPE_LENGTH) {
+                        DEBUG_SERIAL.print(F(" Data: "));
+                        for (uint16_t i = 0; i < obj.length - TYPE_LENGTH; i ++) {
+                            DEBUG_SERIAL.write(obj.data[i]);
                         }
                     }
-                    send_packet_rsp(wantSendData);
-                }
-                if (obj.type == SUCCESS) {
-                    ponged = true;
-                    {=^ low_memory =}
-                    {=# auto_retry =}
-                    need_retry = false;
-                    {=/ auto_retry =}
-                    {=/ low_memory =}
-                }
-                {=# has_timer =}
-                if (obj.type == SYNCTIME) {
-                    sys_timer_can_sync = true;
-                    sys_timer_s = (uint32_t)atol((const char *)obj.data);
-                }
-                {=/ has_timer =}
-                if (obj.type == CTRLREQ) {
-                    {=# ctrl_mode =}
-                    mainAction();
-                    {=/ ctrl_mode =}
-                    send_packet_0(CTRLRES);
-                }
-                if (obj.type == CTRLREQ1) {
-                    {=^ low_memory =}
-                    {=# auto_retry =}
-                    if (!need_retry) {
-                        send_packet_0(PING);
+                    DEBUG_SERIAL.println();
+
+                    {=/ has_debug =}
+                    if (obj.type == AUTHRES && crcFlag) {
+                        {=# production =}
+                        save_addr();
+                        {=/ production =}
                     }
-                    {=/ auto_retry =}
-                    {=/ low_memory =}
-                    {=# ctrl_mode =}
-                    mainAction();
-                    {=/ ctrl_mode =}
-                    send_packet_0(CTRLRES);
+                    if (obj.type == REQUEST && crcFlag) {
+                        wantSendData[0] = '\0';
+                        bool ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
+                        if (wantSendData[0] == '\0') {
+                            if (ret) {
+                                sprintf(wantSendData, FC(F("{\"result\": \"OK\"}")));
+                            } else {
+                                sprintf(wantSendData, FC(F("{\"err\": \"not support\"}")));
+                            }
+                        }
+                        send_packet_rsp(wantSendData);
+                    }
+                    if (obj.type == SUCCESS) {
+                        ponged = true;
+                        {=^ low_memory =}
+                        {=# auto_retry =}
+                        need_retry = false;
+                        {=/ auto_retry =}
+                        {=/ low_memory =}
+                    }
+                    {=# has_timer =}
+                    if (obj.type == SYNCTIME) {
+                        sys_timer_can_sync = true;
+                        sys_timer_s = (uint32_t)atol((const char *)obj.data);
+                    }
+                    {=/ has_timer =}
+                    if (obj.type == CTRLREQ) {
+                        {=# ctrl_mode =}
+                        mainAction();
+                        {=/ ctrl_mode =}
+                        send_packet_0(CTRLRES);
+                    }
+                    if (obj.type == CTRLREQ1) {
+                        {=^ low_memory =}
+                        {=# auto_retry =}
+                        if (!need_retry) {
+                            send_packet_0(PING);
+                        }
+                        {=/ auto_retry =}
+                        {=/ low_memory =}
+                        {=# ctrl_mode =}
+                        mainAction();
+                        {=/ ctrl_mode =}
+                        send_packet_0(CTRLRES);
+                    }
                 }
+                readedLen = 0;
             }
-            readedLen = 0;
-        }
-        if (readedLen > MAX_GL_PAYLOAD_LENGTH) {
-            {=# has_debug =}
-            DEBUG_SERIAL.println(F("Error: payload to large"));
-            {=/ has_debug =}
-            readedLen = 0;
+            if (readedLen > MAX_GL_PAYLOAD_LENGTH) {
+                {=# has_debug =}
+                DEBUG_SERIAL.println(F("Error: payload to large"));
+                {=/ has_debug =}
+                readedLen = 0;
+            }
         }
     }
 
@@ -1329,6 +1333,7 @@ loop {
 
 {=# uarts =}
 is_{= name =}_readed bool = false
+{= name =}_availabled_timer unsigned long
 {=# readers =}
 {= name =}_read_{= index =}_buffer[{= buf_len =}] uint8_t
 {= name =}_read_{= index =}_buffer_len int = 0
@@ -1347,26 +1352,29 @@ loop {
     {= name =}_poll();
 }
 func {= name =}_poll() void {
-    while ({= name =}.available() > 0) {
-        uint8_t outByte = {= name =}.read();
-        {=# readers =}
-        {=# has_on =}
-        if ({= on =}) {
+    if ({= name =}.available() > 0) {
+        {= name =}_availabled_timer = get_current_time_ms();
+        while ({= name =}.available() > 0) {
+            uint8_t outByte = {= name =}.read();
+            {=# readers =}
+            {=# has_on =}
+            if ({= on =}) {
+                if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
+                    {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
+                    {= name =}_read_{= index =}_buffer_len = 0;
+                    is_{= name =}_readed = true;
+                }
+            }
+            {=/ has_on =}
+            {=^ has_on =}
             if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
                 {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
                 {= name =}_read_{= index =}_buffer_len = 0;
                 is_{= name =}_readed = true;
             }
+            {=/ has_on =}
+            {=/ readers =}
         }
-        {=/ has_on =}
-        {=^ has_on =}
-        if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
-            {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
-            {= name =}_read_{= index =}_buffer_len = 0;
-            is_{= name =}_readed = true;
-        }
-        {=/ has_on =}
-        {=/ readers =}
     }
 }
 
