@@ -19,9 +19,8 @@ import           Gasp                       (App (..), Attr (..), Expr (..),
                                              getGaspExprs, setArgvFlags,
                                              setExternalCodeFiles, setGaspExprs,
                                              setProd)
+import           Gasp.Block
 import           Gasp.Function
-import           Gasp.Loop
-import           Gasp.Setup
 import           Generator                  (writeAppCode)
 import           Generator.Template         (compileAndRenderTextTemplate)
 import           Parser                     (parseGasp)

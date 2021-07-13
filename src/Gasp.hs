@@ -32,6 +32,7 @@ import qualified ExternalCode
 import           Gasp.AGpio
 import           Gasp.App
 import           Gasp.Attr
+import           Gasp.Block
 import           Gasp.Command
 import           Gasp.Constant
 import           Gasp.Every
@@ -39,11 +40,9 @@ import           Gasp.Flag
 import           Gasp.Function
 import           Gasp.Gpio
 import           Gasp.Import
-import           Gasp.Loop
 import           Gasp.Metric
 import           Gasp.Require
 import           Gasp.Rule
-import           Gasp.Setup
 import           Gasp.Timer
 import           Gasp.Uart
 

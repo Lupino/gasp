@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5c3467242fa6ad92fb57280350c4db3d31dfd3d4d4da63fbdf34a89f849636f4
+-- hash: 952224c1d67701820cd3d42ff044717677bd7c4a0336793dd7f5ba9d3746f715
 
 name:           gasp
 version:        0.1.0.1
@@ -39,6 +39,7 @@ library
       Gasp.AGpio
       Gasp.App
       Gasp.Attr
+      Gasp.Block
       Gasp.Command
       Gasp.Common
       Gasp.Constant
@@ -47,11 +48,9 @@ library
       Gasp.Function
       Gasp.Gpio
       Gasp.Import
-      Gasp.Loop
       Gasp.Metric
       Gasp.Require
       Gasp.Rule
-      Gasp.Setup
       Gasp.Timer
       Gasp.Uart
       Generator
@@ -70,6 +69,7 @@ library
       Parser.AGpio
       Parser.App
       Parser.Attr
+      Parser.Block
       Parser.Command
       Parser.Common
       Parser.Constant
@@ -78,11 +78,9 @@ library
       Parser.Function
       Parser.Gpio
       Parser.Import
-      Parser.Loop
       Parser.Metric
       Parser.Require
       Parser.Rule
-      Parser.Setup
       Parser.Timer
       Parser.Uart
       Util.IO
