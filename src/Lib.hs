@@ -115,8 +115,9 @@ preprocessGasp gasp = setGaspExprs gasp <$> mapM mapFunc (getGaspExprs gasp)
         mapFunc (ExprApp app@App{appToken=""}) = do
           token <-  filter (/='-') . toString <$> nextRandom
           return $ ExprApp app {appToken = token}
-        mapFunc (ExprSetup (Setup code)) = return . ExprSetup . Setup $ render code
-        mapFunc (ExprLoop (Loop code)) = return . ExprLoop . Loop $ render code
+        mapFunc (ExprSetup (Setup n code)) = return . ExprSetup . Setup n $ render code
+        mapFunc (ExprLoop (Loop n code)) = return . ExprLoop . Loop n $ render code
+        mapFunc (ExprRaw (Raw n code)) = return . ExprRaw . Raw n $ render code
         mapFunc (ExprFunction func) = return $ ExprFunction func
           { funcCode = render $ funcCode func
           }

@@ -5,13 +5,13 @@ import <jsmn.h> https://github.com/zserge/jsmn.git
 import <EEPROM.h>
 GL_SERIAL_availabled_timer_ms unsigned long = 0
 
-setup {
+setup eeprom_setup {
     #ifdef EEPROM_SIZE
     EEPROM.begin(EEPROM_SIZE);
     #endif
 }
 
-loop {
+loop givelink_loop {
     if (GL_SERIAL.available() > 0) {
         GL_SERIAL_availabled_timer_ms = get_current_time_ms();
         while (GL_SERIAL.available() > 0) {
@@ -109,7 +109,7 @@ loop {
 {=/ has_app =}
 
 {=# has_debug =}
-setup {
+setup debug_print_setup {
     DEBUG_SERIAL.println(F("Setup"));
 }
 {=/ has_debug =}
@@ -117,10 +117,11 @@ setup {
 current_time_ms unsigned long = 0
 
 func get_current_time_ms() unsigned long {
-    return millis();
+    // return millis();
+    return 0;
 }
 
-loop {
+loop get_current_time_loop {
     current_time_ms = get_current_time_ms();
 }
 
@@ -158,7 +159,7 @@ token[{= token_len =}] uint8_t = {{= token_hex_array =}}
 addr[{= addr_len =}] uint8_t = {{= addr_hex_array =}};
 {=/ production =}
 
-setup {
+setup givelink_setup {
     givelink_context_init(&ctx, ctx_buff);
     givelink_context_set_key(key, {= key_len =});
     {=# production =}
@@ -486,7 +487,7 @@ attr_{= name =}_force bool = true
 
 {=# has_app =}
 {=# keep =}
-setup {
+setup attr_{= name =}_setup {
     {=# onebyte =}
     attr_{= name =} = EEPROM.read({= addr =});
     {=/ onebyte =}
@@ -588,7 +589,7 @@ last_metric_{= name =}_threshold {= type =} = {= threshold =}
 metric_{= name =}_threshold_force bool = true
 
 {=# has_app =}
-setup {
+setup metric_{= name =}_setup {
     {=# onebyte =}
     metric_{= name =}_threshold = EEPROM.read({= addr =});
     {=/ onebyte =}
@@ -921,7 +922,7 @@ timer_{= name =}_sched bool = false
 {=/ timers =}
 
 {=# has_timer =}
-loop {
+loop timer_{= name =}_loop {
     if (sys_timer_s > 0 && next_timer_event_ms <= get_cache_time_ms()) {
         {=# timers =}
         processTimer({= addr0 =}, {= addr1 =}, {= addr2 =}, &timer_{= name =}_sched);
@@ -1064,7 +1065,7 @@ func get_cache_time_ms() unsigned long {
 {=# actions =}
 // start actions
 {= fn =}_timer_ms unsigned long = 0
-loop {
+loop every_{= fn =}_loop {
     {=# has_on =}
     if ({=& on =} && {= fn =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
     {=/ has_on =}
@@ -1091,7 +1092,7 @@ rule_{= id =}_do_yes bool = true
 {=# has_else =}
 rule_{= id =}_do_else bool = true
 {=/ has_else =}
-loop {
+loop rule_{= id =}_loop {
     rule_depends_checked = true;
     {=# depends =}
     if (!check_metric_{= . =}()) {
@@ -1185,7 +1186,7 @@ gpio_{= name =}_state uint8_t = {= state =}
 gpio_{= name =}_state uint8_t = {= state =}
 {=/ is_pwm =}
 {=/ bind =}
-setup {
+setup gpio_{= name =}_setup {
     {=# bind =}
     {=# is_link =}
     pinMode({= pin =}, OUTPUT);
@@ -1203,7 +1204,7 @@ setup {
     {=/ is_no_bind =}
     {=/ bind =}
 }
-loop {
+loop gpio_{= name =}_loop {
     {=# bind =}
     {=# is_fn =}
     gpio_reading = digitalRead({= pin =});
@@ -1318,7 +1319,7 @@ func toggle_gpio_{= name =}() void {
 agpio_{= name =}_value uint16_t = 0
 {=/ is_no_bind =}
 {=/ bind =}
-loop {
+loop agpio_{= name =}_loop {
     {=# bind =}
     {=# is_link =}
     metric_{= link =} = analogRead({= pin =});
@@ -1349,7 +1350,7 @@ is_{= name =}_write_{= wname =} bool = false
 {=/ action =}
 {=/ writers =}
 {= name =}_write_index uint8_t = 0
-loop {
+loop {= name =}_poll_loop {
     {= name =}_poll();
 }
 func {= name =}_poll() void {

@@ -11,10 +11,11 @@ import qualified Lexer              as L
 import qualified Parser.Common      as P
 import           Text.Parsec.String (Parser)
 
-blockP :: String -> (T.Text -> a) -> Parser a
+blockP :: String -> (String -> T.Text -> a) -> Parser a
 blockP reservedName f = do
   L.reserved reservedName
-  f . T.pack <$> P.gaspBlockClosure
+  name  <- L.identifier
+  f name . T.pack <$> P.gaspBlockClosure
 
 setup :: Parser Setup
 setup = blockP L.reservedNameSetup Setup

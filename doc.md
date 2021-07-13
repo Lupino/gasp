@@ -37,7 +37,7 @@ import lib [url]
 ## setup
 
 ```
-setup {
+setup name {
 // you setup code
 }
 ```
@@ -45,7 +45,7 @@ setup {
 ## loop
 
 ```
-loop {
+loop name {
 // you loop code
 }
 ```
@@ -53,7 +53,7 @@ loop {
 ## raw
 
 ```
-raw {
+raw name {
 // you loop code
 }
 ```
