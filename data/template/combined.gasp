@@ -1066,7 +1066,7 @@ func get_cache_time_ms() unsigned long {
 {= fn =}_timer_ms unsigned long = 0
 loop {
     {=# has_on =}
-    if ({= on =} && {= fn =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
+    if ({=& on =} && {= fn =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
     {=/ has_on =}
     {=^ has_on =}
     if ({= fn =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
@@ -1358,7 +1358,7 @@ func {= name =}_poll() void {
             uint8_t outByte = {= name =}.read();
             {=# readers =}
             {=# has_on =}
-            if ({= on =}) {
+            if ({=& on =}) {
                 if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
                     {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
                     {= name =}_read_{= index =}_buffer_len = 0;
@@ -1402,7 +1402,7 @@ func {= name =}_is_valid_index() bool {
     {=# writers =}
     {=# auto =}
     {=# has_on =}
-    if ({= on =}) {
+    if ({=& on =}) {
         if ({= name =}_write_index == {= index =}) {
             return true;
         }
@@ -1439,7 +1439,7 @@ func {= name =}_write() void {
     {=# writers =}
     {=# auto =}
     {=# has_on =}
-    if ({= on =}) {
+    if ({=& on =}) {
         if ({= name =}_write_index == {= index =}) {
             {= name =}_write_{= wname =}();
         }
