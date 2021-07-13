@@ -3,7 +3,7 @@
 import <givelink.h> https://github.com/Lupino/givelink.git
 import <jsmn.h> https://github.com/zserge/jsmn.git
 import <EEPROM.h>
-GL_SERIAL_availabled_timer unsigned long = 0
+GL_SERIAL_availabled_timer_ms unsigned long = 0
 
 setup {
     #ifdef EEPROM_SIZE
@@ -13,7 +13,7 @@ setup {
 
 loop {
     if (GL_SERIAL.available() > 0) {
-        GL_SERIAL_availabled_timer = get_current_time_ms();
+        GL_SERIAL_availabled_timer_ms = get_current_time_ms();
         while (GL_SERIAL.available() > 0) {
             if (givelink_recv(readedPayload, &readedLen, GL_SERIAL.read(), &crcFlag)) {
                 if (givelink_from_binary(readedPayload, readedLen)) {
@@ -1333,7 +1333,7 @@ loop {
 
 {=# uarts =}
 is_{= name =}_readed bool = false
-{= name =}_availabled_timer unsigned long
+{= name =}_availabled_timer_ms unsigned long
 {=# readers =}
 {= name =}_read_{= index =}_buffer[{= buf_len =}] uint8_t
 {= name =}_read_{= index =}_buffer_len int = 0
@@ -1353,7 +1353,7 @@ loop {
 }
 func {= name =}_poll() void {
     if ({= name =}.available() > 0) {
-        {= name =}_availabled_timer = get_current_time_ms();
+        {= name =}_availabled_timer_ms = get_current_time_ms();
         while ({= name =}.available() > 0) {
             uint8_t outByte = {= name =}.read();
             {=# readers =}
