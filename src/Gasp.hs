@@ -135,22 +135,22 @@ getCmds gasp = [cmd | (ExprCmd cmd) <- gaspExprs gasp]
 -- * Functions
 
 getFunctions:: Gasp -> [Function]
-getFunctions gasp = [func | (ExprFunction func) <- gaspExprs gasp]
+getFunctions gasp = nub $ [func | (ExprFunction func) <- gaspExprs gasp]
 
 -- * Loops
 
 getLoops:: Gasp -> [Loop]
-getLoops gasp = [loop | (ExprLoop loop) <- gaspExprs gasp]
+getLoops gasp = nub $ [loop | (ExprLoop loop) <- gaspExprs gasp]
 
 -- * Setups
 
 getSetups:: Gasp -> [Setup]
-getSetups gasp = [setup | (ExprSetup setup) <- gaspExprs gasp]
+getSetups gasp = nub $ [setup | (ExprSetup setup) <- gaspExprs gasp]
 
 -- * Raws
 
 getRaws:: Gasp -> [Raw]
-getRaws gasp = [raw | (ExprRaw raw) <- gaspExprs gasp]
+getRaws gasp = nub $ [raw | (ExprRaw raw) <- gaspExprs gasp]
 
 -- * Attrs
 
@@ -175,7 +175,7 @@ getRules gasp = [rule | (ExprRule rule) <- gaspExprs gasp]
 -- * Consts
 
 getConstants:: Gasp -> [Constant]
-getConstants gasp = [c | (ExprConst c) <- gaspExprs gasp]
+getConstants gasp = nub $ [c | (ExprConst c) <- gaspExprs gasp]
 
 -- * Gpios
 
@@ -321,11 +321,11 @@ instance ToJSON Gasp where
         [ "app"         .= app
         , "has_app"     .= isJust app
         , "commands"    .= cmds
-        , "functions"   .= funcs
+        , "functions"   .= requiredFuncs
         , "imports"     .= getImports gasp
-        , "loops"       .= getLoops gasp
-        , "setups"      .= getSetups gasp
-        , "raws"        .= getRaws gasp
+        , "loops"       .= loops
+        , "setups"      .= setups
+        , "raws"        .= raws
         , "attrs"       .= attrs
         , "metrics"     .= metrics
         , "has_metric"  .= hasMetric
@@ -345,6 +345,9 @@ instance ToJSON Gasp where
         , "has_timer"   .= hasTimer
         ] ++ map (\(Flag k v) -> k .= v) flags
         where gasp = prepareGasp (maybe 0 (startAddr prod) app) (getFuncFlags gasp0) gasp0
+              setups = getSetups gasp
+              loops = getLoops gasp
+              raws = getRaws gasp
               prod = getProd gasp0
               flags = nub $ argvFlags gasp0 ++ getFlags gasp ++ defaultFlags
               attrs = getAttrs gasp
@@ -353,14 +356,14 @@ instance ToJSON Gasp where
               agpios = getAGpios gasp
               uarts = getUarts gasp
               cmds = getCmds gasp
-              (consts, vars) = splitConstant $ nub $ getConstants gasp
+              (consts, vars) = splitConstant $ getConstants gasp
               requiredText
                 =  T.intercalate "\n"
-                $  map loopCode (getLoops gasp)
-                ++ map setupCode (getSetups gasp)
-                ++ map rawCode (getRaws gasp)
-              uniqFuncs = nub $ getFunctions gasp
-              (requiredVars, requiredConsts, funcs) = getRequired requiredText vars consts uniqFuncs
+                $  map loopCode loops
+                ++ map setupCode setups
+                ++ map rawCode raws
+              funcs = getFunctions gasp
+              (requiredVars, requiredConsts, requiredFuncs) = getRequired requiredText vars consts funcs
               hasMetric = not (null metrics)
               app = getApp gasp0
               rules = getRules gasp
