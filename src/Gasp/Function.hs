@@ -75,7 +75,7 @@ hasToken tok txt
         prevLen = T.length prev
         endC = T.take 1 next
         startC = T.take 1 $ T.takeEnd (tokLen + 1) prev
-        validC = [" ", ",", "=", "(", ")", "[", "]", ";", "\n", "!", ".", "+", "-", "*", "/", "&", ">", "<"]
+        validC = [" ", ",", "=", "(", ")", "[", "]", ";", "\n", "!", ".", "+", "-", "*", "/", "&", ">", "<", "{", "}"]
         isToken = endC `elem` validC && startC `elem` validC
         prevLine = T.takeWhileEnd (/='\n') prev
         (comment, _) = T.breakOnEnd "//" prevLine
@@ -95,9 +95,10 @@ isRequired txt func = hasToken (T.pack fn) (" " <> txt)
 splitRequired :: Text -> [Function] -> ([Function], [Function])
 splitRequired = partition . isRequired
 
-getRequiredFunction :: Text -> [Function] -> [Function]
+getRequiredFunction :: Text -> [Function] -> ([Function], [Function])
 getRequiredFunction txt funcs
-  | null required = []
-  | otherwise     = required ++ getRequiredFunction nextText unrequired
+  | null required = ([], unrequired)
+  | otherwise     = (required ++ nextRequired, nextUnrequired)
   where (required, unrequired) = splitRequired txt funcs
         nextText = T.intercalate "\n" $ map funcCode required
+        (nextRequired, nextUnrequired) = getRequiredFunction nextText unrequired

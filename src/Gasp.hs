@@ -27,6 +27,7 @@ import           Data.ByteString.Base16 as B16 (decodeLenient)
 import           Data.ByteString.Char8  as BC (pack)
 import           Data.List              (nub)
 import           Data.Maybe             (isJust)
+import           Data.Text              (Text)
 import qualified Data.Text              as T (intercalate, pack)
 import qualified ExternalCode
 import           Gasp.AGpio
@@ -336,8 +337,8 @@ instance ToJSON Gasp where
         , "gpios"       .= gpios
         , "agpios"      .= agpios
         , "rules"       .= rules
-        , "consts"      .= requiredConsts
-        , "vars"        .= requiredVars
+        , "consts"      .= reverse requiredConsts
+        , "vars"        .= reverse requiredVars
         , "uarts"       .= uarts
         , "production"  .= prod
         , "timers"      .= timers
@@ -358,12 +359,8 @@ instance ToJSON Gasp where
                 $  map loopCode (getLoops gasp)
                 ++ map setupCode (getSetups gasp)
                 ++ map rawCode (getRaws gasp)
-                ++ map (T.pack . constValue) consts
-              funcs = getRequiredFunction requiredText $ nub $ getFunctions gasp
-              funcText = T.intercalate "\n" $ map funcCode funcs
-              requiredVars = getRequiredConstant (requiredText <> "\n" <> funcText) vars
-              varText = T.intercalate "\n" $ map (\(Constant a b c) -> T.pack $ concat [a, " ", b, " ", c]) requiredVars
-              requiredConsts = getRequiredConstant (requiredText <> "\n" <> funcText <> "\n" <> varText) consts
+              uniqFuncs = nub $ getFunctions gasp
+              (requiredVars, requiredConsts, funcs) = getRequired requiredText vars consts uniqFuncs
               hasMetric = not (null metrics)
               app = getApp gasp0
               rules = getRules gasp
@@ -375,6 +372,20 @@ instance ToJSON Gasp where
               isLowMemory = getFlag False flags "low_memory"
               bufLen = if isLowMemory then max maxCmdLen maxTmplLen else max maxCmdLen bufLen0
               contextLen = maybe 0 appContexLen app
+
+getRequired :: Text -> [Constant] -> [Constant] -> [Function] -> ([Constant], [Constant], [Function])
+getRequired requiredText vars consts funcs
+  | null requiredVars && null requiredConsts && null requiredFuncs = ([], [], [])
+  | otherwise = (requiredVars ++ rv, requiredConsts ++ rc, requiredFuncs ++ rf)
+  where (requiredFuncs, unrequiredFuncs) = getRequiredFunction requiredText funcs
+        (requiredVars, unrequiredVars) = getRequiredConstant requiredText vars
+        (requiredConsts, unrequiredConsts) = getRequiredConstant requiredText consts
+        txt
+          = T.intercalate "\n"
+          $ map (T.pack . constValue) requiredConsts
+          ++ map (\(Constant a b c) -> T.pack $ concat [a, " ", b, " ", c]) requiredVars
+          ++ map funcCode requiredFuncs
+        (rv, rc, rf) = getRequired txt unrequiredVars unrequiredConsts unrequiredFuncs
 
 putExpr :: Expr -> Put
 putExpr (ExprAttr x)

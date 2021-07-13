@@ -32,9 +32,9 @@ instance ToJSON Constant where
 splitConstant :: [Constant] -> ([Constant], [Constant])
 splitConstant = partition (null . constType)
 
-getRequiredConstant :: Text -> [Constant] -> [Constant]
-getRequiredConstant txt = filter isRequired
-  where isRequired :: Constant -> Bool
-        isRequired var = hasToken (getToken var) (" " <> txt)
+getRequiredConstant :: Text -> [Constant] -> ([Constant], [Constant])
+getRequiredConstant = partition . isRequired
+  where isRequired :: Text -> Constant -> Bool
+        isRequired txt var = hasToken (getToken var) (" " <> txt)
 
         getToken = T.takeWhile (/='[') . T.takeWhile (/='(') . T.pack . constName
