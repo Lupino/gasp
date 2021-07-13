@@ -49,8 +49,9 @@ import           Data.Functor         (($>))
 import qualified Data.Text            as T
 import           Data.Text.Encoding   (encodeUtf8)
 import           Data.Yaml            (decodeEither')
-import           Text.Parsec          (alphaNum, anyChar, char, letter, many,
-                                       manyTill, oneOf, try, (<|>))
+import           Text.Parsec          (alphaNum, anyChar, char, letter,
+                                       lookAhead, many, manyTill, oneOf, try,
+                                       (<|>))
 import           Text.Parsec.Language (emptyDef)
 import           Text.Parsec.String   (Parser)
 import qualified Text.Parsec.Token    as Token
@@ -240,6 +241,7 @@ block start end = do
 blockC :: Char -> Char -> Parser String
 blockC start end = do
   whiteSpace
+  void $ lookAhead $ char start
   v <- drop 1 . strip <$> block0 0 start end
   whiteSpace
   return v

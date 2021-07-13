@@ -14,21 +14,22 @@ valueParser :: Parser String
 valueParser = do
   _    <- symbol "="
   whiteSpace
-  strip <$> (argvP "{" "}" <|> many (noneOf "\n\r"))
+  strip <$> (argvP '{' '}' <|> many (noneOf "\n\r"))
 
 
-argvP :: String -> String -> Parser String
+argvP :: Char -> Char -> Parser String
 argvP s e = do
-  argv <- block s e
-  return $ s ++ argv ++ e
+  argv <- blockC s e
+  whiteSpace
+  return $ [s] ++ argv ++ [e]
 
 
 -- | name [type] = value
 constant :: Parser Constant
 constant = do
   name  <- identifier
-  argv0  <- option "" $ argvP "[" "]"
-  argv1  <- option "" $ argvP "(" ")"
+  argv0 <- option "" $ argvP '[' ']'
+  argv1 <- option "" $ argvP '(' ')'
   tp    <- tpParser
   whiteSpace
   value <- option "" valueParser
