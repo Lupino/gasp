@@ -1334,6 +1334,7 @@ loop {
 {=# uarts =}
 is_{= name =}_readed bool = false
 {= name =}_availabled_timer_ms unsigned long
+{= name =}_writer_timer_ms unsigned long
 {=# readers =}
 {= name =}_read_{= index =}_buffer[{= buf_len =}] uint8_t
 {= name =}_read_{= index =}_buffer_len int = 0
@@ -1380,6 +1381,7 @@ func {= name =}_poll() void {
 
 {=# writers =}
 func {= name =}_write_{= wname =}() void {
+    prepare_{= name =}_write();
     is_{= name =}_write_{= wname =} = true;
     is_{= name =}_readed = false;
     {=# action =}
@@ -1430,12 +1432,19 @@ func {= name =}_write_next_index() void {
     }
 }
 
-func {= name =}_write() void {
+func prepare_{= name =}_write() void {
+    if ({= name =}_writer_timer_ms + 200 > get_current_time_ms()) {
+        while ({= name =}_writer_timer_ms + 200 > get_current_time_ms()) {
+            {= name =}_poll();
+        }
+    }
     {=# writers =}
-    {=# auto =}
     is_{= name =}_write_{= wname =} = false;
-    {=/ auto =}
     {=/ writers =}
+    {= name =}_writer_timer_ms = get_current_time_ms();
+}
+
+func {= name =}_write() void {
     {=# writers =}
     {=# auto =}
     {=# has_on =}
