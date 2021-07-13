@@ -62,6 +62,7 @@ data Expr
     | ExprFunction !Function
     | ExprSetup    !Setup
     | ExprLoop     !Loop
+    | ExprRaw      !Raw
     | ExprAttr     !Attr
     | ExprMetric   !Metric
     | ExprEvery    !Every
@@ -144,6 +145,11 @@ getLoops gasp = [loop | (ExprLoop loop) <- gaspExprs gasp]
 
 getSetups:: Gasp -> [Setup]
 getSetups gasp = [setup | (ExprSetup setup) <- gaspExprs gasp]
+
+-- * Raws
+
+getRaws:: Gasp -> [Raw]
+getRaws gasp = [raw | (ExprRaw raw) <- gaspExprs gasp]
 
 -- * Attrs
 
@@ -318,6 +324,7 @@ instance ToJSON Gasp where
         , "imports"     .= getImports gasp
         , "loops"       .= getLoops gasp
         , "setups"      .= getSetups gasp
+        , "raws"        .= getRaws gasp
         , "attrs"       .= attrs
         , "metrics"     .= metrics
         , "has_metric"  .= hasMetric

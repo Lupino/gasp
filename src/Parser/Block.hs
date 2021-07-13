@@ -2,6 +2,7 @@ module Parser.Block
   ( blockP
   , setup
   , loop
+  , raw
   ) where
 
 import qualified Data.Text          as T
@@ -20,3 +21,6 @@ setup = blockP L.reservedNameSetup Setup
 
 loop :: Parser Loop
 loop  = blockP L.reservedNameLoop  Loop
+
+raw :: Parser Raw
+raw = blockP L.reservedNameRaw Raw

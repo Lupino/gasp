@@ -12,6 +12,10 @@
 {=/ has_value =}
 {=/ consts =}
 
+{=# raws =}
+{=& code =}
+
+{=/ raws =}
 {=# vars =}
 {=# has_value =}
 {= type =} {= name =} = {=& value =};
