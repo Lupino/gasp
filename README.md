@@ -38,7 +38,7 @@ METRIC_DELAY_MS = attr_delay
 // METRIC_DELAY_MS = 1800000
 // DEBOUNCE_DELAY_MS = 50
 
-setup {
+setup gl_serial_setup {
     GL_SERIAL.begin(115200);
     while (!GL_SERIAL) {;}
 }
@@ -172,13 +172,13 @@ rule metric_temperature < attr_high_temperature && metric_temperature > attr_low
 import <avr/wdt.h>
 want_reboot bool = false
 
-setup {
+setup wdt_setup {
     MCUSR = 0;
     wdt_disable();
     wdt_enable(WDTO_8S);
 }
 
-loop {
+loop wdt_loop {
     wdt_reset();
     if (want_reboot) {
         reset();

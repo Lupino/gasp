@@ -7,7 +7,7 @@ GL_SERIAL = Serial
 DEBUG_SERIAL = Serial
 METRIC_DELAY_MS = attr_delay
 
-setup {
+setup gl_serial_setup {
     GL_SERIAL.begin(115200);
     while (!GL_SERIAL) {;}
 }
@@ -31,7 +31,7 @@ oneWire(ONE_WIRE_BUS) OneWire
 sensors(&oneWire) DallasTemperature
 insideThermometer DeviceAddress
 
-setup {
+setup sensor_setup {
     sensors.begin();
     #ifdef DEBUG_SERIAL
     DEBUG_SERIAL.print("Found ");

@@ -7,7 +7,9 @@ GL_SERIAL = Serial
 DEBUG_SERIAL = Serial
 METRIC_DELAY_MS = attr_delay
 
-setup {
+SoftwareSerial mySerial(4, 3); // RX, TX
+
+setup gl_serial_setup {
     GL_SERIAL.begin(115200);
     while (!GL_SERIAL) {;}
 }
@@ -21,14 +23,14 @@ attr delay {
 }
 
 import <SoftwareSerial.h>
-import "DEV_Config.h"
+// import "DEV_Config.h"
 import "L76X.h"
-L76X_buff[100] uint8_t = {0};
-L76X_buff_size uint16_t = 0;
-GPS1 GNRMC;
+L76X_buff[100] uint8_t = {0}
+L76X_buff_size uint16_t = 0
+GPS1 GNRMC
 coord Coordinates
 
-setup {
+setup l76x_setup {
     DEV_Set_Baudrate(115200);
     L76X_Send_Command(SET_NMEA_OUTPUT);
     L76X_Send_Command(SET_NMEA_BAUDRATE_9600);
@@ -40,7 +42,7 @@ setup {
     L76X_Send_Command(SET_POS_FIX_10S);
 }
 
-loop {
+loop l76x_loop {
     while (DEV_Uart_Avaliable() > 0) {
         uint8_t outByte = DEV_Uart_Read();
         if (L76X_recv(L76X_buff, &L76X_buff_size, outByte)) {

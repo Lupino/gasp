@@ -6,7 +6,7 @@ app led {
 GL_SERIAL = Serial
 DEBUG_SERIAL = Serial
 
-setup {
+setup gl_serial_setup {
     GL_SERIAL.begin(115200);
     while (!GL_SERIAL) {;}
 }

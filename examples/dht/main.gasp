@@ -7,7 +7,7 @@ GL_SERIAL = Serial
 DEBUG_SERIAL = Serial
 METRIC_DELAY_MS = attr_delay
 
-setup {
+setup gl_serial_setup {
     GL_SERIAL.begin(115200);
     while (!GL_SERIAL) {;}
 }
@@ -22,7 +22,7 @@ DHTTYPE = DHT11   // DHT 11
 import <DHT.h> https://github.com/adafruit/DHT-sensor-library.git
 dht(DHTPIN, DHTTYPE) DHT
 
-setup {
+setup dht_setup {
     dht.begin();
 }
 
