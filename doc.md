@@ -10,6 +10,8 @@ app appName {
 }
 ```
 
+only the first one avaliable
+
 ## flag
 
 ```
@@ -22,17 +24,23 @@ Avaliable flags:
 - auto_retry
 - low_memory
 
+Relpace able only the first one avaliable
+
 ## Constant or Variable
 
 ```
 name[(argv)] [type] = value
 ```
 
+Relpace able only the first one avaliable
+
 ## import
 
 ```
 import lib [url]
 ```
+
+Relpace able only the first one avaliable
 
 ## setup
 
@@ -42,6 +50,8 @@ setup name {
 }
 ```
 
+Relpace able only the first one avaliable
+
 ## loop
 
 ```
@@ -50,6 +60,8 @@ loop name {
 }
 ```
 
+Relpace able only the first one avaliable
+
 ## raw
 
 ```
@@ -57,6 +69,8 @@ raw name {
 // you loop code
 }
 ```
+
+Relpace able only the first one avaliable
 
 ## gpio
 
@@ -82,6 +96,8 @@ func funcName [(argv)] [type] {
     // you func code
 }
 ```
+
+Relpace able only the first one avaliable
 
 ## every
 
