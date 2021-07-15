@@ -117,8 +117,7 @@ setup debug_print_setup {
 current_time_ms unsigned long = 0
 
 func get_current_time_ms() unsigned long {
-    // return millis();
-    return 0;
+    return millis();
 }
 
 loop get_current_time_loop {
