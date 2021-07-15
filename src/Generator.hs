@@ -3,20 +3,22 @@ module Generator
   ) where
 
 import           Gasp                   (Gasp, getGaspExprs, setGaspExprs)
-import           Generator.AppGenerator (generateApp, makeSimpleTemplateFD)
+import           Generator.AppGenerator (generateApp)
 import           Generator.FileDraft    (FileDraft, write)
 import           Parser                 (parseGasp)
 import           System.FilePath        ((</>))
 
 writeAppCode :: Gasp -> FilePath -> FilePath -> IO ()
 writeAppCode gasp dstDir tmplDir = do
-  writeFileDrafts dstDir [makeSimpleTemplateFD fn tmplDir gasp ]
+  files0 <- generateApp tmplDir gasp
+  writeFileDrafts dstDir files0
+
   r <- parseGasp $ dstDir </> fn
   case r of
     Left err       -> error (show err)
     Right combined -> do
-      files <- generateApp tmplDir $ setGaspExprs gasp (getGaspExprs gasp ++ getGaspExprs combined)
-      writeFileDrafts dstDir files
+      files1 <- generateApp tmplDir $ setGaspExprs gasp (getGaspExprs gasp ++ getGaspExprs combined)
+      writeFileDrafts dstDir files1
 
   where fn = "combined.gasp"
 
