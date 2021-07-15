@@ -204,7 +204,7 @@ getRequires gasp = [r | (ExprRequire r) <- gaspExprs gasp]
 -- * Imports
 
 getImports :: Gasp -> [Import]
-getImports gasp = [imp | (ExprImport imp) <- gaspExprs gasp]
+getImports gasp = nub $ [imp | (ExprImport imp) <- gaspExprs gasp]
 
 
 -- * Timers
