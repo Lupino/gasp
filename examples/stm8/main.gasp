@@ -8,10 +8,15 @@ GL_SERIAL_begin = Serial_begin
 GL_SERIAL_read = Serial_read
 GL_SERIAL_available = Serial_available
 GL_SERIAL_write = Serial_write
+GL_SERIAL_flush = Serial_flush
 METRIC_DELAY_MS = attr_delay
 PING_FAILED_CB = noop
 
-setup {
+func isdigit(v char) bool {
+    return v >= '0' && v <= '9';
+}
+
+setup gl_serial_step {
     GL_SERIAL_begin(115200);
     while (!GL_SERIAL) {;}
 }

@@ -69,5 +69,5 @@ char *dtostrf(double number, int width, unsigned int digits, char *result) {
     remainder -= toPrint;
   }
 
-  return n;
+  return result;
 }
