@@ -15,10 +15,9 @@ import           Data.UUID.V4               (nextRandom)
 import           Data.Yaml                  (encode)
 import qualified ExternalCode
 import           Gasp                       (App (..), Attr (..), Expr (..),
-                                             Gasp, Metric (..), filterFlag,
-                                             getGaspExprs, setArgvFlags,
-                                             setExternalCodeFiles, setGaspExprs,
-                                             setProd)
+                                             Gasp, Metric (..), getGaspExprs,
+                                             setArgvFlags, setExternalCodeFiles,
+                                             setGaspExprs, setProd)
 import           Gasp.Block
 import           Gasp.Function
 import           Generator                  (writeAppCode)
@@ -123,7 +122,7 @@ preprocessGasp gasp = setGaspExprs gasp <$> mapM mapFunc (getGaspExprs gasp)
           }
         mapFunc v = return v
 
-        render =  (`compileAndRenderTextTemplate` (toJSON $ filterFlag gasp))
+        render =  (`compileAndRenderTextTemplate` (toJSON gasp))
 
 getCenterValue :: (Ord a) => (a, a) -> a -> (Bool, a)
 getCenterValue (minv, maxv) defv =

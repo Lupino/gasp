@@ -19,6 +19,7 @@ module Lexer
   , reservedNameTimer
   , reservedNameFlag
   , reservedNameRaw
+  , reservedNameData
   , braces
   , brackets
   , symbol
@@ -118,6 +119,9 @@ reservedNameFlag = "flag"
 reservedNameRaw :: String
 reservedNameRaw = "raw"
 
+reservedNameData :: String
+reservedNameData = "data"
+
 -- * Data types.
 
 reservedNameBooleanTrue :: String
@@ -149,6 +153,7 @@ reservedNames =
     , reservedNameTimer
     , reservedNameFlag
     , reservedNameRaw
+    , reservedNameData
     -- * Data types
     , reservedNameBooleanTrue
     , reservedNameBooleanFalse

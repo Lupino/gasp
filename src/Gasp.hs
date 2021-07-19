@@ -8,7 +8,6 @@ module Gasp
     , getProd
     , setArgvFlags
     , getRequires
-    , filterFlag
 
     , module Gasp.App
     , module Gasp.Attr
@@ -64,6 +63,7 @@ data Expr
     | ExprSetup    !Setup
     | ExprLoop     !Loop
     | ExprRaw      !Raw
+    | ExprData     !Data
     | ExprAttr     !Attr
     | ExprMetric   !Metric
     | ExprEvery    !Every
@@ -151,6 +151,11 @@ getSetups gasp = nub $ [setup | (ExprSetup setup) <- gaspExprs gasp]
 
 getRaws:: Gasp -> [Raw]
 getRaws gasp = nub $ [raw | (ExprRaw raw) <- gaspExprs gasp]
+
+-- * Datas
+
+getDatas:: Gasp -> [Data]
+getDatas gasp = nub $ [dat | (ExprData dat) <- gaspExprs gasp]
 
 -- * Attrs
 
@@ -344,10 +349,12 @@ instance ToJSON Gasp where
         , "timers"      .= timers
         , "has_timer"   .= hasTimer
         ] ++ map (\(Flag k v) -> k .= v) flags
+          ++ map (\(Data k v) -> T.pack k .= v) datas
         where gasp = prepareGasp (maybe 0 (startAddr prod) app) (getFuncFlags gasp0) gasp0
               setups = getSetups gasp
               loops = getLoops gasp
               raws = getRaws gasp
+              datas = getDatas gasp
               prod = getProd gasp0
               flags = nub $ argvFlags gasp0 ++ getFlags gasp ++ defaultFlags
               attrs = getAttrs gasp
@@ -412,7 +419,3 @@ instance Binary Gasp where
           addr = maybe "00000000" appAddr app
 
   put Gasp {gaspExprs=exprs} = mapM_ putExpr exprs
-
-
-filterFlag :: Gasp -> Gasp
-filterFlag gasp = setGaspExprs gasp [ExprFlag flag | ExprFlag flag <- gaspExprs gasp]

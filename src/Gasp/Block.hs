@@ -2,9 +2,10 @@ module Gasp.Block
   ( Loop (..)
   , Setup (..)
   , Raw (..)
+  , Data (..)
   ) where
 
-import           Data.Aeson (ToJSON (..), object, (.=))
+import           Data.Aeson (ToJSON (..), Value, object, (.=))
 import           Data.Text  (Text)
 
 data Loop = Loop
@@ -51,4 +52,20 @@ instance ToJSON Raw where
   toJSON raw = object
     [ "code" .= rawCode raw
     , "name" .= rawName raw
+    ]
+
+data Data = Data
+  { dataName :: String
+  , dataData :: Value
+  } deriving (Show)
+
+
+instance Eq Data where
+  x == y = dataName x == dataName y
+
+
+instance ToJSON Data where
+  toJSON dat = object
+    [ "data" .= dataData dat
+    , "name" .= dataName dat
     ]

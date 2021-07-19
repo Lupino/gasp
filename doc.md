@@ -66,7 +66,17 @@ Relpace able only the first one avaliable
 
 ```
 raw name {
-// you loop code
+// you raw code
+}
+```
+
+Relpace able only the first one avaliable
+
+## data
+
+```
+data name {
+// you yaml code
 }
 ```
 
