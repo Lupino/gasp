@@ -220,28 +220,6 @@ unsigned long current_time_ms = 0;
 
 unsigned long get_current_time_ms();
 {=# functions =}
-{=# has_argv =}
-{= type =} {= name =}({= argv =});
-{=/ has_argv =}
-{=^ has_argv =}
-{=# flag =}
-{=# retval =}
-{=# json =}
-{= type =} {= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval);
-{=/ json =}
-{=^ json =}
-{= type =} {= name =}(char *retval);
-{=/ json =}
-{=/ retval =}
-{=^ retval =}
-{=# json =}
-{= type =} {= name =}(const char *json, jsmntok_t *tokens, int num_tokens);
-{=/ json =}
-{=^ json =}
-{= type =} {= name =}();
-{=/ json =}
-{=/ retval =}
-{=/ flag =}
-{=/ has_argv =}
+{= type =} {= name =}({=# argv =}{= type =} {= name =}{=^ last =}, {=/ last =}{=/ argv =});
 {=/ functions =}
 ```

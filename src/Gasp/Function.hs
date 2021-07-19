@@ -7,6 +7,10 @@ module Gasp.Function
   , getRequiredFunction
   , FuncFlag (..)
   , genFuncFlag
+  , Arg
+  , mkArg
+  , assignLast
+  , funcFlagToArgv
   ) where
 
 
@@ -44,26 +48,71 @@ newtype FuncName = FuncName String
 instance ToJSON FuncName where
   toJSON (FuncName n) = toJSON n
 
+data Arg = Arg
+  { argName   :: String
+  , argType   :: String
+  , argIsLast :: Bool
+  }
+  deriving (Show, Eq)
+
+instance ToJSON Arg where
+  toJSON (Arg n t l) = object
+    [ "name" .= n
+    , "type" .= t
+    , "last" .= l
+    ]
+
+mkArg :: String -> String -> Arg
+mkArg n t = Arg n t False
+
+assignLast :: [Arg] -> [Arg]
+assignLast []     = []
+assignLast [arg]  = [arg {argIsLast = True}]
+assignLast (x:xs) = x: assignLast xs
+
+argJson :: Arg
+argJson = mkArg "json" "const char *"
+
+argTokens :: Arg
+argTokens = mkArg "tokens" "jsmntok_t *"
+
+argNumToken :: Arg
+argNumToken = mkArg "num_tokens" "int"
+
+argRetVal :: Arg
+argRetVal = mkArg "retval" "char *"
+
+funcFlagToArgv :: Arg -> FuncFlag -> [Arg]
+funcFlagToArgv tokens flag
+  | retval && json = [argJson, tokens, argNumToken, argRetVal]
+  | retval = [argRetVal]
+  | json   = [argJson, tokens, argNumToken]
+  | otherwise  = []
+  where retval = flagRetval flag
+        json   = flagJson flag
+
 data Function = Function
-    { funcName :: !FuncName
-    , funcCode :: !Text
-    , funcFlag :: !FuncFlag
-    , funcArgv :: !String
-    , funcType :: !String
-    } deriving (Show)
+  { funcName :: !FuncName
+  , funcCode :: !Text
+  , funcFlag :: !FuncFlag
+  , funcArgv :: ![Arg]
+  , funcType :: !String
+  } deriving (Show)
 
 instance Eq Function where
   c0 == c1 = funcName c0 == funcName c1
 
 instance ToJSON Function where
-    toJSON func = object
-        [ "name"     .= funcName func
-        , "code"     .= funcCode func
-        , "flag"     .= funcFlag func
-        , "argv"     .= funcArgv func
-        , "has_argv" .= not (null $ funcArgv func)
-        , "type"     .= funcType func
-        ]
+  toJSON func = object
+    [ "name"     .= funcName func
+    , "code"     .= funcCode func
+    , "argv"     .= assignLast argv
+    , "type"     .= funcType func
+    ]
+    where argv = if null (funcArgv func) then funcFlagToArgv argTokens (funcFlag func)
+                                         else funcArgv func
+
+
 
 hasToken :: Text -> Text -> Bool
 hasToken tok txt

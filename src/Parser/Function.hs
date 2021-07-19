@@ -14,6 +14,22 @@ tpParser = fixed . strip <$> many1 (noneOf "{}")
   where fixed [] = "void"
         fixed v  = v
 
+
+arg :: Parser Arg
+arg = do
+  name <- identifier
+  mkArg name . strip <$> many1 (noneOf ",\n\r)")
+
+
+argv :: Parser [Arg]
+argv = do
+  _ <- symbol "("
+  args <- commaSep arg
+  _ <- symbol ")"
+
+  return args
+
+
 -- func funcName [(argv)] [rettp] do
 --
 -- done
@@ -22,7 +38,7 @@ function :: Parser Function
 function = do
     reserved reservedNameFunction
     name  <- FuncName <$> identifier
-    argv  <- option ""     $ block "(" ")"
+    args  <- option [] $ argv
     tp    <- option "void" tpParser
     code  <- gaspBlockClosure
 
@@ -30,7 +46,7 @@ function = do
     return Function
         { funcName = name
         , funcCode = Text.pack code
-        , funcArgv = argv
+        , funcArgv = args
         , funcFlag = genFuncFlag name
         , funcType = tp
         }

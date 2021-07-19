@@ -39,6 +39,7 @@ expr
     <|> exprLoop
     <|> exprSetup
     <|> exprRaw
+    <|> exprData
     <|> exprAttr
     <|> exprMetric
     <|> exprEvery

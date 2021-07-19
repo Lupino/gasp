@@ -223,7 +223,7 @@ requireReportMetric bool = true
 // -1 non num
 //  0 int
 //  1 float
-func isnum(const char *buf) int {
+func isnum(buf const char *) int {
     int length = strlen(buf);
 
     if (length == 0) {
@@ -262,7 +262,7 @@ func isnum(const char *buf) int {
     return f;
 }
 
-func is_valid_float(float number, float min, float max) bool {
+func is_valid_float(number float, min float, max float) bool {
     if (isnan(number)) return false;
     if (isinf(number)) return false;
     if (number > max) return false;  // constant determined empirically
@@ -332,7 +332,7 @@ func mainAction() void {
 
 func PING_FAILED_CB() void {}
 
-func send_packet_raw(uint8_t * buf, uint16_t length) void {
+func send_packet_raw(buf uint8_t *, length uint16_t) void {
     delay(SENDED_DELAY_MS);
     for (uint16_t i = 0; i < length; i ++) {
         GL_SERIAL.write(buf[i]);
@@ -381,31 +381,31 @@ func send_packet() void {
     {=/ low_memory =}
 }
 
-func send_packet_0(const uint8_t type) void {
+func send_packet_0(type const uint8_t) void {
     next_packet(type);
     send_packet();
 }
 
-func send_packet_1(const uint8_t type, const char *data, const int length) void {
+func send_packet_1(type const uint8_t, data_ const char *, length const int) void {
     next_packet(type);
-    givelink_set_data((const uint8_t*)data, length);
+    givelink_set_data((const uint8_t*)data_, length);
     send_packet();
 }
 
-func send_packet_rsp(const char *data) void {
+func send_packet_rsp(data_ const char *) void {
     givelink_set_type(RESPONSE);
-    givelink_set_data((const uint8_t*)wantSendData, get_json_length(data));
+    givelink_set_data((const uint8_t*)wantSendData, get_json_length(data_));
     send_packet();
 }
 
-func next_packet(const uint8_t type) void {
+func next_packet(type const uint8_t) void {
     givelink_reset();
     givelink_set_id(lastPayloadId);
     givelink_set_type(type);
     lastPayloadId ++;
 }
 
-func FC(const __FlashStringHelper *ifsh) char * {
+func FC(ifsh const __FlashStringHelper *) char * {
     PGM_P p = reinterpret_cast<PGM_P>(ifsh);
     size_t n = 0;
     while (1) {
@@ -417,12 +417,12 @@ func FC(const __FlashStringHelper *ifsh) char * {
     return wantSendDataTpl;
 }
 
-func ltrim(char *s) char * {
+func ltrim(s char *) char * {
   while (*s == ' ') s++;
   return s;
 }
 
-func jsoneq(const char *json, jsmntok_t *token, const char *s) bool {
+func jsoneq(json const char *, token jsmntok_t *, s const char *) bool {
   if (token->type == JSMN_STRING && (int)strlen(s) == token->end - token->start &&
       strncmp(json + token->start, s, token->end - token->start) == 0) {
     return true;
@@ -430,7 +430,7 @@ func jsoneq(const char *json, jsmntok_t *token, const char *s) bool {
   return false;
 }
 
-func jsonfind(const char *json, jsmntok_t *tokens, int num_tokens, const char *name) int {
+func jsonfind(json const char *, tokens jsmntok_t *, num_tokens int, name const char *) int {
     /* Assume the top-level element is an object */
     if (num_tokens < 1 || tokens[0].type != JSMN_OBJECT) {
       return 0;
@@ -444,7 +444,7 @@ func jsonfind(const char *json, jsmntok_t *tokens, int num_tokens, const char *n
     return 0;
 }
 
-func jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char *name, char *value) bool {
+func jsonlookup(json const char *, tokens jsmntok_t *, num_tokens int, name const char *, value char *) bool {
     int token = jsonfind(json, tokens, num_tokens, name);
 
     if (token > 1) {
@@ -456,7 +456,7 @@ func jsonlookup(const char *json, jsmntok_t *tokens, int num_tokens, const char 
 }
 
 {=^ low_memory =}
-func merge_json(char *dst, char *src, int *total_length) void {
+func merge_json(dst char *, src char *, total_length int *) void {
     src[0] = ' ';
     // fix compile error {
     while (*src != '}') {
@@ -468,7 +468,7 @@ func merge_json(char *dst, char *src, int *total_length) void {
 }
 
 {=/ low_memory =}
-func get_json_length(const char *src) int {
+func get_json_length(src const char *) int {
     int length = 1;
     // fix compile error {
     while (*src != '}') {
@@ -510,7 +510,7 @@ setup attr_{= name =}_setup {
 {=/ keep =}
 {=/ has_app =}
 
-func set_attr_{= name =}_raw({= type =} unscaled_value) void {
+func set_attr_{= name =}_raw(unscaled_value {= type =}) void {
     attr_{= name =}_force = true;
     attr_{= name =} = unscaled_value * {= scale =};
     {=# keep =}
@@ -526,7 +526,7 @@ func set_attr_{= name =}_raw({= type =} unscaled_value) void {
     #endif
 }
 
-func set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) bool {
+func set_attr_{= name =}(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
         int tp = isnum(requestValue);
         if (tp == -1) {
@@ -560,7 +560,7 @@ func set_attr_{= name =}(const char *json, jsmntok_t *tokens, int num_tokens, ch
     return true;
 }
 
-func get_attr_{= name =}(char *retval) bool {
+func get_attr_{= name =}(retval char *) bool {
     {=^ is_float =}
     {=# is_long =}
     sprintf(retval, FC(F("{\"{= name =}\": %ld}")), ({= type =})attr_{= name =} / {= scale =});
@@ -611,7 +611,7 @@ setup metric_{= name =}_setup {
 }
 {=/ has_app =}
 
-func set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int num_tokens, char *retval) bool {
+func set_metric_{= name =}_threshold(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
     if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
         int tp = isnum(requestValue);
         if (tp == -1) {
@@ -655,7 +655,7 @@ func set_metric_{= name =}_threshold(const char *json, jsmntok_t *tokens, int nu
     return true;
 }
 
-func get_metric_{= name =}_threshold(char *retval) bool {
+func get_metric_{= name =}_threshold(retval char *) bool {
     {=^ is_float =}
     {=# is_long =}
     sprintf(retval, FC(F("{\"{= name =}_threshold\": %ld}")), metric_{= name =}_threshold);
@@ -681,12 +681,12 @@ func check_metric_{= name =}() bool {
     {=/ is_float =}
 }
 
-func invalid_metric_{= name =}_error(char *retval) bool {
+func invalid_metric_{= name =}_error(retval char *) bool {
     sprintf(retval, FC(F("{\"err\": \"{= name =} is invalid\"}")));
     return false;
 }
 
-func get_metric_{= name =}(char *retval) bool {
+func get_metric_{= name =}(retval char *) bool {
     if (!check_metric_{= name =}()) {
         return invalid_metric_{= name =}_error(retval);
     }
@@ -706,7 +706,7 @@ func get_metric_{= name =}(char *retval) bool {
 }
 
 {=/ metrics =}
-func processRequest(const char *json, int length, char *retval) bool {
+func processRequest(json const char *, length int, retval char *) bool {
     /* Prepare parser */
     jsmn_init(&requestJsmnParser);
     int num_tokens = jsmn_parse(&requestJsmnParser, json, length, requestJsmnTokens, MAX_NUM_TOKENS);
@@ -721,23 +721,7 @@ func processRequest(const char *json, int length, char *retval) bool {
     if (token > 1) {
         {=# commands =}
         if (jsoneq(json, &requestJsmnTokens[token], FC(F("{= name =}")))) {
-            {=# flag =}
-            {=# retval =}
-            {=# json =}
-            if ({= fn =}(json, requestJsmnTokens, num_tokens, retval)) {
-            {=/ json =}
-            {=^ json =}
-            if ({= fn =}(retval)) {
-            {=/ json =}
-            {=/ retval =}
-            {=^ retval =}
-            {=# json =}
-            if ({= fn =}(json, requestJsmnTokens, num_tokens)) {
-            {=/ json =}
-            {=^ json =}
-            if ({= fn =}()) {
-            {=/ json =}
-            {=/ retval =}
+            if ({= fn =}({=# argv =}{= name =}{=^ last =}, {=/ last =}{=/ argv =})) {
                 return true;
             } else {
                 {=# error =}
@@ -745,7 +729,6 @@ func processRequest(const char *json, int length, char *retval) bool {
                 {=/ error =}
                 return false;
             }
-            {=/ flag =}
         }
         {=/ commands =}
         {=# attrs =}
@@ -784,7 +767,7 @@ func processRequest(const char *json, int length, char *retval) bool {
 }
 
 {=^ low_memory =}
-func reportMetric(bool force) bool {
+func reportMetric(force bool) bool {
     bool wantSend = false;
     int total_length = 0;
     wantSendData[0] = '{';
@@ -813,7 +796,7 @@ func reportMetric(bool force) bool {
     return false;
 }
 
-func reportAttribute(bool force) bool {
+func reportAttribute(force bool) bool {
     int total_length = 0;
     bool wantSend = false;
     wantSendData[0] = '{';
@@ -856,7 +839,7 @@ func reportAttribute(bool force) bool {
 }
 {=/ low_memory =}
 {=# low_memory =}
-func reportMetric(bool force) bool {
+func reportMetric(force bool) bool {
     bool sended = false;
     {=# metrics =}
     {=# auto =}
@@ -874,7 +857,7 @@ func reportMetric(bool force) bool {
     return sended;
 }
 
-func reportAttribute(bool force) bool {
+func reportAttribute(force bool) bool {
     bool sended = true;
     {=# attrs =}
     if (last_attr_{= name =} != attr_{= name =} || force) {
@@ -939,7 +922,7 @@ loop timer_{= name =}_loop {
 }
 {=/ has_timer =}
 
-func swap_timer_event(uint32_t delta_ms) void {
+func swap_timer_event(delta_ms uint32_t) void {
     if (delta_ms <= get_cache_time_ms()) {
         return;
     }
@@ -952,7 +935,7 @@ func swap_timer_event(uint32_t delta_ms) void {
     }
 }
 
-func get_value(const char *json, jsmntok_t *tokens, int num_tokens, const char * name) uint32_t {
+func get_value(json const char *, tokens jsmntok_t *, num_tokens int, name const char *) uint32_t {
     if (jsonlookup(json, tokens, num_tokens, name, requestValue)) {
         int tp = isnum(requestValue);
         if (tp == -1) {
@@ -972,7 +955,7 @@ func get_value(const char *json, jsmntok_t *tokens, int num_tokens, const char *
     return 0;
 }
 
-func set_timer_raw(const char *json, jsmntok_t *tokens, int num_tokens, int addr0, int addr1, int addr2) void {
+func set_timer_raw(json const char *, tokens jsmntok_t *, num_tokens int, addr0 int, addr1 int, addr2 int) void {
     timer_schedat_s  = get_value(json, tokens, num_tokens, "sched_at");
     timer_period_s   = get_value(json, tokens, num_tokens, "period");
     timer_duration_s = get_value(json, tokens, num_tokens, "duration");
@@ -986,7 +969,7 @@ func set_timer_raw(const char *json, jsmntok_t *tokens, int num_tokens, int addr
     swap_timer_event(timer_delta0_ms);
 }
 
-func get_timer_raw(int addr0, int addr1, int addr2, char *retval) bool {
+func get_timer_raw(addr0 int, addr1 int, addr2 int, retval char *) bool {
     EEPROM.get(addr0, timer_schedat_s);
     EEPROM.get(addr1, timer_period_s);
     EEPROM.get(addr2, timer_duration_s);
@@ -994,7 +977,7 @@ func get_timer_raw(int addr0, int addr1, int addr2, char *retval) bool {
     return true;
 }
 
-func getset_timer(const char *json, jsmntok_t *tokens, int num_tokens, char *retval, bool set) bool {
+func getset_timer(json const char *, tokens jsmntok_t *, num_tokens int, retval char *, set bool) bool {
     int token = jsonfind(json, tokens, num_tokens, "name");
     if (token > 1) {
         {=# timers =}
@@ -1009,7 +992,7 @@ func getset_timer(const char *json, jsmntok_t *tokens, int num_tokens, char *ret
     return false;
 }
 
-func finishTimer(int addr0, int addr1, bool *sched) void {
+func finishTimer(addr0 int, addr1 int, sched bool *) void {
     if (*sched) {
         timer_delta1_ms = (timer_schedat_s - sys_timer_s + timer_duration_s) * 1000 + sys_timer_sync_ms;
         if (timer_delta1_ms <= get_cache_time_ms()) {
@@ -1028,13 +1011,13 @@ func finishTimer(int addr0, int addr1, bool *sched) void {
     }
 }
 
-func processTimer(int addr0, int addr1, int addr2, bool * sched) void {
+func processTimer(addr0 int, addr1 int, addr2 int, sched bool *) void {
     processTimer0(addr0, addr1, addr2, sched);
     swap_timer_event(timer_delta0_ms);
     swap_timer_event(timer_delta1_ms);
 }
 
-func processTimer0(int addr0, int addr1, int addr2, bool * sched) void {
+func processTimer0(addr0 int, addr1 int, addr2 int, sched bool *) void {
     timer_action = 0;
     EEPROM.get(addr0, timer_schedat_s);
     EEPROM.get(addr2, timer_duration_s);

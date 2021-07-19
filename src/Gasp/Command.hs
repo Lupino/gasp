@@ -12,7 +12,8 @@ import           Data.Text            (Text)
 import qualified Data.Text            as T (lines, strip, unlines)
 import           Data.Text.Encoding   (decodeUtf8)
 import qualified Data.Yaml            as Y (encode)
-import           Gasp.Function        (FuncFlag, FuncName)
+import           Gasp.Function        (Arg, FuncFlag, FuncName, assignLast,
+                                       funcFlagToArgv, mkArg)
 
 data DocItem = DocItem
   { itemDocs :: [String]
@@ -58,7 +59,7 @@ instance ToJSON Command where
     toJSON cmd = object
         [ "name"    .= cmdName cmd
         , "fn"      .= cmdFunc cmd
-        , "flag"    .= cmdFlag cmd
+        , "argv"    .= assignLast (funcFlagToArgv argReqTokens (cmdFlag cmd))
         , "error"   .= cmdErrS cmd
         , "docs"    .= cmdDocS cmd
         ]
@@ -67,3 +68,6 @@ getCmdRspLength :: Command -> Int
 getCmdRspLength Command {cmdErrS = err} = max okLen errLen
   where errLen = length err + 11
         okLen  = 22
+
+argReqTokens :: Arg
+argReqTokens = mkArg "requestJsmnTokens" "jsmntok_t *"

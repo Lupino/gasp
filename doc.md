@@ -102,7 +102,7 @@ agpio agpioName pinName [-> link attrName]
 ## func
 
 ```
-func funcName [(argv)] [type] {
+func funcName [(arg type)] [type] {
     // you func code
 }
 ```
