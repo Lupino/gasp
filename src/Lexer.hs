@@ -161,12 +161,14 @@ reservedNames =
 
 gaspLanguageDef :: Token.LanguageDef ()
 gaspLanguageDef = emptyDef
-    { Token.commentLine = "//"
+    { Token.commentLine   = "//"
+    , Token.commentStart  = "/*"
+    , Token.commentEnd    = "*/"
     , Token.reservedNames = reservedNames
     , Token.caseSensitive = True
     -- Identifier
-    , Token.identStart = letter
-    , Token.identLetter = alphaNum <|> char '_'
+    , Token.identStart    = letter
+    , Token.identLetter   = alphaNum <|> char '_'
     }
 
 gaspLexer :: Token.TokenParser ()
