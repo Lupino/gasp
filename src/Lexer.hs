@@ -167,7 +167,7 @@ gaspLanguageDef = emptyDef
     , Token.reservedNames = reservedNames
     , Token.caseSensitive = True
     -- Identifier
-    , Token.identStart    = letter
+    , Token.identStart    = letter <|> char '_'
     , Token.identLetter   = alphaNum <|> char '_'
     }
 
