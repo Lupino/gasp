@@ -20,11 +20,11 @@ $(ARDUINO_LIB_PATH)/%:
 	git clone $(filter %/$(notdir $@).git, $(LIBRARIES_URL)) $@
 
 ifeq ($(BOARD_TAG),rp2040:rp2040:rpipico)
-$(TARGET_APP): app/app.ino $(LIBRARIES)
+$(TARGET_APP): $(TARGET_INO) $(LIBRARIES)
 	$(ARDUINO_COMPILE) $(dir $<)
 	cp $(BUILD_PATH)/$(notdir $<).uf2 $@
 else
-$(TARGET_APP): app/app.ino $(LIBRARIES)
+$(TARGET_APP): $(TARGET_INO) $(LIBRARIES)
 	$(ARDUINO_COMPILE) $(dir $<)
 	cp $(BUILD_PATH)/$(notdir $<).with_bootloader.hex $@
 endif
