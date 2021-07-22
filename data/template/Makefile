@@ -14,17 +14,17 @@ LIBRARIES += $(patsubst %.git, $(ARDUINO_LIB_PATH)/%, $(notdir $(LIBRARIES_URL))
 CLI_FLAGS += -b $(BOARD_TAG)
 ARDUINO_COMPILE = $(ARDUINO_CLI) compile --build-path $(BUILD_PATH) $(CLI_FLAGS)
 
-all: $(DIST_APP)
+all: $(TARGET_APP)
 
 $(ARDUINO_LIB_PATH)/%:
 	git clone $(filter %/$(notdir $@).git, $(LIBRARIES_URL)) $@
 
 ifeq ($(BOARD_TAG),rp2040:rp2040:rpipico)
-$(DIST_APP): app/app.ino $(LIBRARIES)
+$(TARGET_APP): app/app.ino $(LIBRARIES)
 	$(ARDUINO_COMPILE) $(dir $<)
 	cp $(BUILD_PATH)/$(notdir $<).uf2 $@
 else
-$(DIST_APP): app/app.ino $(LIBRARIES)
+$(TARGET_APP): app/app.ino $(LIBRARIES)
 	$(ARDUINO_COMPILE) $(dir $<)
 	cp $(BUILD_PATH)/$(notdir $<).with_bootloader.hex $@
 endif
