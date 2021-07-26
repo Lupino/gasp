@@ -16,3 +16,10 @@ TARGET_APP = $(PROJECT_NAME).uf2
 else
 TARGET_APP = $(PROJECT_NAME).hex
 endif
+
+define get_arduino_dir
+    $(shell $(ARDUINO_CLI) config dump | grep $1 | awk -F ':' '{print $$2}')
+endef
+
+ARDUINO_DATA = $(call get_arduino_dir, data)
+ARDUINO_LIB_PATH = $(call get_arduino_dir, user)/libraries

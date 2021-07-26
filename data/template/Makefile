@@ -1,13 +1,6 @@
 {{={= =}=}}
 include config.mk
 
-define get_arduino_dir
-    $(shell $(ARDUINO_CLI) config dump | grep $1 | awk -F ':' '{print $$2}')
-endef
-
-ARDUINO_DATA = $(call get_arduino_dir, data)
-ARDUINO_LIB_PATH = $(call get_arduino_dir, user)/libraries
-
 LIBRARIES_URL +=  {=# imports =}{= url =} {=/ imports =}
 LIBRARIES += $(patsubst %.git, $(ARDUINO_LIB_PATH)/%, $(notdir $(LIBRARIES_URL)))
 
