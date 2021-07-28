@@ -18,10 +18,10 @@
 {=/ raws =}
 {=# vars =}
 {=# has_value =}
-{= type =} {= name =} = {=& value =};
+{= type =} {=& name =} = {=& value =};
 {=/ has_value =}
 {=^ has_value =}
-{= type =} {= name =};
+{= type =} {=& name =};
 {=/ has_value =}
 {=/ vars =}
 
