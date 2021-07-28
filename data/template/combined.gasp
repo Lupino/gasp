@@ -50,12 +50,15 @@ loop givelink_loop {
                         send_packet_rsp(wantSendData);
                     }
                     if (obj.type == SUCCESS) {
-                        ponged = true;
+                        if (obj.id == ping_packet_id) {
+                            ponged = true;
                         {=^ low_memory =}
                         {=# auto_retry =}
+                        } else {
                         need_retry = false;
                         {=/ auto_retry =}
                         {=/ low_memory =}
+                        }
                     }
                     {=# has_timer =}
                     if (obj.type == SYNCTIME) {
@@ -70,13 +73,8 @@ loop givelink_loop {
                         send_packet_0(CTRLRES);
                     }
                     if (obj.type == CTRLREQ1) {
-                        {=^ low_memory =}
-                        {=# auto_retry =}
-                        if (!need_retry) {
-                            send_packet_0(PING);
-                        }
-                        {=/ auto_retry =}
-                        {=/ low_memory =}
+                        ping_packet_id = lastPayloadId;
+                        send_packet_0(PING);
                         {=# ctrl_mode =}
                         mainAction();
                         {=/ ctrl_mode =}
@@ -141,8 +139,9 @@ GL_SERIAL_sent_delay_ms int = 100
 // EEPROM_SIZE = 1024
 // EEPROM_NEED_COMMIT
 
-pong_timer_ms unsigned long = 0
-ping_timer_ms unsigned long = 0
+pong_timer_ms  unsigned long = 0
+ping_timer_ms  unsigned long = 0
+ping_packet_id uint16_t = 0
 ponged bool = true
 ping_failed uint8_t = 0
 
@@ -298,6 +297,7 @@ func mainAction() void {
     {=/ has_metric =}
 
     if (ping_timer_ms + PING_DELAY_MS < get_cache_time_ms()) {
+        ping_packet_id = lastPayloadId;
         send_packet_0(PING);
         ponged = false;
         ping_timer_ms = get_cache_time_ms();
