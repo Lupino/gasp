@@ -14,6 +14,7 @@ setup eeprom_setup {
 loop givelink_loop {
     if (GL_SERIAL.available() > 0) {
         GL_SERIAL_availabled_timer_ms = get_current_time_ms();
+        GL_SERIAL_sent_delay_ms = 100;
         while (GL_SERIAL.available() > 0) {
             if (givelink_recv(readedPayload, &readedLen, GL_SERIAL.read(), &crcFlag)) {
                 if (givelink_from_binary(readedPayload, readedLen)) {
@@ -130,12 +131,12 @@ AUTH_DELAY_MS = 1000
 PONG_DELAY_MS = 6000
 PING_DELAY_MS = 300000
 MAX_PING_FAILED = 10
-SENDED_DELAY_MS = 100
 MAX_GL_PAYLOAD_LENGTH = {= max_gl_len =}
 MAX_BUFFER_LENGTH = {= max_buf_len =}
 MAX_NUM_TOKENS = 12
 MAX_REQUEST_VALUE_LENGTH = {= max_req_len =}
 MAX_TMPL_LENGTH = {= max_tpl_len =}
+GL_SERIAL_sent_delay_ms int = 100
 
 // EEPROM_SIZE = 1024
 // EEPROM_NEED_COMMIT
@@ -333,7 +334,8 @@ func mainAction() void {
 func PING_FAILED_CB() void {}
 
 func send_packet_raw(buf uint8_t *, length uint16_t) void {
-    delay(SENDED_DELAY_MS);
+    delay(GL_SERIAL_sent_delay_ms);
+    GL_SERIAL_sent_delay_ms = 10;
     for (uint16_t i = 0; i < length; i ++) {
         GL_SERIAL.write(buf[i]);
     }
