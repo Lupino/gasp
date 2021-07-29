@@ -50,29 +50,28 @@ loop givelink_loop {
                         send_packet_rsp(wantSendData);
                     }
                     if (obj.type == SUCCESS) {
-                        {=^ low_memory =}
+                        report_timer_ms = 0;
                         if (obj.id == ping_packet_id) {
                             ponged = true;
-                        {=# auto_retry =}
-                        } else {
-                        need_retry = false;
-                        {=/ auto_retry =}
                         }
+                        {=^ low_memory =}
+                        {=# auto_retry =}
+                        if (obj.id == report_attr_packet_id) {
+                            need_retry = false;
+                        }
+                        if (obj.id == report_metric_packet_id) {
+                            need_retry = false;
+                        }
+                        {=/ auto_retry =}
                         {=/ low_memory =}
                         {=# low_memory =}
-                        incrLastPayloadId();
-                        if (obj.id == ping_packet_id) {
-                            report_timer_ms = 0;
-                            ponged = true;
-                        }
                         if (obj.id == report_attr_packet_id) {
-                            report_timer_ms = 0;
                             doneReportAttribute();
                         }
                         if (obj.id == report_metric_packet_id) {
-                            report_timer_ms = 0;
                             doneReportMetric();
                         }
+                        incrLastPayloadId();
                         {=/ low_memory =}
                     }
                     {=# has_timer =}
@@ -205,13 +204,13 @@ crcFlag bool = false
 lastPayloadId uint16_t = 0
 readedLen uint16_t = 0
 readedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
-{=# low_memory =}
-report_attr_index int = 0
-report_metric_index int = 0
 report_attr_packet_id uint16_t = 0
 report_metric_packet_id uint16_t = 0
 report_timer_ms unsigned long = 0
 REPORT_DELAY_MS = 1000
+{=# low_memory =}
+report_attr_index int = 0
+report_metric_index int = 0
 {=/ low_memory =}
 {=^ low_memory =}
 sendedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
@@ -219,7 +218,6 @@ sendedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
 retryPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
 retryLen uint16_t = 0
 need_retry bool = false
-retry_timer_ms unsigned long = 0
 {=/ auto_retry =}
 {=/ low_memory =}
 
@@ -290,11 +288,11 @@ func is_valid_float(number float, min float, max float) bool {
 }
 
 func mainAction() void {
-    {=# low_memory =}
     if (report_timer_ms + REPORT_DELAY_MS > get_cache_time_ms()) {
         return;
     }
 
+    {=# low_memory =}
     if (!reportAttribute()) {
         return;
     }
@@ -316,16 +314,15 @@ func mainAction() void {
     {=^ low_memory =}
     {=# auto_retry =}
     if (need_retry) {
-        if (retry_timer_ms + 1000 < get_cache_time_ms()) {
-            retry_timer_ms = get_cache_time_ms();
-            send_packet_raw(retryPayload, retryLen);
-        }
+        report_timer_ms = get_cache_time_ms();
+        send_packet_raw(retryPayload, retryLen);
         return;
     }
 
     {=/ auto_retry =}
     if (reportAttribute(requireReportAttribute)) {
         requireReportAttribute = false;
+        return;
     }
 
     {=# has_metric =}
@@ -336,6 +333,7 @@ func mainAction() void {
     if (reportMetric(requireReportMetric)) {
         metric_timer_ms = get_cache_time_ms();
         requireReportMetric = false;
+        return;
     }
 
     {=/ has_metric =}
@@ -411,7 +409,6 @@ func send_packet() void {
         givelink_to_binary(retryPayload);
         retryLen = givelink_get_length();
         need_retry = true;
-        retry_timer_ms = get_cache_time_ms();
 
         send_packet_raw(retryPayload, retryLen);
     } else {
@@ -444,20 +441,21 @@ func send_packet_rsp(data_ const char *) void {
 }
 
 func next_packet(type const uint8_t) void {
-    {=# low_memory =}
     if (type == PING) {
         ping_packet_id = lastPayloadId;
         report_timer_ms = get_cache_time_ms();
     }
+
     if (type == ATTRIBUTE) {
         report_attr_packet_id = lastPayloadId;
         report_timer_ms = get_cache_time_ms();
     }
+
     if (type == TELEMETRY) {
         report_metric_packet_id = lastPayloadId;
         report_timer_ms = get_cache_time_ms();
     }
-    {=/ low_memory =}
+
     givelink_reset();
     givelink_set_id(lastPayloadId);
     givelink_set_type(type);
