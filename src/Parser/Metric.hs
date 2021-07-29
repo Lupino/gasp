@@ -70,4 +70,5 @@ metric = do
         , Metric.metricPrec         = fromIntegral $ getFromList 2 [t | Prec t <- props]
         , Metric.metricAddr         = 0
         , Metric.metricAuto         = isAuto props
+        , Metric.metricIdx          = 0
         }

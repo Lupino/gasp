@@ -63,4 +63,5 @@ attr = do
         , Attr.attrKeep   = getFromList True [t | Keep t <- props]
         , Attr.attrScale  = scale
         , Attr.attrPrec   = fromIntegral $ getFromList 2 [t | Prec t <- props]
+        , Attr.attrIdx    = 0
         }

@@ -50,15 +50,30 @@ loop givelink_loop {
                         send_packet_rsp(wantSendData);
                     }
                     if (obj.type == SUCCESS) {
+                        {=^ low_memory =}
                         if (obj.id == ping_packet_id) {
                             ponged = true;
-                        {=^ low_memory =}
                         {=# auto_retry =}
                         } else {
                         need_retry = false;
                         {=/ auto_retry =}
-                        {=/ low_memory =}
                         }
+                        {=/ low_memory =}
+                        {=# low_memory =}
+                        incrLastPayloadId();
+                        if (obj.id == ping_packet_id) {
+                            report_timer_ms = 0;
+                            ponged = true;
+                        }
+                        if (obj.id == report_attr_packet_id) {
+                            report_timer_ms = 0;
+                            doneReportAttribute();
+                        }
+                        if (obj.id == report_metric_packet_id) {
+                            report_timer_ms = 0;
+                            doneReportMetric();
+                        }
+                        {=/ low_memory =}
                     }
                     {=# has_timer =}
                     if (obj.type == SYNCTIME) {
@@ -73,11 +88,7 @@ loop givelink_loop {
                         send_packet_0(CTRLRES);
                     }
                     if (obj.type == CTRLREQ1) {
-                        ping_packet_id = lastPayloadId;
                         send_packet_0(PING);
-                        {=# ctrl_mode =}
-                        mainAction();
-                        {=/ ctrl_mode =}
                         send_packet_0(CTRLRES);
                     }
                 }
@@ -193,7 +204,15 @@ obj_buff[MAX_BUFFER_LENGTH] uint8_t
 crcFlag bool = false
 lastPayloadId uint16_t = 0
 readedLen uint16_t = 0
- readedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
+readedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
+{=# low_memory =}
+report_attr_index int = 0
+report_metric_index int = 0
+report_attr_packet_id uint16_t = 0
+report_metric_packet_id uint16_t = 0
+report_timer_ms unsigned long = 0
+REPORT_DELAY_MS = 1000
+{=/ low_memory =}
 {=^ low_memory =}
 sendedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
 {=# auto_retry =}
@@ -271,6 +290,29 @@ func is_valid_float(number float, min float, max float) bool {
 }
 
 func mainAction() void {
+    {=# low_memory =}
+    if (report_timer_ms + REPORT_DELAY_MS > get_cache_time_ms()) {
+        return;
+    }
+
+    if (!reportAttribute()) {
+        return;
+    }
+
+    {=# has_metric =}
+    if (metric_timer_ms + METRIC_DELAY_MS < get_cache_time_ms()) {
+        setReportMetricAll();
+    }
+
+    if (reportMetric()) {
+        metric_timer_ms = get_cache_time_ms();
+        requireReportMetric = false;
+    } else {
+        return;
+    }
+
+    {=/ has_metric =}
+    {=/ low_memory =}
     {=^ low_memory =}
     {=# auto_retry =}
     if (need_retry) {
@@ -280,24 +322,25 @@ func mainAction() void {
         }
         return;
     }
+
     {=/ auto_retry =}
-    {=/ low_memory =}
-    reportAttribute(requireReportAttribute);
-    if (requireReportAttribute) {
+    if (reportAttribute(requireReportAttribute)) {
         requireReportAttribute = false;
     }
+
     {=# has_metric =}
     if (metric_timer_ms + METRIC_DELAY_MS < get_cache_time_ms()) {
         requireReportMetric = true;
     }
+
     if (reportMetric(requireReportMetric)) {
         metric_timer_ms = get_cache_time_ms();
         requireReportMetric = false;
     }
-    {=/ has_metric =}
 
+    {=/ has_metric =}
+    {=/ low_memory =}
     if (ping_timer_ms + PING_DELAY_MS < get_cache_time_ms()) {
-        ping_packet_id = lastPayloadId;
         send_packet_0(PING);
         ponged = false;
         ping_timer_ms = get_cache_time_ms();
@@ -401,9 +444,29 @@ func send_packet_rsp(data_ const char *) void {
 }
 
 func next_packet(type const uint8_t) void {
+    {=# low_memory =}
+    if (type == PING) {
+        ping_packet_id = lastPayloadId;
+        report_timer_ms = get_cache_time_ms();
+    }
+    if (type == ATTRIBUTE) {
+        report_attr_packet_id = lastPayloadId;
+        report_timer_ms = get_cache_time_ms();
+    }
+    if (type == TELEMETRY) {
+        report_metric_packet_id = lastPayloadId;
+        report_timer_ms = get_cache_time_ms();
+    }
+    {=/ low_memory =}
     givelink_reset();
     givelink_set_id(lastPayloadId);
     givelink_set_type(type);
+    {=^ low_memory =}
+    incrLastPayloadId();
+    {=/ low_memory =}
+}
+
+func incrLastPayloadId() {
     lastPayloadId ++;
 }
 
@@ -485,6 +548,7 @@ func get_json_length(src const char *) int {
 attr_{= name =} {= type =} = {= default =}
 last_attr_{= name =} {= type =} = {= default =}
 attr_{= name =}_force bool = true
+attr_{= name =}_reported bool = false
 
 {=# has_app =}
 {=# keep =}
@@ -583,11 +647,13 @@ func get_attr_{= name =}(retval char *) bool {
 {=# metrics =}
 metric_{= name =} {= type =} = 0
 last_metric_{= name =} {= type =} = 0
+metric_{= name =}_reported bool = true
 
 {=# auto =}
 metric_{= name =}_threshold {= type =} = {= threshold =}
 last_metric_{= name =}_threshold {= type =} = {= threshold =}
 metric_{= name =}_threshold_force bool = true
+metric_{= name =}_threshold_reported bool = false
 
 {=# has_app =}
 setup metric_{= name =}_setup {
@@ -841,51 +907,154 @@ func reportAttribute(force bool) bool {
 }
 {=/ low_memory =}
 {=# low_memory =}
-func reportMetric(force bool) bool {
-    bool sended = false;
+func is_valid_report_metric_index() bool {
     {=# metrics =}
     {=# auto =}
-    if ((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || force) {
+    if (report_metric_index == {= index =}) {
+        return true;
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+    return false;
+}
+
+func report_metric_next_index() void {
+    for (int i = 0; i < 20; i ++) {
+        report_metric_index += 1;
+        if (report_metric_index >= 20) {
+            report_metric_index = 0;
+        }
+        if (is_valid_report_metric_index()) {
+            break;
+        }
+    }
+}
+
+setup setup_report_metric_index {
+    report_metric_next_index();
+}
+
+func reportMetric() bool {
+    {=# metrics =}
+    {=# auto =}
+    if (((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || !metric_{= name =}_reported) && report_metric_index == {= index =}) {
         wantSendData[0] = '\0';
         if (get_metric_{= name =}(wantSendData)) {
-            last_metric_{= name =} = metric_{= name =};
             send_packet_1(TELEMETRY, wantSendData, get_json_length(wantSendData));
-            sended = true;
+            return false;
         }
     }
 
     {=/ auto =}
     {=/ metrics =}
-    return sended;
+    report_metric_next_index();
+
+    return true;
 }
 
-func reportAttribute(force bool) bool {
-    bool sended = true;
+func doneReportMetric() void {
+    {=# metrics =}
+    {=# auto =}
+    if (report_metric_index == {= index =}) {
+        last_metric_{= name =} = metric_{= name =};
+        metric_{= name =}_reported = true;
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+    report_metric_next_index();
+}
+
+func setReportMetricAll() void {
+    {=# metrics =}
+    {=# auto =}
+    metric_{= name =}_reported = false;
+    {=/ auto =}
+    {=/ metrics =}
+}
+
+func is_valid_report_attr_index() bool {
     {=# attrs =}
-    if (last_attr_{= name =} != attr_{= name =} || force) {
+    if (report_attr_index == {= index =}) {
+        return true;
+    }
+
+    {=/ attrs =}
+    {=# metrics =}
+    {=# auto =}
+    if (report_attr_index == {= index =}) {
+        return true;
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+    return false;
+}
+
+func report_attr_next_index() void {
+    for (int i = 0; i < 20; i ++) {
+        report_attr_index += 1;
+        if (report_attr_index >= 20) {
+            report_attr_index = 0;
+        }
+        if (is_valid_report_attr_index()) {
+            break;
+        }
+    }
+}
+
+setup setup_report_attr_index {
+    report_attr_next_index();
+}
+
+func reportAttribute() bool {
+    {=# attrs =}
+    if ((last_attr_{= name =} != attr_{= name =} || !attr_{= name =}_reported) && report_attr_index == {= index =}) {
         wantSendData[0] = '\0';
         if (get_attr_{= name =}(wantSendData)) {
-            sended = true;
-            last_attr_{= name =} = attr_{= name =};
             send_packet_1(ATTRIBUTE, wantSendData, get_json_length(wantSendData));
+            return false;
         }
     }
 
     {=/ attrs =}
     {=# metrics =}
     {=# auto =}
-    if (last_metric_{= name =}_threshold != metric_{= name =}_threshold || force) {
+    if ((last_metric_{= name =}_threshold != metric_{= name =}_threshold || !metric_{= name =}_threshold_reported) && report_attr_index == {= index =}) {
         wantSendData[0] = '\0';
         if (get_metric_{= name =}_threshold(wantSendData)) {
-            sended = true;
-            last_metric_{= name =}_threshold = metric_{= name =}_threshold;
             send_packet_1(ATTRIBUTE, wantSendData, get_json_length(wantSendData));
+            return false;
         }
     }
 
     {=/ auto =}
     {=/ metrics =}
-    return sended;
+
+    report_attr_next_index();
+    return true;
+}
+
+func doneReportAttribute() void {
+    {=# attrs =}
+    if (report_attr_index == {= index =}) {
+        last_attr_{= name =} = attr_{= name =};
+        attr_{= name =}_reported = true;
+    }
+
+    {=/ attrs =}
+    {=# metrics =}
+    {=# auto =}
+    if (report_attr_index == {= index =}) {
+        last_metric_{= name =}_threshold = metric_{= name =}_threshold;
+        metric_{= name =}_threshold_reported = true;
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+
+    report_attr_next_index();
 }
 {=/ low_memory =}
 

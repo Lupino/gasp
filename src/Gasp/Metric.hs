@@ -30,6 +30,7 @@ data Metric = Metric
     , metricThreshold    :: !Double
     , metricPrec         :: !Int
     , metricAuto         :: !Bool
+    , metricIdx          :: !Int
     } deriving (Show, Eq)
 
 calcMetricWidth :: Metric -> Int
@@ -57,6 +58,7 @@ instance ToJSON Metric where
         , "onebyte"         .= (getMetricDataLength metric == 1)
         , "auto"            .= metricAuto metric
         , "is_long"         .= isLong (metricType metric)
+        , "index"           .= metricIdx metric
         ]
 
 metricNameLen :: Metric -> Int
