@@ -2,8 +2,6 @@
 
 cp -av ../../data/template/* template/
 
-patch template/app/app.ino template/app/app.ino.patch
-
 sed -i 's/EEPROM\.get/EEPROM_get/g' template/combined.gasp
 sed -i 's/EEPROM\.put/EEPROM_put/g' template/combined.gasp
 sed -i 's/EEPROM\.read/EEPROM_read/g' template/combined.gasp
@@ -18,3 +16,8 @@ sed -i 's/\.begin/_begin/g' template/combined.gasp
 sed -i 's/\.available/_available/g' template/combined.gasp
 sed -i 's/\.read/_read/g' template/combined.gasp
 sed -i 's/\.write/_write/g' template/combined.gasp
+
+sed -i 's/BOARD_TAG ?= .*/BOARD_TAG ?= sduino:stm8:stm8sdisco/g' template/config.mk
+sed -i 's/\.with_bootloader//g' template/Makefile
+
+echo 'require "./dtostrf.gasp"' >> template/combined.gasp

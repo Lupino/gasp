@@ -90,7 +90,7 @@ metric lon {
 
 func read_l76x {
     if (GPS1.Status == 0) {
-        return RET_ERR;
+        return;
     }
 
     coord = L76X_Baidu_Coordinates();

@@ -1,9 +1,21 @@
-TARGET=blink/build button/build dht/build ds18b20/build l76x/build led/build reset/build # stm8/build
+PROJECTS0=$(patsubst %/main.gasp, %, $(wildcard */main.gasp))
+PROJECTS=$(filter-out microbit,$(PROJECTS0))
+TARGETS=$(patsubst %,dist/%.hex,$(PROJECTS))
+CLEANS=$(patsubst %,%/clean,$(PROJECTS))
+BUILDS=$(patsubst %,%/build,$(PROJECTS))
 
-all: $(TARGET)
+all: $(TARGETS)
 
-%/build: %
-	cd $< && gasp compile
+%/build/Makefile: %/main.gasp
+	cd $(patsubst %/build/Makefile,%,$@) && gasp compile
 
-clean:
-	rm -r $(TARGET)
+$(shell mkdir -p dist)
+dist/%.hex: %/build/Makefile
+	make -C $(dir $<)
+	cp $(dir $<)*.hex dist
+
+%/clean:
+	cd $(dir $@) && gasp clean
+
+clean: $(CLEANS)
+	rm -r dist

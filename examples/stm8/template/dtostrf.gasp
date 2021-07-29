@@ -1,25 +1,25 @@
-char *dtostrf_nan(char *result) {
+func dtostrf_nan(result char *) char * {
     result[0] = 'n';
     result[1] = 'a';
     result[2] = 'n';
     return result;
 }
 
-char *dtostrf_inf(char *result) {
+func dtostrf_inf(result char *) char * {
     result[0] = 'i';
     result[1] = 'n';
     result[2] = 'f';
     return result;
 }
 
-char *dtostrf_ovf(char *result) {
+func dtostrf_ovf(result char *) char * {
     result[0] = 'o';
     result[1] = 'v';
     result[2] = 'f';
     return result;
 }
 
-char *dtostrf(double number, int width, unsigned int digits, char *result) {
+func dtostrf(number double, width int, digits unsigned int, result char *) char * {
   size_t n = 0;
   uint8_t i;
   unsigned long int_part;

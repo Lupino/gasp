@@ -19,7 +19,9 @@ import <avr/wdt.h>
 
 want_reboot bool = false
 
-PING_FAILED_CB = reset
+func PING_FAILED_CB {
+    reset();
+}
 
 setup wdt_setup {
     // wdt init

@@ -3,6 +3,8 @@ app stm8 {
   token: "14b61d617a9c428a95542dbd097d7a0e"
 }
 
+flag low_memory true
+
 GL_SERIAL = Serial
 GL_SERIAL_begin = Serial_begin
 GL_SERIAL_read = Serial_read
