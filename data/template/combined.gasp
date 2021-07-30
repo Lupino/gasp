@@ -86,6 +86,7 @@ loop givelink_loop {
                         send_packet_0(CTRLRES);
                     }
                     if (obj.type == CTRLREQ1) {
+                        mainAction();
                         if (report_timer_ms + REPORT_DELAY_MS < get_cache_time_ms()) {
                             send_packet_0(PING);
                         }
