@@ -52,7 +52,7 @@ loop givelink_loop {
                     if (obj.type == SUCCESS) {
                         report_timer_ms = 0;
                         if (obj.id == ping_packet_id) {
-                            ponged = true;
+                            ping_timer_ms = get_cache_time_ms();
                         }
                         {=^ low_memory =}
                         {=# auto_retry =}
@@ -80,16 +80,18 @@ loop givelink_loop {
                         sys_timer_s = (uint32_t)atol((const char *)obj.data);
                     }
                     {=/ has_timer =}
+                    {=# ctrl_mode =}
                     if (obj.type == CTRLREQ) {
-                        {=# ctrl_mode =}
                         mainAction();
-                        {=/ ctrl_mode =}
                         send_packet_0(CTRLRES);
                     }
                     if (obj.type == CTRLREQ1) {
-                        send_packet_0(PING);
+                        if (report_timer_ms + REPORT_DELAY_MS < get_cache_time_ms()) {
+                            send_packet_0(PING);
+                        }
                         send_packet_0(CTRLRES);
                     }
+                    {=/ ctrl_mode =}
                 }
                 readedLen = 0;
             }
@@ -136,7 +138,6 @@ loop get_current_time_loop {
 auth_timer_ms unsigned long = 0
 
 AUTH_DELAY_MS = 1000
-PONG_DELAY_MS = 6000
 PING_DELAY_MS = 300000
 MAX_PING_FAILED = 10
 MAX_GL_PAYLOAD_LENGTH = {= max_gl_len =}
@@ -149,10 +150,8 @@ GL_SERIAL_sent_delay_ms int = 100
 // EEPROM_SIZE = 1024
 // EEPROM_NEED_COMMIT
 
-pong_timer_ms  unsigned long = 0
 ping_timer_ms  unsigned long = 0
 ping_packet_id uint16_t = 0
-ponged bool = true
 ping_failed uint8_t = 0
 
 ctx givelink_context_t
@@ -207,7 +206,7 @@ readedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
 report_attr_packet_id uint16_t = 0
 report_metric_packet_id uint16_t = 0
 report_timer_ms unsigned long = 0
-REPORT_DELAY_MS = 1000
+REPORT_DELAY_MS = 6000
 {=# low_memory =}
 report_attr_index int = 0
 report_metric_index int = 0
@@ -340,23 +339,16 @@ func mainAction() void {
     {=/ low_memory =}
     if (ping_timer_ms + PING_DELAY_MS < get_cache_time_ms()) {
         send_packet_0(PING);
-        ponged = false;
-        ping_timer_ms = get_cache_time_ms();
-        pong_timer_ms = get_cache_time_ms();
-    }
 
-    if (ponged) {
-        ping_failed = 0;
-    } else {
-        if (pong_timer_ms + PONG_DELAY_MS < get_cache_time_ms()) {
-            ping_failed += 1;
-            pong_timer_ms = get_cache_time_ms();
+        ping_failed += 1;
 
-            if (ping_failed > MAX_PING_FAILED) {
-                PING_FAILED_CB();
-            }
+        if (ping_failed > MAX_PING_FAILED) {
+            PING_FAILED_CB();
         }
+    } else {
+        ping_failed = 0;
     }
+
     {=# has_timer =}
     if (sys_timer_can_sync) {
         if (sys_timer_s < 1000) {
