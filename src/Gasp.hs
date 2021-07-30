@@ -24,7 +24,7 @@ import           Data.Binary.Put        (Put, putByteString, putFloatle,
                                          putInt32le)
 import           Data.ByteString.Base16 as B16 (decodeLenient)
 import           Data.ByteString.Char8  as BC (pack)
-import           Data.List              (nub)
+import           Data.List              (nub, sort)
 import           Data.Maybe             (isJust)
 import           Data.Text              (Text)
 import qualified Data.Text              as T (intercalate, pack)
@@ -140,17 +140,17 @@ getFunctions gasp = nub $ [func | (ExprFunction func) <- gaspExprs gasp]
 -- * Loops
 
 getLoops:: Gasp -> [Loop]
-getLoops gasp = nub $ [loop | (ExprLoop loop) <- gaspExprs gasp]
+getLoops gasp = sort . nub $ [loop | (ExprLoop loop) <- gaspExprs gasp]
 
 -- * Setups
 
 getSetups:: Gasp -> [Setup]
-getSetups gasp = nub $ [setup | (ExprSetup setup) <- gaspExprs gasp]
+getSetups gasp = sort . nub $ [setup | (ExprSetup setup) <- gaspExprs gasp]
 
 -- * Raws
 
 getRaws:: Gasp -> [Raw]
-getRaws gasp = nub $ [raw | (ExprRaw raw) <- gaspExprs gasp]
+getRaws gasp = sort . nub $ [raw | (ExprRaw raw) <- gaspExprs gasp]
 
 -- * Datas
 

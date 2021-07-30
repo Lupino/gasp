@@ -16,6 +16,9 @@ data Loop = Loop
 instance Eq Loop where
   x == y = loopName x == loopName y
 
+instance Ord Loop where
+  compare x y = compare (loopName x) (loopName y)
+
 
 instance ToJSON Loop where
   toJSON loop = object
@@ -32,6 +35,9 @@ data Setup = Setup
 instance Eq Setup where
   x == y = setupName x == setupName y
 
+instance Ord Setup where
+  compare x y = compare (setupName x) (setupName y)
+
 instance ToJSON Setup where
   toJSON setup = object
     [ "code" .= setupCode setup
@@ -46,6 +52,9 @@ data Raw = Raw
 
 instance Eq Raw where
   x == y = rawName x == rawName y
+
+instance Ord Raw where
+  compare x y = compare (rawName x) (rawName y)
 
 
 instance ToJSON Raw where
@@ -63,6 +72,9 @@ data Data = Data
 instance Eq Data where
   x == y = dataName x == dataName y
 
+
+instance Ord Data where
+  compare x y = compare (dataName x) (dataName y)
 
 instance ToJSON Data where
   toJSON dat = object

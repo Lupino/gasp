@@ -52,6 +52,8 @@ setup name {
 
 Relpace able only the first one avaliable
 
+sorted render
+
 ## loop
 
 ```
@@ -62,6 +64,8 @@ loop name {
 
 Relpace able only the first one avaliable
 
+sorted render
+
 ## raw
 
 ```
@@ -71,6 +75,8 @@ raw name {
 ```
 
 Relpace able only the first one avaliable
+
+sorted render
 
 ## data
 
