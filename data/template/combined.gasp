@@ -300,11 +300,11 @@ func mainAction() void {
     {=# has_metric =}
 
     if (reportMetric()) {
-        metric_timer_ms = get_cache_time_ms();
         if (metric_timer_ms + METRIC_DELAY_MS < get_cache_time_ms()) {
             setReportMetricAll();
         }
     } else {
+        metric_timer_ms = get_cache_time_ms();
         return;
     }
 
