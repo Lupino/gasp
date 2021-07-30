@@ -298,13 +298,12 @@ func mainAction() void {
     }
 
     {=# has_metric =}
-    if (metric_timer_ms + METRIC_DELAY_MS < get_cache_time_ms()) {
-        setReportMetricAll();
-    }
 
     if (reportMetric()) {
         metric_timer_ms = get_cache_time_ms();
-        requireReportMetric = false;
+        if (metric_timer_ms + METRIC_DELAY_MS < get_cache_time_ms()) {
+            setReportMetricAll();
+        }
     } else {
         return;
     }
