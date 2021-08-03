@@ -38,7 +38,6 @@ import           Gasp.Block
 import           Gasp.Command
 import           Gasp.Constant
 import           Gasp.Every
-import           Gasp.Flag
 import           Gasp.Function
 import           Gasp.Gpio
 import           Gasp.Metric
@@ -361,7 +360,7 @@ instance ToJSON Gasp where
         , "production"  .= prod
         , "timers"      .= timers
         , "has_timer"   .= hasTimer
-        ] ++ map (\(Flag k v) -> k .= v) flags
+        ] ++ map (\(Flag k v) -> T.pack k .= v) flags
           ++ map (\(Data k v) -> T.pack k .= v) datas
         where gasp = prepareGasp (maybe 0 (startAddr prod) app) (getFuncFlags gasp0) gasp0
               setups = getSetups gasp

@@ -4,7 +4,7 @@ module CompileOptions
     , isCompile
     ) where
 
-import           Gasp.Flag (Flag)
+import           Gasp.Block (Flag)
 
 data CompileType = Syntax | Compile | Eeprom
 

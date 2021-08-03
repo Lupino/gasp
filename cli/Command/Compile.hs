@@ -15,8 +15,7 @@ import           CompileOptions         (CompileOptions (..), CompileType,
 import           Control.Monad          (when)
 import           Control.Monad.Except   (throwError)
 import           Control.Monad.IO.Class (liftIO)
-import           Data.Text              (pack)
-import           Gasp.Flag
+import           Gasp.Block             (Flag (..))
 import qualified Lib
 import           System.FilePath        ((</>))
 
@@ -53,5 +52,5 @@ parseCompileOptions :: CompileOptions -> [String] -> CompileOptions
 parseCompileOptions opts []                   = opts
 parseCompileOptions opts ("--template":v:xs) = parseCompileOptions opts {templateDir = v} xs
 parseCompileOptions opts ("--production":xs) = parseCompileOptions opts {isProd = True} xs
-parseCompileOptions opts ("--flag":k:v:xs)   = parseCompileOptions opts {argvFlags = Flag (pack k) (read v) : argvFlags opts} xs
+parseCompileOptions opts ("--flag":k:v:xs)   = parseCompileOptions opts {argvFlags = Flag k (read v) : argvFlags opts} xs
 parseCompileOptions opts (_:xs) = parseCompileOptions opts xs

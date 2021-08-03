@@ -3,6 +3,7 @@ module Parser.Block
   , readEndOfLine
   , block_
   , blockLine
+  , blockBool
   , blockP
   , blockV
   , setup
@@ -14,6 +15,7 @@ module Parser.Block
   , render1
   , require
   , import_
+  , flag
   ) where
 
 import           Data.Aeson         (Value)
@@ -21,12 +23,12 @@ import qualified Data.Text          as T
 import           Gasp.Block
 import qualified Lexer              as L
 import qualified Parser.Common      as P
-import           Text.Parsec        (many1, noneOf, option)
+import           Text.Parsec        (many1, noneOf, option, (<|>))
 import           Text.Parsec.String (Parser)
 
 
 normalName0 :: Parser String
-normalName0 = many1 (noneOf " \n\r")
+normalName0 = L.stringLiteral <|> many1 (noneOf " \n\r")
 
 normalName :: Parser String
 normalName = do
@@ -49,6 +51,12 @@ blockLine reservedName f = do
   r <- f name <$> option "" readEndOfLine
   L.whiteSpace
   return r
+
+blockBool :: String -> (String -> Bool -> a) -> Parser a
+blockBool reservedName f = do
+  L.reserved reservedName
+  name <- normalName
+  f name <$> L.bool
 
 blockP :: String -> (String -> T.Text -> a) -> Parser a
 blockP reservedName f = do
@@ -89,3 +97,6 @@ require = block_ L.reservedNameRequire Require
 
 import_ :: Parser Import
 import_ = blockLine L.reservedNameImport Import
+
+flag :: Parser Flag
+flag = blockBool L.reservedNameFlag Flag
