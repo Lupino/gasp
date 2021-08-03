@@ -20,6 +20,7 @@ module Lexer
   , reservedNameFlag
   , reservedNameRaw
   , reservedNameData
+  , reservedNameRender
   , braces
   , brackets
   , symbol
@@ -122,6 +123,9 @@ reservedNameRaw = "raw"
 reservedNameData :: String
 reservedNameData = "data"
 
+reservedNameRender :: String
+reservedNameRender = "render"
+
 -- * Data types.
 
 reservedNameBooleanTrue :: String
@@ -132,7 +136,7 @@ reservedNameBooleanFalse = "false"
 
 reservedNames :: [String]
 reservedNames =
-    -- * Wasp element types
+    -- * Gasp element types
     [ reservedNameApp
     , reservedNameCommand
     , reservedNameTelemetry
@@ -154,6 +158,7 @@ reservedNames =
     , reservedNameFlag
     , reservedNameRaw
     , reservedNameData
+    , reservedNameRender
     -- * Data types
     , reservedNameBooleanTrue
     , reservedNameBooleanFalse

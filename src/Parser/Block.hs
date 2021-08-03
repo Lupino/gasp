@@ -5,6 +5,7 @@ module Parser.Block
   , loop
   , raw
   , data_
+  , render
   ) where
 
 import           Data.Aeson         (Value)
@@ -31,10 +32,13 @@ setup :: Parser Setup
 setup = blockP L.reservedNameSetup Setup
 
 loop :: Parser Loop
-loop  = blockP L.reservedNameLoop  Loop
+loop  = blockP L.reservedNameLoop Loop
 
 raw :: Parser Raw
 raw = blockP L.reservedNameRaw Raw
 
 data_ :: Parser Data
 data_ = blockV L.reservedNameData Data
+
+render :: Parser Render
+render  = blockP L.reservedNameRender Render

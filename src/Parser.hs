@@ -1,5 +1,6 @@
 module Parser
   ( parseGasp
+  , parseGasp0
   ) where
 
 
@@ -11,7 +12,7 @@ import           Lexer
 import           Parser.AGpio           (agpio)
 import           Parser.App             (app)
 import           Parser.Attr            (attr)
-import           Parser.Block           (data_, loop, raw, setup)
+import           Parser.Block           (data_, loop, raw, render, setup)
 import           Parser.Command         (command)
 import           Parser.Common          (runGaspParser)
 import           Parser.Constant        (constant)
@@ -27,7 +28,7 @@ import           Parser.Timer           (timer)
 import           Parser.Uart            (uart)
 import           System.Directory       (canonicalizePath, doesFileExist)
 import           System.FilePath        (addExtension, (</>))
-import           Text.Parsec            (ParseError, eof, many1, (<|>))
+import           Text.Parsec            (ParseError, eof, many1, parse, (<|>))
 import           Text.Parsec.String     (Parser)
 import           Util.IO                (parent)
 
@@ -40,6 +41,7 @@ expr
     <|> exprSetup
     <|> exprRaw
     <|> exprData
+    <|> exprRender
     <|> exprAttr
     <|> exprMetric
     <|> exprEvery
@@ -73,6 +75,9 @@ exprRaw = ExprRaw <$> raw
 
 exprData :: Parser Expr
 exprData = ExprData <$> data_
+
+exprRender :: Parser Expr
+exprRender = ExprRender [] <$> render
 
 exprAttr :: Parser Expr
 exprAttr = ExprAttr <$> attr
@@ -151,3 +156,6 @@ parseExpr fp = parseWithRequired (parent fp) =<< parseFile fp
 
 parseGasp :: FilePath -> IO (Either ParseError Gasp)
 parseGasp fp = runExceptT $ fromGaspExprs <$> parseExpr fp
+
+parseGasp0 :: String -> String -> Either ParseError [Expr]
+parseGasp0 = parse gaspParser

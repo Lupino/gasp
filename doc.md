@@ -88,6 +88,16 @@ data name {
 
 Relpace able only the first one avaliable
 
+## render
+
+```
+render renderName {
+// you tmpl code
+}
+```
+
+Inline render tmpl code
+
 ## gpio
 
 ```

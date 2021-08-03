@@ -3,6 +3,7 @@ module Gasp.Block
   , Setup (..)
   , Raw (..)
   , Data (..)
+  , Render (..)
   ) where
 
 import           Data.Aeson (ToJSON (..), Value, object, (.=))
@@ -81,3 +82,9 @@ instance ToJSON Data where
     [ "data" .= dataData dat
     , "name" .= dataName dat
     ]
+
+
+data Render = Render
+  { rdName :: String
+  , rdTmpl :: Text
+  } deriving (Show, Eq, Ord)

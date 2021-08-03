@@ -64,6 +64,7 @@ data Expr
     | ExprLoop     !Loop
     | ExprRaw      !Raw
     | ExprData     !Data
+    | ExprRender   [Expr] !Render
     | ExprAttr     !Attr
     | ExprMetric   !Metric
     | ExprEvery    !Every

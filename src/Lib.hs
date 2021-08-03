@@ -1,6 +1,6 @@
 module Lib
-    ( compile
-    ) where
+  ( compile
+  ) where
 
 
 import           CompileOptions             (CompileOptions, CompileType (..))
@@ -10,6 +10,7 @@ import           Data.Aeson                 (toJSON)
 import qualified Data.Binary                as Bin (encode)
 import qualified Data.ByteString.Char8      as BC (putStrLn)
 import qualified Data.ByteString.Lazy.Char8 as BL (putStrLn)
+import qualified Data.Text                  as T (unpack)
 import           Data.UUID                  (toString)
 import           Data.UUID.V4               (nextRandom)
 import           Data.Yaml                  (encode)
@@ -22,7 +23,7 @@ import           Gasp.Block
 import           Gasp.Function
 import           Generator                  (writeAppCode)
 import           Generator.Template         (compileAndRenderTextTemplate)
-import           Parser                     (parseGasp)
+import           Parser                     (parseGasp, parseGasp0)
 import           Text.Printf                (printf)
 import qualified Util.Terminal              as Term
 
@@ -50,7 +51,7 @@ compile gaspFile options = do
 
 
 preprocessGasp :: Gasp -> IO Gasp
-preprocessGasp gasp = setGaspExprs gasp <$> mapM mapFunc (getGaspExprs gasp)
+preprocessGasp gasp = setGaspExprs gasp . foldr foldFunc [] <$> mapM mapFunc (getGaspExprs gasp)
   where mapFunc :: Expr -> IO Expr
         mapFunc (ExprAttr x)   = do
           unless (attrScale x > 0) $ gaspError $ concat
@@ -117,12 +118,20 @@ preprocessGasp gasp = setGaspExprs gasp <$> mapM mapFunc (getGaspExprs gasp)
         mapFunc (ExprSetup (Setup n code)) = return . ExprSetup . Setup n $ render code
         mapFunc (ExprLoop (Loop n code)) = return . ExprLoop . Loop n $ render code
         mapFunc (ExprRaw (Raw n code)) = return . ExprRaw . Raw n $ render code
+        mapFunc (ExprRender _ (Render n code)) = do
+          case parseGasp0 n (T.unpack $ render code) of
+            Left e      -> error $ Term.applyStyles [Term.Red] $ show e
+            Right exprs -> return . ExprRender exprs . Render n $ render code
         mapFunc (ExprFunction func) = return $ ExprFunction func
           { funcCode = render $ funcCode func
           }
         mapFunc v = return v
 
         render =  (`compileAndRenderTextTemplate` (toJSON gasp))
+
+        foldFunc :: Expr -> [Expr] -> [Expr]
+        foldFunc (ExprRender xs _) acc = xs ++ acc
+        foldFunc e acc                 = e:acc
 
 getCenterValue :: (Ord a) => (a, a) -> a -> (Bool, a)
 getCenterValue (minv, maxv) defv =
