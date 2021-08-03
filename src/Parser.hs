@@ -6,14 +6,13 @@ module Parser
 
 import           Control.Monad.Except   (ExceptT (..), runExceptT)
 import           Control.Monad.IO.Class (liftIO)
-import           Gasp                   (Expr (..), Gasp, Require (..),
-                                         fromGaspExprs)
+import           Gasp                   (Expr (..), Gasp, fromGaspExprs)
+import           Gasp.Block             (Require (..))
 import           Lexer
 import           Parser.AGpio           (agpio)
 import           Parser.App             (app)
 import           Parser.Attr            (attr)
-import           Parser.Block           (data_, loop, raw, render, render1,
-                                         setup, tmpl)
+import           Parser.Block
 import           Parser.Command         (command)
 import           Parser.Common          (runGaspParser)
 import           Parser.Constant        (constant)
@@ -21,9 +20,7 @@ import           Parser.Every           (every)
 import           Parser.Flag            (flag)
 import           Parser.Function        (function)
 import           Parser.Gpio            (gpio)
-import           Parser.Import          (importParser)
 import           Parser.Metric          (metric)
-import           Parser.Require         (require)
 import           Parser.Rule            (rule)
 import           Parser.Timer           (timer)
 import           Parser.Uart            (uart)
@@ -116,7 +113,7 @@ exprRequire :: Parser Expr
 exprRequire = ExprRequire <$> require
 
 exprImport :: Parser Expr
-exprImport = ExprImport <$> importParser
+exprImport = ExprImport <$> import_
 
 exprTimer :: Parser Expr
 exprTimer = ExprTimer <$> timer

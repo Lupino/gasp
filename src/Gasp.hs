@@ -15,7 +15,6 @@ module Gasp
   , module Gasp.App
   , module Gasp.Attr
   , module Gasp.Metric
-  , module Gasp.Require
 
   , setExternalCodeFiles
   , getExternalCodeFiles
@@ -42,9 +41,7 @@ import           Gasp.Every
 import           Gasp.Flag
 import           Gasp.Function
 import           Gasp.Gpio
-import           Gasp.Import
 import           Gasp.Metric
-import           Gasp.Require
 import           Gasp.Rule
 import           Gasp.Timer
 import           Gasp.Uart

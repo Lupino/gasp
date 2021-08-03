@@ -6,6 +6,8 @@ module Gasp.Block
   , Tmpl (..)
   , Render (..)
   , Render1 (..)
+  , Require (..)
+  , Import (..)
   ) where
 
 import           Data.Aeson (ToJSON (..), Value, object, (.=))
@@ -107,3 +109,18 @@ data Tmpl = Tmpl
 
 instance Eq Tmpl where
   x == y = tmplName x == tmplName y
+
+newtype Require = Require FilePath
+  deriving (Show, Eq)
+
+data Import = Import String String
+  deriving (Show)
+
+instance Eq Import where
+  (Import x _) == (Import y _) = x == y
+
+instance ToJSON Import where
+  toJSON (Import name url) = object
+    [ "name" .= name
+    , "url" .= url
+    ]
