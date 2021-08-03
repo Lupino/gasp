@@ -12,7 +12,8 @@ import           Lexer
 import           Parser.AGpio           (agpio)
 import           Parser.App             (app)
 import           Parser.Attr            (attr)
-import           Parser.Block           (data_, loop, raw, render, setup)
+import           Parser.Block           (data_, loop, raw, render, render1,
+                                         setup, tmpl)
 import           Parser.Command         (command)
 import           Parser.Common          (runGaspParser)
 import           Parser.Constant        (constant)
@@ -41,7 +42,9 @@ expr
     <|> exprSetup
     <|> exprRaw
     <|> exprData
+    <|> exprTmpl
     <|> exprRender
+    <|> exprRender1
     <|> exprAttr
     <|> exprMetric
     <|> exprEvery
@@ -76,8 +79,14 @@ exprRaw = ExprRaw <$> raw
 exprData :: Parser Expr
 exprData = ExprData <$> data_
 
+exprTmpl :: Parser Expr
+exprTmpl = ExprTmpl <$> tmpl
+
 exprRender :: Parser Expr
-exprRender = ExprRender [] <$> render
+exprRender = ExprRender <$> render
+
+exprRender1 :: Parser Expr
+exprRender1 = ExprRender1 <$> render1
 
 exprAttr :: Parser Expr
 exprAttr = ExprAttr <$> attr

@@ -1,22 +1,25 @@
 module Gasp
-    ( Gasp
-    , Expr (..)
-    , fromGaspExprs
-    , setGaspExprs
-    , getGaspExprs
-    , setProd
-    , getProd
-    , setArgvFlags
-    , getRequires
+  ( Gasp
+  , Expr (..)
+  , fromGaspExprs
+  , setGaspExprs
+  , getGaspExprs
+  , setProd
+  , getProd
+  , setArgvFlags
+  , getRequires
 
-    , module Gasp.App
-    , module Gasp.Attr
-    , module Gasp.Metric
-    , module Gasp.Require
+  , getTmpls
+  , getTmpl
 
-    , setExternalCodeFiles
-    , getExternalCodeFiles
-    ) where
+  , module Gasp.App
+  , module Gasp.Attr
+  , module Gasp.Metric
+  , module Gasp.Require
+
+  , setExternalCodeFiles
+  , getExternalCodeFiles
+  ) where
 
 import           Data.Aeson             (ToJSON (..), object, (.=))
 import           Data.Binary            (Binary (..))
@@ -24,7 +27,7 @@ import           Data.Binary.Put        (Put, putByteString, putFloatle,
                                          putInt32le)
 import           Data.ByteString.Base16 as B16 (decodeLenient)
 import           Data.ByteString.Char8  as BC (pack)
-import           Data.List              (nub, sort)
+import           Data.List              (find, nub, sort)
 import           Data.Maybe             (isJust)
 import           Data.Text              (Text)
 import qualified Data.Text              as T (intercalate, pack)
@@ -64,7 +67,10 @@ data Expr
     | ExprLoop     !Loop
     | ExprRaw      !Raw
     | ExprData     !Data
-    | ExprRender   [Expr] !Render
+    | ExprTmpl     !Tmpl
+    | ExprRender   !Render
+    | ExprRender1  !Render1
+    | ExprRendered ![Expr]
     | ExprAttr     !Attr
     | ExprMetric   !Metric
     | ExprEvery    !Every
@@ -157,6 +163,15 @@ getRaws gasp = sort . nub $ [raw | (ExprRaw raw) <- gaspExprs gasp]
 
 getDatas:: Gasp -> [Data]
 getDatas gasp = nub $ [dat | (ExprData dat) <- gaspExprs gasp]
+
+-- * Tmpls
+
+getTmpls :: Gasp -> [Tmpl]
+getTmpls gasp = nub $ [dat | (ExprTmpl dat) <- gaspExprs gasp]
+
+
+getTmpl :: String -> [Tmpl] -> Maybe Tmpl
+getTmpl n = find (\tmpl -> tmplName tmpl == n)
 
 -- * Attrs
 

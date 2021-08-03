@@ -88,15 +88,33 @@ data name {
 
 Relpace able only the first one avaliable
 
-## render
+## tmpl
 
 ```
-render renderName {
+tmpl tmplName {
 // you tmpl code
 }
 ```
 
-Inline render tmpl code
+defined tmpl code
+
+## render
+
+```
+render tmplName
+```
+
+render tmpl code by global gasp exprs
+
+## render1
+
+```
+render1 tmplName {
+// yaml code
+}
+```
+
+render tmpl code by yaml data
 
 ## gpio
 

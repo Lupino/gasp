@@ -20,7 +20,9 @@ module Lexer
   , reservedNameFlag
   , reservedNameRaw
   , reservedNameData
+  , reservedNameTmpl
   , reservedNameRender
+  , reservedNameRender1
   , braces
   , brackets
   , symbol
@@ -123,8 +125,14 @@ reservedNameRaw = "raw"
 reservedNameData :: String
 reservedNameData = "data"
 
+reservedNameTmpl :: String
+reservedNameTmpl = "tmpl"
+
 reservedNameRender :: String
 reservedNameRender = "render"
+
+reservedNameRender1 :: String
+reservedNameRender1 = "render1"
 
 -- * Data types.
 
@@ -158,7 +166,9 @@ reservedNames =
     , reservedNameFlag
     , reservedNameRaw
     , reservedNameData
+    , reservedNameTmpl
     , reservedNameRender
+    , reservedNameRender1
     -- * Data types
     , reservedNameBooleanTrue
     , reservedNameBooleanFalse
