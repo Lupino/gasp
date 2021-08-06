@@ -68,9 +68,11 @@ loop givelink_loop {
                         if (obj.id == report_attr_packet_id) {
                             doneReportAttribute();
                         }
+                        {=# has_metric =}
                         if (obj.id == report_metric_packet_id) {
                             doneReportMetric();
                         }
+                        {=/ has_metric =}
                         incrLastPayloadId();
                         {=/ low_memory =}
                     }
@@ -298,7 +300,6 @@ func mainAction() void {
     }
 
     {=# has_metric =}
-
     if (reportMetric()) {
         if (metric_timer_ms + METRIC_DELAY_MS < get_cache_time_ms()) {
             setReportMetricAll();
@@ -897,6 +898,7 @@ func reportAttribute(force bool) bool {
 }
 {=/ low_memory =}
 {=# low_memory =}
+{=# has_metric =}
 func is_valid_report_metric_index() bool {
     {=# metrics =}
     {=# auto =}
@@ -964,6 +966,7 @@ func setReportMetricAll() void {
     {=/ metrics =}
 }
 
+{=/ has_metric =}
 func is_valid_report_attr_index() bool {
     {=# attrs =}
     if (report_attr_index == {= index =}) {
