@@ -51,6 +51,7 @@ loop givelink_loop {
                     }
                     if (obj.type == SUCCESS) {
                         report_timer_ms = 0;
+                        ping_failed = 0;
                         if (obj.id == ping_packet_id) {
                             ping_timer_ms = get_cache_time_ms();
                         }
@@ -294,8 +295,13 @@ func mainAction() void {
         return;
     }
 
+    if (ping_failed > MAX_PING_FAILED) {
+        PING_FAILED_CB();
+    }
+
     {=# low_memory =}
     if (!reportAttribute()) {
+        ping_failed += 1;
         return;
     }
 
@@ -305,6 +311,7 @@ func mainAction() void {
             setReportMetricAll();
         }
     } else {
+        ping_failed += 1;
         metric_timer_ms = get_cache_time_ms();
         return;
     }
@@ -340,14 +347,7 @@ func mainAction() void {
     {=/ low_memory =}
     if (ping_timer_ms + PING_DELAY_MS < get_cache_time_ms()) {
         send_packet_0(PING);
-
         ping_failed += 1;
-
-        if (ping_failed > MAX_PING_FAILED) {
-            PING_FAILED_CB();
-        }
-    } else {
-        ping_failed = 0;
     }
 
     {=# has_timer =}
