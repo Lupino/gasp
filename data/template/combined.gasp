@@ -537,6 +537,7 @@ func get_json_length(src const char *) int {
 {=# attrs =}
 
 attr_{= name =} {= type =} = {= default =}
+cache_attr_{= name =} {= type =} = {= default =}
 last_attr_{= name =} {= type =} = {= default =}
 attr_{= name =}_force bool = true
 attr_{= name =}_reported bool = false
@@ -637,11 +638,13 @@ func get_attr_{= name =}(retval char *) bool {
 
 {=# metrics =}
 metric_{= name =} {= type =} = 0
+cache_metric_{= name =} {= type =} = 0
 last_metric_{= name =} {= type =} = 0
 metric_{= name =}_reported bool = true
 
 {=# auto =}
 metric_{= name =}_threshold {= type =} = {= threshold =}
+cache_metric_{= name =}_threshold {= type =} = {= threshold =}
 last_metric_{= name =}_threshold {= type =} = {= threshold =}
 metric_{= name =}_threshold_force bool = true
 metric_{= name =}_threshold_reported bool = false
@@ -934,6 +937,7 @@ func reportMetric() bool {
         wantSendData[0] = '\0';
         if (get_metric_{= name =}(wantSendData)) {
             send_packet_1(TELEMETRY, wantSendData, get_json_length(wantSendData));
+            cache_metric_{= name =} = metric_{= name =};
             return false;
         }
     }
@@ -949,7 +953,7 @@ func doneReportMetric() void {
     {=# metrics =}
     {=# auto =}
     if (report_metric_index == {= index =}) {
-        last_metric_{= name =} = metric_{= name =};
+        last_metric_{= name =} = cache_metric_{= name =};
         metric_{= name =}_reported = true;
     }
 
@@ -1007,6 +1011,7 @@ func reportAttribute() bool {
         wantSendData[0] = '\0';
         if (get_attr_{= name =}(wantSendData)) {
             send_packet_1(ATTRIBUTE, wantSendData, get_json_length(wantSendData));
+            cache_attr_{= name =} = attr_{= name =};
             return false;
         }
     }
@@ -1018,6 +1023,7 @@ func reportAttribute() bool {
         wantSendData[0] = '\0';
         if (get_metric_{= name =}_threshold(wantSendData)) {
             send_packet_1(ATTRIBUTE, wantSendData, get_json_length(wantSendData));
+            cache_metric_{= name =}_threshold = metric_{= name =}_threshold;
             return false;
         }
     }
@@ -1032,7 +1038,7 @@ func reportAttribute() bool {
 func doneReportAttribute() void {
     {=# attrs =}
     if (report_attr_index == {= index =}) {
-        last_attr_{= name =} = attr_{= name =};
+        last_attr_{= name =} = cache_attr_{= name =};
         attr_{= name =}_reported = true;
     }
 
@@ -1040,7 +1046,7 @@ func doneReportAttribute() void {
     {=# metrics =}
     {=# auto =}
     if (report_attr_index == {= index =}) {
-        last_metric_{= name =}_threshold = metric_{= name =}_threshold;
+        last_metric_{= name =}_threshold = cache_metric_{= name =}_threshold;
         metric_{= name =}_threshold_reported = true;
     }
 
