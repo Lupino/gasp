@@ -1,5 +1,6 @@
 module Parser.Block
-  ( normalName
+  ( anyName
+  , normalName
   , readEndOfLine
   , block_
   , blockLine
@@ -27,12 +28,12 @@ import           Text.Parsec        (many1, noneOf, option, (<|>))
 import           Text.Parsec.String (Parser)
 
 
-normalName0 :: Parser String
-normalName0 = L.stringLiteral <|> many1 (noneOf " \n\r")
+anyName :: Parser String
+anyName = many1 (noneOf " \n\r")
 
 normalName :: Parser String
 normalName = do
-  v <- normalName0
+  v <- L.stringLiteral <|> anyName
   L.whiteSpace
   return v
 
@@ -47,7 +48,7 @@ block_ reservedName f = do
 blockLine :: String -> (String -> String -> a) -> Parser a
 blockLine reservedName f = do
   L.reserved reservedName
-  name <- normalName0
+  name <- anyName
   r <- f name <$> option "" readEndOfLine
   L.whiteSpace
   return r

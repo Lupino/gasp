@@ -126,9 +126,8 @@ instance Eq Import where
 instance ToJSON Import where
   toJSON (Import name url) = object
     [ "name" .= name
-    , "url" .= url
+    , "url"  .= url
     ]
-
 
 data Flag = Flag
   { flagName  :: !String
