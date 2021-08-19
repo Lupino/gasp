@@ -8,6 +8,7 @@ data Every = Every
     { everyFunc    :: !String
     , everyDelayMs :: !Integer
     , everyOn      :: !String
+    , everyIdx     :: !Int
     } deriving (Show, Eq)
 
 
@@ -17,4 +18,5 @@ instance ToJSON Every where
         , "delay_ms" .= everyDelayMs every
         , "on"       .= everyOn every
         , "has_on"   .= not (null $ everyOn every)
+        , "id"       .= everyIdx every
         ]

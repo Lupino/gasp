@@ -1216,16 +1216,16 @@ func get_cache_time_ms() unsigned long {
 
 {=# actions =}
 // start actions
-{= fn =}_timer_ms unsigned long = 0
-loop every_{= fn =}_loop {
+every_{= id =}_timer_ms unsigned long = 0
+loop every_{= id =}_loop {
     {=# has_on =}
-    if ({=& on =} && {= fn =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
+    if ({=& on =} && every_{= id =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
     {=/ has_on =}
     {=^ has_on =}
-    if ({= fn =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
+    if (every_{= id =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
     {=/ has_on =}
         {= fn =}();
-        {= fn =}_timer_ms = get_cache_time_ms();
+        every_{= id =}_timer_ms = get_cache_time_ms();
     }
 }
 // end actions

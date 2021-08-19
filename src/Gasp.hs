@@ -296,20 +296,21 @@ getMaxTmplLength = maximum . map getTmplLength . gaspExprs
 
 
 prepareGasp :: Int -> [FuncFlag] -> Gasp -> Gasp
-prepareGasp sAddr flags gasp = setGaspExprs gasp . go 0 1 sAddr $ gaspExprs gasp
-  where go :: Int -> Int -> Int -> [Expr] -> [Expr]
-        go _ _ _ []        = []
-        go idx ri addr (ExprAttr x:xs)
-          | attrKeep x = ExprAttr x {attrAddr = addr, attrIdx = idx} : go (idx + 1) ri (addr + getAttrDataLength x) xs
-          | otherwise  = ExprAttr x {attrIdx = idx} : go (idx + 1) ri addr xs
-        go idx ri addr (ExprMetric x:xs)
-          | metricAuto x = ExprMetric x {metricAddr = addr, metricIdx = idx} : go (idx + 1) ri (addr + getMetricDataLength x) xs
-          | otherwise  = ExprMetric x : go idx ri addr xs
-        go idx ri addr (ExprTimer x:xs) = ExprTimer x {timerAddr = addr} : go idx ri (addr + timerDataLen) xs
-        go idx ri addr (ExprCmd x:xs) = ExprCmd (setCommandFlag flags x) : go idx ri addr xs
-        go idx ri addr (ExprFunction x:xs) = ExprFunction (setFunctionFlag flags x) : go idx ri addr xs
-        go idx ri addr (ExprRule x:xs) = ExprRule x {ruleIndex=ri} : go idx (ri + 1) addr xs
-        go idx ri addr (x:xs) = x : go idx ri addr xs
+prepareGasp sAddr flags gasp = setGaspExprs gasp . go 0 1 sAddr 0 $ gaspExprs gasp
+  where go :: Int -> Int -> Int -> Int -> [Expr] -> [Expr]
+        go _ _ _ _ []        = []
+        go idx ri addr ei (ExprAttr x:xs)
+          | attrKeep x = ExprAttr x {attrAddr = addr, attrIdx = idx} : go (idx + 1) ri (addr + getAttrDataLength x) ei xs
+          | otherwise  = ExprAttr x {attrIdx = idx} : go (idx + 1) ri addr ei xs
+        go idx ri addr ei (ExprMetric x:xs)
+          | metricAuto x = ExprMetric x {metricAddr = addr, metricIdx = idx} : go (idx + 1) ri (addr + getMetricDataLength x) ei xs
+          | otherwise  = ExprMetric x : go idx ri addr ei xs
+        go idx ri addr ei (ExprTimer x:xs) = ExprTimer x {timerAddr = addr} : go idx ri (addr + timerDataLen) ei xs
+        go idx ri addr ei (ExprCmd x:xs) = ExprCmd (setCommandFlag flags x) : go idx ri addr ei xs
+        go idx ri addr ei (ExprFunction x:xs) = ExprFunction (setFunctionFlag flags x) : go idx ri addr ei xs
+        go idx ri addr ei (ExprRule x:xs) = ExprRule x {ruleIndex=ri} : go idx (ri + 1) addr ei xs
+        go idx ri addr ei (ExprEvery x:xs) = ExprEvery x {everyIdx=ei} : go idx ri addr (ei + 1) xs
+        go idx ri addr ei (x:xs) = x : go idx ri addr ei xs
 
 guessFuncFlag :: FuncFlag -> [Expr] -> FuncFlag
 guessFuncFlag flag [] = flag

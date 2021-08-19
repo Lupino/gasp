@@ -18,4 +18,5 @@ every = do
       { everyFunc    = name
       , everyDelayMs = delay
       , everyOn      = on
+      , everyIdx     = 0
       }
