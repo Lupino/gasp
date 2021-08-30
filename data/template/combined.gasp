@@ -641,6 +641,7 @@ metric_{= name =} {= type =} = 0
 cache_metric_{= name =} {= type =} = 0
 last_metric_{= name =} {= type =} = 0
 metric_{= name =}_reported bool = true
+metric_{= name =}_readed bool = false
 
 {=# auto =}
 metric_{= name =}_threshold {= type =} = {= threshold =}
@@ -765,6 +766,10 @@ func get_metric_{= name =}(retval char *) bool {
     sprintf(retval, FC(F("{\"{= name =}\": %s}")), ltrim(requestValue));
     {=/ is_float =}
     return true;
+}
+
+func set_metric_{= name =}_readed() {
+    metric_{= name =}_readed = true;
 }
 
 {=/ metrics =}
@@ -933,7 +938,7 @@ setup setup_report_metric_index {
 func reportMetric() bool {
     {=# metrics =}
     {=# auto =}
-    if (((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || !metric_{= name =}_reported) && report_metric_index == {= index =}) {
+    if (metric_{= name =}_readed && ((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || !metric_{= name =}_reported) && report_metric_index == {= index =}) {
         wantSendData[0] = '\0';
         if (get_metric_{= name =}(wantSendData)) {
             send_packet_1(TELEMETRY, wantSendData, get_json_length(wantSendData));
@@ -955,6 +960,7 @@ func doneReportMetric() void {
     if (report_metric_index == {= index =}) {
         last_metric_{= name =} = cache_metric_{= name =};
         metric_{= name =}_reported = true;
+        metric_{= name =}_readed = false;
     }
 
     {=/ auto =}
