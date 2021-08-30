@@ -1323,20 +1323,11 @@ gpio_reading uint8_t = 0
 
 {=# gpios =}
 {=# bind =}
-{=# is_link =}
 gpio_{= name =}_state uint8_t = {= state =}
-{=/ is_link =}
 {=# is_fn =}
-gpio_{= name =}_state uint8_t = {= state =}
 last_gpio_{= name =}_debounce_time_ms unsigned long = 0
 last_gpio_{= name =}_state uint8_t = {= state =}
 {=/ is_fn =}
-{=# is_no_bind =}
-gpio_{= name =}_state uint8_t = {= state =}
-{=/ is_no_bind =}
-{=# is_pwm =}
-gpio_{= name =}_state uint8_t = {= state =}
-{=/ is_pwm =}
 {=/ bind =}
 setup setup_gpio_{= name =} {
     {=# bind =}
