@@ -1282,15 +1282,17 @@ loop rule_{= id =}_loop {
             rule_{= id =}_do_yes = true;
             rule_{= id =}_{= action =}_timer_ms = get_cache_time_ms();
             {=# has_else =}
-            {=# has_else_later =}
-            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_cache_time_ms()) {
+            if (rule_{= id =}_do_else) {
                 rule_{= id =}_do_else = false;
+                {=# has_else_later =}
+                if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_cache_time_ms()) {
+                    {= else_action =}();
+                }
+                {=/ has_else_later =}
+                {=^ has_else_later =}
                 {= else_action =}();
+                {=/ has_else_later =}
             }
-            {=/ has_else_later =}
-            {=^ has_else_later =}
-            {= else_action =}();
-            {=/ has_else_later =}
             {=/ has_else =}
         }
         {=/ has_later =}
@@ -1309,16 +1311,17 @@ loop rule_{= id =}_loop {
         } else {
             rule_{= id =}_do_yes = true;
             {=# has_else =}
-            {=# has_else_later =}
-            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_cache_time_ms()) {
+            if (rule_{= id =}_do_else) {
                 rule_{= id =}_do_else = false;
+                {=# has_else_later =}
+                if (rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_cache_time_ms()) {
+                    {= else_action =}();
+                }
+                {=/ has_else_later =}
+                {=^ has_else_later =}
                 {= else_action =}();
+                {=/ has_else_later =}
             }
-            {=/ has_else_later =}
-            {=^ has_else_later =}
-            rule_{= id =}_do_else = false;
-            {= else_action =}();
-            {=/ has_else_later =}
             {=/ has_else =}
         }
         {=/ has_later =}
