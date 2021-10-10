@@ -50,31 +50,34 @@ loop givelink_loop {
                         send_packet_rsp(wantSendData);
                     }
                     if (obj.type == SUCCESS) {
-                        report_timer_ms = 0;
                         ping_failed = 0;
-                        if (obj.id == ping_packet_id) {
+                        if (lastPayloadId == ping_packet_id) {
                             ping_timer_ms = get_cache_time_ms();
+                            {=# low_memory =}
+                            incrLastPayloadId();
+                            {=/ low_memory =}
                         }
                         {=^ low_memory =}
                         {=# auto_retry =}
-                        if (obj.id == report_attr_packet_id) {
+                        if (lastPayloadId == report_attr_packet_id) {
                             need_retry = false;
                         }
-                        if (obj.id == report_metric_packet_id) {
+                        if (lastPayloadId == report_metric_packet_id) {
                             need_retry = false;
                         }
                         {=/ auto_retry =}
                         {=/ low_memory =}
                         {=# low_memory =}
-                        if (obj.id == report_attr_packet_id) {
+                        if (lastPayloadId == report_attr_packet_id) {
                             doneReportAttribute();
+                            incrLastPayloadId();
                         }
                         {=# has_metric =}
-                        if (obj.id == report_metric_packet_id) {
+                        if (lastPayloadId == report_metric_packet_id) {
                             doneReportMetric();
+                            incrLastPayloadId();
                         }
                         {=/ has_metric =}
-                        incrLastPayloadId();
                         {=/ low_memory =}
                     }
                     {=# has_timer =}
@@ -204,12 +207,12 @@ obj givelink_t
 obj_buff[MAX_BUFFER_LENGTH] uint8_t
 
 crcFlag bool = false
-lastPayloadId uint16_t = 0
+lastPayloadId uint16_t = 100
 readedLen uint16_t = 0
 readedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
 report_attr_packet_id uint16_t = 0
 report_metric_packet_id uint16_t = 0
-report_timer_ms unsigned long = 0
+report_timer_ms unsigned long = 4000
 REPORT_DELAY_MS = 6000
 {=# low_memory =}
 report_attr_index int = 0
