@@ -6,6 +6,7 @@ module Parser
 
 import           Control.Monad.Except   (ExceptT (..), runExceptT)
 import           Control.Monad.IO.Class (liftIO)
+import           Data.IORef             (IORef, newIORef, readIORef, writeIORef)
 import           Gasp                   (Expr (..), Gasp, fromGaspExprs)
 import           Gasp.Block             (Require (..))
 import           Lexer
@@ -143,21 +144,27 @@ type GaspParser = ExceptT ParseError IO
 parseFile :: FilePath -> GaspParser [Expr]
 parseFile = ExceptT . runGaspParser gaspParser
 
-parseWithRequired :: FilePath -> [Expr] -> GaspParser [Expr]
-parseWithRequired _ [] = return []
-parseWithRequired rootDir (ExprRequire (Require path) : xs) = do
-  fp0 <- liftIO . canonicalizePath $ rootDir </> path
-  exist <- liftIO $ doesFileExist fp0
-  let fp = if exist then fp0 else addExtension fp0 ".gasp"
-  expr0 <- parseFile fp
-  expr1 <- parseWithRequired (parent fp) expr0
-  expr2 <- parseWithRequired rootDir xs
+parseWithRequired :: IORef [FilePath] -> FilePath -> [Expr] -> GaspParser [Expr]
+parseWithRequired _ _ [] = return []
+parseWithRequired parsedH rootDir (ExprRequire (Require path) : xs) = do
+  parsed <- liftIO $ readIORef parsedH
+  expr1 <- if path `notElem` parsed then do
+             fp0 <- liftIO . canonicalizePath $ rootDir </> path
+             exist <- liftIO $ doesFileExist fp0
+             let fp = if exist then fp0 else addExtension fp0 ".gasp"
+             expr0 <- parseFile fp
+             liftIO $! writeIORef parsedH $ path : parsed
+             parseWithRequired parsedH (parent fp) expr0
+             else return []
+  expr2 <- parseWithRequired parsedH rootDir xs
   return $ expr1 ++ expr2
 
-parseWithRequired rootDir (x : xs) = (x:) <$> parseWithRequired rootDir xs
+parseWithRequired parsedH rootDir (x : xs) = (x:) <$> parseWithRequired parsedH rootDir xs
 
 parseExpr :: FilePath -> GaspParser [Expr]
-parseExpr fp = parseWithRequired (parent fp) =<< parseFile fp
+parseExpr fp = do
+  parsedH <- liftIO $ newIORef []
+  parseWithRequired parsedH (parent fp) =<< parseFile fp
 
 parseGasp :: FilePath -> IO (Either ParseError Gasp)
 parseGasp fp = runExceptT $ fromGaspExprs <$> parseExpr fp
