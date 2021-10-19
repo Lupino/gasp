@@ -21,6 +21,7 @@ module Gasp
   ) where
 
 import           Data.Aeson             (ToJSON (..), object, (.=))
+import qualified Data.Aeson.Key         as Key (fromString)
 import           Data.Binary            (Binary (..))
 import           Data.Binary.Put        (Put, putByteString, putFloatle,
                                          putInt32le)
@@ -361,8 +362,8 @@ instance ToJSON Gasp where
         , "production"  .= prod
         , "timers"      .= timers
         , "has_timer"   .= hasTimer
-        ] ++ map (\(Flag k v) -> T.pack k .= v) flags
-          ++ map (\(Data k v) -> T.pack k .= v) datas
+        ] ++ map (\(Flag k v) -> Key.fromString k .= v) flags
+          ++ map (\(Data k v) -> Key.fromString k .= v) datas
         where gasp = prepareGasp (maybe 0 (startAddr prod) app) (getFuncFlags gasp0) gasp0
               setups = getSetups gasp
               loops = getLoops gasp
