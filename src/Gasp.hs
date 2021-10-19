@@ -122,9 +122,8 @@ setArgvFlags gasp flags = gasp { argvFlags = flags }
 getApp :: Gasp -> Maybe App
 getApp gasp =
   case apps of
-    [app] -> Just app
-    []    -> Nothing
-    _     -> error "Gasp has to contain exactly one ExprApp element!"
+    []      -> Nothing
+    (app:_) -> Just app
 
   where apps = getApps gasp
 
