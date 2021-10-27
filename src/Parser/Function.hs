@@ -38,7 +38,7 @@ function :: Parser Function
 function = do
     reserved reservedNameFunction
     name  <- FuncName <$> identifier
-    args  <- option [] $ argv
+    args  <- option [] argv
     tp    <- option "void" tpParser
     code  <- gaspBlockClosure
 

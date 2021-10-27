@@ -127,7 +127,7 @@ preprocessGasp gasp = setGaspExprs gasp . foldr foldFunc [] <$> mapM mapFunc (ge
           }
         mapFunc v = return v
 
-        render =  (`compileAndRenderTextTemplate` (toJSON gasp))
+        render =  (`compileAndRenderTextTemplate` toJSON gasp)
 
         tmpls = getTmpls gasp
 

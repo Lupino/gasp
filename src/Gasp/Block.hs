@@ -91,7 +91,7 @@ instance ToJSON Data where
     , "name" .= dataName dat
     ]
 
-data Render = Render
+newtype Render = Render
   { rdName :: String
   } deriving (Show)
 
