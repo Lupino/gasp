@@ -1016,9 +1016,11 @@ func report_attr_next_index() void {
     }
 }
 
+{=# has_app =}
 setup setup_report_attr_index {
     report_attr_next_index();
 }
+{=/ has_app =}
 
 func reportAttribute() bool {
     {=# attrs =}
