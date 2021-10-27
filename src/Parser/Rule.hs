@@ -5,16 +5,16 @@ module Parser.Rule
 
 import           Gasp.Rule
 import           Lexer
-import           Text.Parsec        (option, (<|>))
+import           Text.Parsec        (option, try, (<|>))
 import           Text.Parsec.String (Parser)
 
 laterP :: Parser String
-laterP = do
+laterP = try $ do
   _ <- symbol "later"
   identifier <|> (show <$> integer)
 
 elseActionP :: Parser (String, String)
-elseActionP = do
+elseActionP = try $ do
   _ <- symbol "else"
   later <- option "" laterP
   v <- identifier
