@@ -4,6 +4,7 @@ import <givelink.h> https://github.com/Lupino/givelink.git
 import <jsmn.h> https://github.com/zserge/jsmn.git
 import <EEPROM.h>
 GL_SERIAL_availabled_timer_ms unsigned long = 0
+GL_SERIAL_received_timer_ms unsigned long = 0
 
 setup a_setup_eeprom {
     #ifdef EEPROM_SIZE
@@ -18,6 +19,7 @@ loop givelink_loop {
         while (GL_SERIAL.available() > 0) {
             if (givelink_recv(readedPayload, &readedLen, GL_SERIAL.read(), &crcFlag)) {
                 if (givelink_from_binary(readedPayload, readedLen)) {
+                    GL_SERIAL_received_timer_ms = get_current_time_ms();
                     {=# has_debug =}
                     DEBUG_SERIAL.print(F("Recv Id: "));
                     DEBUG_SERIAL.print(obj.id);
