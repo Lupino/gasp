@@ -176,6 +176,14 @@ token[{= token_len =}] uint8_t = {{= token_hex_array =}}
 addr[{= addr_len =}] uint8_t = {{= addr_hex_array =}}
 {=/ production =}
 
+func load_addr() {
+    for (int i = 0; i < {= addr_len =}; i ++) {
+        addr[i] = EEPROM.read({= addr_addr =} + i);
+    }
+    givelink_context_set_addr(addr, {= addr_len =});
+    givelink_context_set_auth(true);
+}
+
 setup setup_givelink {
     givelink_context_init(&ctx, ctx_buff);
     givelink_context_set_key(key, {= key_len =});
@@ -186,11 +194,7 @@ setup setup_givelink {
     {=/ production =}
     givelink_context_set_token(token, {= token_len =});
     {=# production =}
-    for (int i = 0; i < {= addr_len =}; i ++) {
-        addr[i] = EEPROM.read({= addr_addr =} + i);
-    }
-    givelink_context_set_addr(addr, {= addr_len =});
-    givelink_context_set_auth(true);
+    load_addr();
     {=/ production =}
     givelink_init(&obj, obj_buff);
 }
