@@ -1269,7 +1269,7 @@ loop rule_{= id =}_loop {
     }
     {=/ depends =}
     {=# has_on =}
-    if (rule_depends_checked && {=& on_condition =}) {
+    if (rule_depends_checked && ({=& on_condition =})) {
     {=/ has_on =}
     {=^ has_on =}
     if (rule_depends_checked) {
