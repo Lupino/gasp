@@ -1516,6 +1516,7 @@ loop agpio_{= name =}_loop {
 {=/ agpios =}
 
 
+import <givelink_common.h> https://github.com/Lupino/givelink.git
 {=# uarts =}
 {= name =}_availabled_timer_ms unsigned long
 {= name =}_writer_timer_ms unsigned long
