@@ -17,7 +17,7 @@ loop givelink_loop {
         GL_SERIAL_availabled_timer_ms = get_current_time_ms();
         GL_SERIAL_sent_delay_ms = 100;
         while (GL_SERIAL.available() > 0) {
-            if (givelink_recv(readedPayload, &readedLen, GL_SERIAL.read(), &crcFlag)) {
+            if (givelink_recv(readedPayload, &readedLen, GL_SERIAL.read())) {
                 if (givelink_from_binary(readedPayload, readedLen)) {
                     GL_SERIAL_received_timer_ms = get_current_time_ms();
                     {=# has_debug =}
@@ -34,12 +34,12 @@ loop givelink_loop {
                     DEBUG_SERIAL.println();
 
                     {=/ has_debug =}
-                    if (obj.type == AUTHRES && crcFlag) {
+                    if (obj.type == AUTHRES) {
                         {=# production =}
                         save_addr();
                         {=/ production =}
                     }
-                    if (obj.type == REQUEST && crcFlag) {
+                    if (obj.type == REQUEST) {
                         wantSendData[0] = '\0';
                         bool ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
                         if (wantSendData[0] == '\0') {
@@ -212,7 +212,6 @@ func save_addr {
 obj givelink_t
 obj_buff[MAX_BUFFER_LENGTH] uint8_t
 
-crcFlag bool = false
 lastPayloadId uint16_t = 100
 readedLen uint16_t = 0
 readedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
