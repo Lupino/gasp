@@ -443,7 +443,7 @@ func send_packet_1(type const uint8_t, data_ const char *, length const int) voi
 
 func send_packet_rsp(data_ const char *) void {
     givelink_set_type(RESPONSE);
-    givelink_set_data((const uint8_t*)wantSendData, get_json_length(data_));
+    givelink_set_data((const uint8_t*)data_, get_json_length(data_));
     send_packet();
 }
 
