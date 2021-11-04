@@ -1257,36 +1257,36 @@ loop every_{= id =}_loop {
 rule_depends_checked bool = false
 {=# rules =}
 {=# has_later =}
-rule_{= id =}_{= action =}_timer_ms unsigned long = 0
+rule_{= id =}_do_yes_timer_ms unsigned long = 0
 {=/ has_later =}
 {=# has_else_later =}
-rule_{= id =}_{= else_action =}_timer_ms unsigned long = 0
+rule_{= id =}_do_else_timer_ms unsigned long = 0
 {=/ has_else_later =}
 rule_{= id =}_do_yes bool = true
 {=# has_else =}
 rule_{= id =}_do_else bool = true
 {=/ has_else =}
-func run_rule_{= id =}() void {
+func rule_{= id =}_poll() void {
     {=# has_later =}
     if ({=& condition =}) {
-        if (rule_{= id =}_do_yes && rule_{= id =}_{= action =}_timer_ms + {= later =} < get_cache_time_ms()) {
+        if (rule_{= id =}_do_yes && rule_{= id =}_do_yes_timer_ms + {= later =} < get_cache_time_ms()) {
             rule_{= id =}_do_yes = false;
             {= action =}();
         }
         {=# has_else =}
         rule_{= id =}_do_else = true;
         {=# has_else_later =}
-        rule_{= id =}_{= else_action =}_timer_ms = get_cache_time_ms();
+        rule_{= id =}_do_else_timer_ms = get_cache_time_ms();
         {=/ has_else_later =}
         {=/ has_else =}
     } else {
         rule_{= id =}_do_yes = true;
-        rule_{= id =}_{= action =}_timer_ms = get_cache_time_ms();
+        rule_{= id =}_do_yes_timer_ms = get_cache_time_ms();
         {=# has_else =}
         if (rule_{= id =}_do_else) {
             rule_{= id =}_do_else = false;
             {=# has_else_later =}
-            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_cache_time_ms()) {
+            if (rule_{= id =}_do_else && rule_{= id =}_do_else_timer_ms + {= else_later =} < get_cache_time_ms()) {
                 {= else_action =}();
             }
             {=/ has_else_later =}
@@ -1306,7 +1306,7 @@ func run_rule_{= id =}() void {
         {=# has_else =}
         rule_{= id =}_do_else = true;
         {=# has_else_later =}
-        rule_{= id =}_{= else_action =}_timer_ms = get_cache_time_ms();
+        rule_{= id =}_do_else_timer_ms = get_cache_time_ms();
         {=/ has_else_later =}
         {=/ has_else =}
     } else {
@@ -1315,7 +1315,7 @@ func run_rule_{= id =}() void {
         if (rule_{= id =}_do_else) {
             rule_{= id =}_do_else = false;
             {=# has_else_later =}
-            if (rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_cache_time_ms()) {
+            if (rule_{= id =}_do_else_timer_ms + {= else_later =} < get_cache_time_ms()) {
                 {= else_action =}();
             }
             {=/ has_else_later =}
@@ -1342,17 +1342,17 @@ loop rule_{= id =}_loop {
     {=^ has_on =}
     if (rule_depends_checked) {
     {=/ has_on =}
-        run_rule_{= id =}();
+        rule_{= id =}_poll();
     }
     {=/ has_dep =}
     {=^ has_dep =}
     {=# has_on =}
     if ({=& on_condition =}) {
-        run_rule_{= id =}();
+        rule_{= id =}_poll();
     }
     {=/ has_on =}
     {=^ has_on =}
-    run_rule_{= id =}();
+    rule_{= id =}_poll();
     {=/ has_on =}
     {=/ has_dep =}
 }
