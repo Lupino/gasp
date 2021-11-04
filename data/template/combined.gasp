@@ -1507,6 +1507,7 @@ loop agpio_{= name =}_loop {
 {= name =}_read_{= index =}_buffer[{= buf_len =} + 1] uint8_t
 {= name =}_read_{= index =}_buffer_len int = 0
 is_{= name =}_{= index =}_readed bool = false
+is_{= name =}_{= index =}_readed_flag bool = false
 {=/ readers =}
 {=# writers =}
 is_{= name =}_write_{= wname =} bool = false
@@ -1527,31 +1528,26 @@ func {= name =}_poll() void {
         while ({= name =}.available() > 0) {
             uint8_t outByte = {= name =}.read();
             {=# readers =}
-            {=# has_on =}
-            if ({=& on =}) {
+            if (!is_{= name =}_{= index =}_readed_flag{=# has_on =} && ({=& on =}){=/ has_on =}) {
                 if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
-                    {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
-                    {= name =}_read_{= index =}_buffer_len = 0;
-                    is_{= name =}_{= index =}_readed = true;
+                    is_{= name =}_{= index =}_readed_flag = true;
                 }
                 if ({= name =}_read_{= index =}_buffer_len > {= buf_len =}) {
-                    {= name =}_read_{= index =}_buffer_len = 0;
+                    givelink_shift_data_raw({= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len);
+                    {= name =}_read_{= index =}_buffer_len -= 1;
                 }
             }
-            {=/ has_on =}
-            {=^ has_on =}
-            if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
-                {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
-                {= name =}_read_{= index =}_buffer_len = 0;
-                is_{= name =}_{= index =}_readed = true;
-            }
-            if ({= name =}_read_{= index =}_buffer_len > {= buf_len =}) {
-                {= name =}_read_{= index =}_buffer_len = 0;
-            }
-            {=/ has_on =}
             {=/ readers =}
         }
     }
+    {=# readers =}
+    if (is_{= name =}_{= index =}_readed_flag) {
+        is_{= name =}_{= index =}_readed_flag = false;
+        is_{= name =}_{= index =}_readed = true;
+        {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
+        {= name =}_read_{= index =}_buffer_len = 0;
+    }
+    {=/ readers =}
 }
 
 {=# writers =}
