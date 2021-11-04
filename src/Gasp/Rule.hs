@@ -32,9 +32,12 @@ instance ToJSON Rule where
         , "else_later"     .= ruleElseLater rule
         , "has_else"       .= not (null $ ruleElseAction rule)
         , "has_else_later" .= not (null $ ruleElseLater rule)
-        , "depends"        .= nub (getMetricNames rule)
+        , "depends"        .= depends
+        , "has_dep"        .= not (null depends)
         , "id"             .= ruleIndex rule
         ]
+
+      where depends = nub (getMetricNames rule)
 
 
 getMetricNames :: Rule -> [MetricName]
