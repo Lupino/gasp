@@ -1504,7 +1504,7 @@ loop agpio_{= name =}_loop {
 {= name =}_availabled_timer_ms unsigned long
 {= name =}_writer_timer_ms unsigned long
 {=# readers =}
-{= name =}_read_{= index =}_buffer[{= buf_len =}] uint8_t
+{= name =}_read_{= index =}_buffer[{= buf_len =} + 1] uint8_t
 {= name =}_read_{= index =}_buffer_len int = 0
 is_{= name =}_{= index =}_readed bool = false
 {=/ readers =}
@@ -1512,7 +1512,7 @@ is_{= name =}_{= index =}_readed bool = false
 is_{= name =}_write_{= wname =} bool = false
 {=# action =}
 {=# is_gen =}
-{= name =}_write_{= wname =}_buffer[{= buf_len =}] uint8_t
+{= name =}_write_{= wname =}_buffer[{= buf_len =} + 1] uint8_t
 {= name =}_write_{= wname =}_buffer_len int = 0
 {=/ is_gen =}
 {=/ action =}
@@ -1534,6 +1534,9 @@ func {= name =}_poll() void {
                     {= name =}_read_{= index =}_buffer_len = 0;
                     is_{= name =}_{= index =}_readed = true;
                 }
+                if ({= name =}_read_{= index =}_buffer_len > {= buf_len =}) {
+                    {= name =}_read_{= index =}_buffer_len = 0;
+                }
             }
             {=/ has_on =}
             {=^ has_on =}
@@ -1541,6 +1544,9 @@ func {= name =}_poll() void {
                 {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
                 {= name =}_read_{= index =}_buffer_len = 0;
                 is_{= name =}_{= index =}_readed = true;
+            }
+            if ({= name =}_read_{= index =}_buffer_len > {= buf_len =}) {
+                {= name =}_read_{= index =}_buffer_len = 0;
             }
             {=/ has_on =}
             {=/ readers =}
