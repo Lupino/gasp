@@ -1550,7 +1550,7 @@ func {= name =}_poll() void {
                     is_{= name =}_{= index =}_readed_flag = true;
                 }
                 if ({= name =}_read_{= index =}_buffer_len > {= buf_len =}) {
-                    givelink_shift_data_raw({= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len);
+                    givelink_shift_data_raw({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
                     {= name =}_read_{= index =}_buffer_len -= 1;
                 }
             }
