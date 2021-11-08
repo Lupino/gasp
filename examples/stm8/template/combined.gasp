@@ -4,8 +4,10 @@ import <givelink.h> https://github.com/Lupino/givelink.git
 import <jsmn.h> https://github.com/zserge/jsmn.git
 import <EEPROM.h>
 GL_SERIAL_availabled_timer_ms unsigned long = 0
+GL_SERIAL_received_timer_ms unsigned long = 0
+GL_SERIAL_received bool = false
 
-setup eeprom_setup {
+setup a_setup_eeprom {
     #ifdef EEPROM_SIZE
     EEPROM_begin(EEPROM_SIZE);
     #endif
@@ -14,92 +16,109 @@ setup eeprom_setup {
 loop givelink_loop {
     if (GL_SERIAL_available() > 0) {
         GL_SERIAL_availabled_timer_ms = get_current_time_ms();
-        GL_SERIAL_sent_delay_ms = 100;
         while (GL_SERIAL_available() > 0) {
-            if (givelink_recv(readedPayload, &readedLen, GL_SERIAL_read(), &crcFlag)) {
-                if (givelink_from_binary(readedPayload, readedLen)) {
+            if (GL_SERIAL_received) {
+                GL_SERIAL_read();
+            } else {
+                GL_SERIAL_received = givelink_recv(readedPayload, &readedLen, GL_SERIAL_read());
+                if (readedLen >= MAX_GL_PAYLOAD_LENGTH) {
                     {=# has_debug =}
-                    DEBUG_SERIAL_print(F("Recv Id: "));
-                    DEBUG_SERIAL_print(obj.id);
-                    DEBUG_SERIAL_print(F(" Type: "));
-                    DEBUG_SERIAL_print(obj.type);
-                    if (obj.length > TYPE_LENGTH) {
-                        DEBUG_SERIAL_print(F(" Data: "));
-                        for (uint16_t i = 0; i < obj.length - TYPE_LENGTH; i ++) {
-                            DEBUG_SERIAL_write(obj.data[i]);
-                        }
-                    }
-                    DEBUG_SERIAL_println();
-
+                    DEBUG_SERIAL_println(F("Error: payload to large"));
                     {=/ has_debug =}
-                    if (obj.type == AUTHRES && crcFlag) {
-                        {=# production =}
-                        save_addr();
-                        {=/ production =}
-                    }
-                    if (obj.type == REQUEST && crcFlag) {
-                        wantSendData[0] = '\0';
-                        bool ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
-                        if (wantSendData[0] == '\0') {
-                            if (ret) {
-                                sprintf(wantSendData, "{\"result\": \"OK\"}");
-                            } else {
-                                sprintf(wantSendData, "{\"err\": \"not support\"}");
-                            }
-                        }
-                        send_packet_rsp(wantSendData);
-                    }
-                    if (obj.type == SUCCESS) {
-                        report_timer_ms = 0;
-                        if (obj.id == ping_packet_id) {
-                            ponged = true;
-                        }
-                        {=^ low_memory =}
-                        {=# auto_retry =}
-                        if (obj.id == report_attr_packet_id) {
-                            need_retry = false;
-                        }
-                        if (obj.id == report_metric_packet_id) {
-                            need_retry = false;
-                        }
-                        {=/ auto_retry =}
-                        {=/ low_memory =}
-                        {=# low_memory =}
-                        if (obj.id == report_attr_packet_id) {
-                            doneReportAttribute();
-                        }
-                        if (obj.id == report_metric_packet_id) {
-                            doneReportMetric();
-                        }
-                        incrLastPayloadId();
-                        {=/ low_memory =}
-                    }
-                    {=# has_timer =}
-                    if (obj.type == SYNCTIME) {
-                        sys_timer_can_sync = true;
-                        sys_timer_s = (uint32_t)atol((const char *)obj.data);
-                    }
-                    {=/ has_timer =}
-                    if (obj.type == CTRLREQ) {
-                        {=# ctrl_mode =}
-                        mainAction();
-                        {=/ ctrl_mode =}
-                        send_packet_0(CTRLRES);
-                    }
-                    if (obj.type == CTRLREQ1) {
-                        send_packet_0(PING);
-                        send_packet_0(CTRLRES);
-                    }
+                    givelink_shift_data(readedPayload, &readedLen);
                 }
-                readedLen = 0;
-            }
-            if (readedLen > MAX_GL_PAYLOAD_LENGTH) {
-                {=# has_debug =}
-                DEBUG_SERIAL_println(F("Error: payload to large"));
-                {=/ has_debug =}
-                readedLen = 0;
             }
         }
+    }
+
+    if (GL_SERIAL_received) {
+        GL_SERIAL_received_timer_ms = get_current_time_ms();
+        GL_SERIAL_received = false;
+        if (givelink_from_binary(readedPayload, readedLen)) {
+            GL_SERIAL_received_timer_ms = get_current_time_ms();
+            {=# has_debug =}
+            DEBUG_SERIAL_print(F("Recv Id: "));
+            DEBUG_SERIAL_print(obj.id);
+            DEBUG_SERIAL_print(F(" Type: "));
+            DEBUG_SERIAL_print(obj.type);
+            if (obj.length > TYPE_LENGTH) {
+                DEBUG_SERIAL_print(F(" Data: "));
+                for (uint16_t i = 0; i < obj.length - TYPE_LENGTH; i ++) {
+                    DEBUG_SERIAL_write(obj.data[i]);
+                }
+            }
+            DEBUG_SERIAL_println();
+
+            {=/ has_debug =}
+            if (obj.type == AUTHRES) {
+                {=# production =}
+                save_addr();
+                {=/ production =}
+            }
+            if (obj.type == REQUEST) {
+                wantSendData[0] = '\0';
+                bool ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
+                if (wantSendData[0] == '\0') {
+                    if (ret) {
+                        sprintf(wantSendData, "{\"result\": \"OK\"}");
+                    } else {
+                        sprintf(wantSendData, "{\"err\": \"not support\"}");
+                    }
+                }
+                send_packet_rsp(wantSendData);
+            }
+            if (obj.type == SUCCESS) {
+                ping_failed = 0;
+                if (lastPayloadId == ping_packet_id) {
+                    ping_timer_ms = get_cache_time_ms();
+                    {=# low_memory =}
+                    incrLastPayloadId();
+                    {=/ low_memory =}
+                }
+                {=^ low_memory =}
+                {=# auto_retry =}
+                if (lastPayloadId == report_attr_packet_id) {
+                    need_retry = false;
+                }
+                if (lastPayloadId == report_metric_packet_id) {
+                    need_retry = false;
+                }
+                {=/ auto_retry =}
+                {=/ low_memory =}
+                {=# low_memory =}
+                if (lastPayloadId == report_attr_packet_id) {
+                    doneReportAttribute();
+                    incrLastPayloadId();
+                }
+                {=# has_metric =}
+                if (lastPayloadId == report_metric_packet_id) {
+                    doneReportMetric();
+                    incrLastPayloadId();
+                }
+                {=/ has_metric =}
+                {=/ low_memory =}
+            }
+            {=# has_timer =}
+            if (obj.type == SYNCTIME) {
+                sys_timer_can_sync = true;
+                sys_timer_s = (uint32_t)atol((const char *)obj.data);
+            }
+            {=/ has_timer =}
+            {=# ctrl_mode =}
+            if (obj.type == CTRLREQ) {
+                mainAction();
+                send_packet_0(CTRLRES);
+            }
+            if (obj.type == CTRLREQ1) {
+                mainAction();
+                if (report_timer_ms + REPORT_DELAY_MS < get_cache_time_ms()) {
+                    send_packet_0(PING);
+                }
+                send_packet_0(CTRLRES);
+            }
+            {=/ ctrl_mode =}
+        }
+        readedLen = 0;
     }
 
     if (!givelink_context_authed()) {
@@ -118,7 +137,7 @@ loop givelink_loop {
 {=/ has_app =}
 
 {=# has_debug =}
-setup debug_print_setup {
+setup w_setup_debug_print {
     DEBUG_SERIAL_println(F("Setup"));
 }
 {=/ has_debug =}
@@ -136,7 +155,6 @@ loop get_current_time_loop {
 auth_timer_ms unsigned long = 0
 
 AUTH_DELAY_MS = 1000
-PONG_DELAY_MS = 6000
 PING_DELAY_MS = 300000
 MAX_PING_FAILED = 10
 MAX_GL_PAYLOAD_LENGTH = {= max_gl_len =}
@@ -144,15 +162,12 @@ MAX_BUFFER_LENGTH = {= max_buf_len =}
 MAX_NUM_TOKENS = 12
 MAX_REQUEST_VALUE_LENGTH = {= max_req_len =}
 MAX_TMPL_LENGTH = {= max_tpl_len =}
-GL_SERIAL_sent_delay_ms int = 100
 
 // EEPROM_SIZE = 1024
 // EEPROM_NEED_COMMIT
 
-pong_timer_ms  unsigned long = 0
 ping_timer_ms  unsigned long = 0
 ping_packet_id uint16_t = 0
-ponged bool = true
 ping_failed uint8_t = 0
 
 ctx givelink_context_t
@@ -168,7 +183,15 @@ token[{= token_len =}] uint8_t = {{= token_hex_array =}}
 addr[{= addr_len =}] uint8_t = {{= addr_hex_array =}}
 {=/ production =}
 
-setup givelink_setup {
+func load_addr() {
+    for (int i = 0; i < {= addr_len =}; i ++) {
+        addr[i] = EEPROM_read({= addr_addr =} + i);
+    }
+    givelink_context_set_addr(addr, {= addr_len =});
+    givelink_context_set_auth(true);
+}
+
+setup setup_givelink {
     givelink_context_init(&ctx, ctx_buff);
     givelink_context_set_key(key, {= key_len =});
     {=# production =}
@@ -178,11 +201,7 @@ setup givelink_setup {
     {=/ production =}
     givelink_context_set_token(token, {= token_len =});
     {=# production =}
-    for (int i = 0; i < {= addr_len =}; i ++) {
-        addr[i] = EEPROM_read({= addr_addr =} + i);
-    }
-    givelink_context_set_addr(addr, {= addr_len =});
-    givelink_context_set_auth(true);
+    load_addr();
     {=/ production =}
     givelink_init(&obj, obj_buff);
 }
@@ -200,14 +219,13 @@ func save_addr {
 obj givelink_t
 obj_buff[MAX_BUFFER_LENGTH] uint8_t
 
-crcFlag bool = false
-lastPayloadId uint16_t = 0
+lastPayloadId uint16_t = 100
 readedLen uint16_t = 0
 readedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
 report_attr_packet_id uint16_t = 0
 report_metric_packet_id uint16_t = 0
-report_timer_ms unsigned long = 0
-REPORT_DELAY_MS = 1000
+report_timer_ms unsigned long = 4000
+REPORT_DELAY_MS = 6000
 {=# low_memory =}
 report_attr_index int = 0
 report_metric_index int = 0
@@ -292,20 +310,24 @@ func mainAction() void {
         return;
     }
 
+    if (ping_failed > MAX_PING_FAILED) {
+        PING_FAILED_CB();
+    }
+
     {=# low_memory =}
     if (!reportAttribute()) {
+        ping_failed += 1;
         return;
     }
 
     {=# has_metric =}
-    if (metric_timer_ms + METRIC_DELAY_MS < get_cache_time_ms()) {
-        setReportMetricAll();
-    }
-
     if (reportMetric()) {
-        metric_timer_ms = get_cache_time_ms();
-        requireReportMetric = false;
+        if (metric_timer_ms + METRIC_DELAY_MS < get_cache_time_ms()) {
+            setReportMetricAll();
+        }
     } else {
+        ping_failed += 1;
+        metric_timer_ms = get_cache_time_ms();
         return;
     }
 
@@ -340,23 +362,9 @@ func mainAction() void {
     {=/ low_memory =}
     if (ping_timer_ms + PING_DELAY_MS < get_cache_time_ms()) {
         send_packet_0(PING);
-        ponged = false;
-        ping_timer_ms = get_cache_time_ms();
-        pong_timer_ms = get_cache_time_ms();
+        ping_failed += 1;
     }
 
-    if (ponged) {
-        ping_failed = 0;
-    } else {
-        if (pong_timer_ms + PONG_DELAY_MS < get_cache_time_ms()) {
-            ping_failed += 1;
-            pong_timer_ms = get_cache_time_ms();
-
-            if (ping_failed > MAX_PING_FAILED) {
-                PING_FAILED_CB();
-            }
-        }
-    }
     {=# has_timer =}
     if (sys_timer_can_sync) {
         if (sys_timer_s < 1000) {
@@ -375,8 +383,7 @@ func mainAction() void {
 func PING_FAILED_CB() void {}
 
 func send_packet_raw(buf uint8_t *, length uint16_t) void {
-    delay(GL_SERIAL_sent_delay_ms);
-    GL_SERIAL_sent_delay_ms = 10;
+    delay(5);
     for (uint16_t i = 0; i < length; i ++) {
         GL_SERIAL_write(buf[i]);
     }
@@ -436,7 +443,7 @@ func send_packet_1(type const uint8_t, data_ const char *, length const int) voi
 
 func send_packet_rsp(data_ const char *) void {
     givelink_set_type(RESPONSE);
-    givelink_set_data((const uint8_t*)wantSendData, get_json_length(data_));
+    givelink_set_data((const uint8_t*)data_, get_json_length(data_));
     send_packet();
 }
 
@@ -471,7 +478,7 @@ func incrLastPayloadId() {
 func FC(ifsh const __FlashStringHelper *) char * {
     PGM_P p = reinterpret_cast<PGM_P>(ifsh);
     size_t n = 0;
-    while (1) {
+    while (n < MAX_TMPL_LENGTH) {
         unsigned char c = pgm_read_byte(p++);
         wantSendDataTpl[n] = c;
         n++;
@@ -544,13 +551,14 @@ func get_json_length(src const char *) int {
 {=# attrs =}
 
 attr_{= name =} {= type =} = {= default =}
+cache_attr_{= name =} {= type =} = {= default =}
 last_attr_{= name =} {= type =} = {= default =}
 attr_{= name =}_force bool = true
 attr_{= name =}_reported bool = false
 
 {=# has_app =}
 {=# keep =}
-setup attr_{= name =}_setup {
+setup setup_attr_{= name =} {
     {=# onebyte =}
     attr_{= name =} = EEPROM_read({= addr =});
     {=/ onebyte =}
@@ -644,17 +652,20 @@ func get_attr_{= name =}(retval char *) bool {
 
 {=# metrics =}
 metric_{= name =} {= type =} = 0
+cache_metric_{= name =} {= type =} = 0
 last_metric_{= name =} {= type =} = 0
 metric_{= name =}_reported bool = true
+metric_{= name =}_readed bool = false
 
 {=# auto =}
 metric_{= name =}_threshold {= type =} = {= threshold =}
+cache_metric_{= name =}_threshold {= type =} = {= threshold =}
 last_metric_{= name =}_threshold {= type =} = {= threshold =}
 metric_{= name =}_threshold_force bool = true
 metric_{= name =}_threshold_reported bool = false
 
 {=# has_app =}
-setup metric_{= name =}_setup {
+setup setup_metric_{= name =} {
     {=# onebyte =}
     metric_{= name =}_threshold = EEPROM_read({= addr =});
     {=/ onebyte =}
@@ -769,6 +780,10 @@ func get_metric_{= name =}(retval char *) bool {
     sprintf(retval, "{\"{= name =}\": %s}", ltrim(requestValue));
     {=/ is_float =}
     return true;
+}
+
+func set_metric_{= name =}_readed() {
+    metric_{= name =}_readed = true;
 }
 
 {=/ metrics =}
@@ -905,6 +920,7 @@ func reportAttribute(force bool) bool {
 }
 {=/ low_memory =}
 {=# low_memory =}
+{=# has_metric =}
 func is_valid_report_metric_index() bool {
     {=# metrics =}
     {=# auto =}
@@ -936,10 +952,11 @@ setup setup_report_metric_index {
 func reportMetric() bool {
     {=# metrics =}
     {=# auto =}
-    if (((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || !metric_{= name =}_reported) && report_metric_index == {= index =}) {
+    if (metric_{= name =}_readed && ((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || !metric_{= name =}_reported) && report_metric_index == {= index =}) {
         wantSendData[0] = '\0';
         if (get_metric_{= name =}(wantSendData)) {
             send_packet_1(TELEMETRY, wantSendData, get_json_length(wantSendData));
+            cache_metric_{= name =} = metric_{= name =};
             return false;
         }
     }
@@ -955,8 +972,9 @@ func doneReportMetric() void {
     {=# metrics =}
     {=# auto =}
     if (report_metric_index == {= index =}) {
-        last_metric_{= name =} = metric_{= name =};
+        last_metric_{= name =} = cache_metric_{= name =};
         metric_{= name =}_reported = true;
+        metric_{= name =}_readed = false;
     }
 
     {=/ auto =}
@@ -972,6 +990,7 @@ func setReportMetricAll() void {
     {=/ metrics =}
 }
 
+{=/ has_metric =}
 func is_valid_report_attr_index() bool {
     {=# attrs =}
     if (report_attr_index == {= index =}) {
@@ -1002,9 +1021,11 @@ func report_attr_next_index() void {
     }
 }
 
+{=# has_app =}
 setup setup_report_attr_index {
     report_attr_next_index();
 }
+{=/ has_app =}
 
 func reportAttribute() bool {
     {=# attrs =}
@@ -1012,6 +1033,7 @@ func reportAttribute() bool {
         wantSendData[0] = '\0';
         if (get_attr_{= name =}(wantSendData)) {
             send_packet_1(ATTRIBUTE, wantSendData, get_json_length(wantSendData));
+            cache_attr_{= name =} = attr_{= name =};
             return false;
         }
     }
@@ -1023,6 +1045,7 @@ func reportAttribute() bool {
         wantSendData[0] = '\0';
         if (get_metric_{= name =}_threshold(wantSendData)) {
             send_packet_1(ATTRIBUTE, wantSendData, get_json_length(wantSendData));
+            cache_metric_{= name =}_threshold = metric_{= name =}_threshold;
             return false;
         }
     }
@@ -1037,7 +1060,7 @@ func reportAttribute() bool {
 func doneReportAttribute() void {
     {=# attrs =}
     if (report_attr_index == {= index =}) {
-        last_attr_{= name =} = attr_{= name =};
+        last_attr_{= name =} = cache_attr_{= name =};
         attr_{= name =}_reported = true;
     }
 
@@ -1045,7 +1068,7 @@ func doneReportAttribute() void {
     {=# metrics =}
     {=# auto =}
     if (report_attr_index == {= index =}) {
-        last_metric_{= name =}_threshold = metric_{= name =}_threshold;
+        last_metric_{= name =}_threshold = cache_metric_{= name =}_threshold;
         metric_{= name =}_threshold_reported = true;
     }
 
@@ -1215,16 +1238,16 @@ func get_cache_time_ms() unsigned long {
 
 {=# actions =}
 // start actions
-{= fn =}_timer_ms unsigned long = 0
-loop every_{= fn =}_loop {
+every_{= id =}_timer_ms unsigned long = 0
+loop every_{= id =}_loop {
     {=# has_on =}
-    if ({=& on =} && {= fn =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
+    if ({=& on =} && every_{= id =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
     {=/ has_on =}
     {=^ has_on =}
-    if ({= fn =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
+    if (every_{= id =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
     {=/ has_on =}
         {= fn =}();
-        {= fn =}_timer_ms = get_cache_time_ms();
+        every_{= id =}_timer_ms = get_cache_time_ms();
     }
 }
 // end actions
@@ -1234,16 +1257,79 @@ loop every_{= fn =}_loop {
 rule_depends_checked bool = false
 {=# rules =}
 {=# has_later =}
-rule_{= id =}_{= action =}_timer_ms unsigned long = 0
+rule_{= id =}_do_yes_timer_ms unsigned long = 0
 {=/ has_later =}
 {=# has_else_later =}
-rule_{= id =}_{= else_action =}_timer_ms unsigned long = 0
+rule_{= id =}_do_else_timer_ms unsigned long = 0
 {=/ has_else_later =}
 rule_{= id =}_do_yes bool = true
 {=# has_else =}
 rule_{= id =}_do_else bool = true
 {=/ has_else =}
+func rule_{= id =}_poll() void {
+    {=# has_later =}
+    if ({=& condition =}) {
+        if (rule_{= id =}_do_yes && rule_{= id =}_do_yes_timer_ms + {= later =} < get_cache_time_ms()) {
+            rule_{= id =}_do_yes = false;
+            {= action =}();
+        }
+        {=# has_else =}
+        rule_{= id =}_do_else = true;
+        {=# has_else_later =}
+        rule_{= id =}_do_else_timer_ms = get_cache_time_ms();
+        {=/ has_else_later =}
+        {=/ has_else =}
+    } else {
+        rule_{= id =}_do_yes = true;
+        rule_{= id =}_do_yes_timer_ms = get_cache_time_ms();
+        {=# has_else =}
+        if (rule_{= id =}_do_else) {
+            rule_{= id =}_do_else = false;
+            {=# has_else_later =}
+            if (rule_{= id =}_do_else && rule_{= id =}_do_else_timer_ms + {= else_later =} < get_cache_time_ms()) {
+                {= else_action =}();
+            }
+            {=/ has_else_later =}
+            {=^ has_else_later =}
+            {= else_action =}();
+            {=/ has_else_later =}
+        }
+        {=/ has_else =}
+    }
+    {=/ has_later =}
+    {=^ has_later =}
+    if ({=& condition =}) {
+        if (rule_{= id =}_do_yes) {
+            rule_{= id =}_do_yes = false;
+            {= action =}();
+        }
+        {=# has_else =}
+        rule_{= id =}_do_else = true;
+        {=# has_else_later =}
+        rule_{= id =}_do_else_timer_ms = get_cache_time_ms();
+        {=/ has_else_later =}
+        {=/ has_else =}
+    } else {
+        rule_{= id =}_do_yes = true;
+        {=# has_else =}
+        if (rule_{= id =}_do_else) {
+            rule_{= id =}_do_else = false;
+            {=# has_else_later =}
+            if (rule_{= id =}_do_else_timer_ms + {= else_later =} < get_cache_time_ms()) {
+                {= else_action =}();
+            }
+            {=/ has_else_later =}
+            {=^ has_else_later =}
+            {= else_action =}();
+            {=/ has_else_later =}
+        }
+        {=/ has_else =}
+    }
+    {=/ has_later =}
+}
+
 loop rule_{= id =}_loop {
+    {=# has_dep =}
     rule_depends_checked = true;
     {=# depends =}
     if (!check_metric_{= . =}()) {
@@ -1251,68 +1337,24 @@ loop rule_{= id =}_loop {
     }
     {=/ depends =}
     {=# has_on =}
-    if (rule_depends_checked && {=& on_condition =}) {
+    if (rule_depends_checked && ({=& on_condition =})) {
     {=/ has_on =}
     {=^ has_on =}
     if (rule_depends_checked) {
     {=/ has_on =}
-        {=# has_later =}
-        if ({=& condition =}) {
-            if (rule_{= id =}_do_yes && rule_{= id =}_{= action =}_timer_ms + {= later =} < get_cache_time_ms()) {
-                rule_{= id =}_do_yes = false;
-                {= action =}();
-            }
-            {=# has_else =}
-            rule_{= id =}_do_else = true;
-            {=# has_else_later =}
-            rule_{= id =}_{= else_action =}_timer_ms = get_cache_time_ms();
-            {=/ has_else_later =}
-            {=/ has_else =}
-        } else {
-            rule_{= id =}_do_yes = true;
-            rule_{= id =}_{= action =}_timer_ms = get_cache_time_ms();
-            {=# has_else =}
-            {=# has_else_later =}
-            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_cache_time_ms()) {
-                rule_{= id =}_do_else = false;
-                {= else_action =}();
-            }
-            {=/ has_else_later =}
-            {=^ has_else_later =}
-            {= else_action =}();
-            {=/ has_else_later =}
-            {=/ has_else =}
-        }
-        {=/ has_later =}
-        {=^ has_later =}
-        if ({=& condition =}) {
-            if (rule_{= id =}_do_yes) {
-                rule_{= id =}_do_yes = false;
-                {= action =}();
-            }
-            {=# has_else =}
-            rule_{= id =}_do_else = true;
-            {=# has_else_later =}
-            rule_{= id =}_{= else_action =}_timer_ms = get_cache_time_ms();
-            {=/ has_else_later =}
-            {=/ has_else =}
-        } else {
-            rule_{= id =}_do_yes = true;
-            {=# has_else =}
-            {=# has_else_later =}
-            if (rule_{= id =}_do_else && rule_{= id =}_{= else_action =}_timer_ms + {= else_later =} < get_cache_time_ms()) {
-                rule_{= id =}_do_else = false;
-                {= else_action =}();
-            }
-            {=/ has_else_later =}
-            {=^ has_else_later =}
-            rule_{= id =}_do_else = false;
-            {= else_action =}();
-            {=/ has_else_later =}
-            {=/ has_else =}
-        }
-        {=/ has_later =}
+        rule_{= id =}_poll();
     }
+    {=/ has_dep =}
+    {=^ has_dep =}
+    {=# has_on =}
+    if ({=& on_condition =}) {
+        rule_{= id =}_poll();
+    }
+    {=/ has_on =}
+    {=^ has_on =}
+    rule_{= id =}_poll();
+    {=/ has_on =}
+    {=/ has_dep =}
 }
 {=/ rules =}
 // end rules
@@ -1322,22 +1364,13 @@ gpio_reading uint8_t = 0
 
 {=# gpios =}
 {=# bind =}
-{=# is_link =}
 gpio_{= name =}_state uint8_t = {= state =}
-{=/ is_link =}
 {=# is_fn =}
-gpio_{= name =}_state uint8_t = {= state =}
 last_gpio_{= name =}_debounce_time_ms unsigned long = 0
 last_gpio_{= name =}_state uint8_t = {= state =}
 {=/ is_fn =}
-{=# is_no_bind =}
-gpio_{= name =}_state uint8_t = {= state =}
-{=/ is_no_bind =}
-{=# is_pwm =}
-gpio_{= name =}_state uint8_t = {= state =}
-{=/ is_pwm =}
 {=/ bind =}
-setup gpio_{= name =}_setup {
+setup setup_gpio_{= name =} {
     {=# bind =}
     {=# is_link =}
     pinMode({= pin =}, OUTPUT);
@@ -1483,19 +1516,21 @@ loop agpio_{= name =}_loop {
 {=/ agpios =}
 
 
+import <givelink_common.h> https://github.com/Lupino/givelink.git
 {=# uarts =}
-is_{= name =}_readed bool = false
 {= name =}_availabled_timer_ms unsigned long
 {= name =}_writer_timer_ms unsigned long
 {=# readers =}
-{= name =}_read_{= index =}_buffer[{= buf_len =}] uint8_t
+{= name =}_read_{= index =}_buffer[{= buf_len =} + 1] uint8_t
 {= name =}_read_{= index =}_buffer_len int = 0
+is_{= name =}_{= index =}_readed bool = false
+is_{= name =}_{= index =}_readed_flag bool = false
 {=/ readers =}
 {=# writers =}
 is_{= name =}_write_{= wname =} bool = false
 {=# action =}
 {=# is_gen =}
-{= name =}_write_{= wname =}_buffer[{= buf_len =}] uint8_t
+{= name =}_write_{= wname =}_buffer[{= buf_len =} + 1] uint8_t
 {= name =}_write_{= wname =}_buffer_len int = 0
 {=/ is_gen =}
 {=/ action =}
@@ -1510,32 +1545,35 @@ func {= name =}_poll() void {
         while ({= name =}_available() > 0) {
             uint8_t outByte = {= name =}_read();
             {=# readers =}
-            {=# has_on =}
-            if ({=& on =}) {
+            if (!is_{= name =}_{= index =}_readed_flag{=# has_on =} && ({=& on =}){=/ has_on =}) {
                 if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
-                    {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
-                    {= name =}_read_{= index =}_buffer_len = 0;
-                    is_{= name =}_readed = true;
+                    is_{= name =}_{= index =}_readed_flag = true;
+                }
+                if ({= name =}_read_{= index =}_buffer_len > {= buf_len =}) {
+                    givelink_shift_data_raw({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
+                    {= name =}_read_{= index =}_buffer_len -= 1;
                 }
             }
-            {=/ has_on =}
-            {=^ has_on =}
-            if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
-                {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
-                {= name =}_read_{= index =}_buffer_len = 0;
-                is_{= name =}_readed = true;
-            }
-            {=/ has_on =}
             {=/ readers =}
         }
     }
+    {=# readers =}
+    if (is_{= name =}_{= index =}_readed_flag) {
+        is_{= name =}_{= index =}_readed_flag = false;
+        is_{= name =}_{= index =}_readed = true;
+        {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
+        {= name =}_read_{= index =}_buffer_len = 0;
+    }
+    {=/ readers =}
 }
 
 {=# writers =}
 func {= name =}_write_{= wname =}() void {
     prepare_{= name =}_write();
     is_{= name =}_write_{= wname =} = true;
-    is_{= name =}_readed = false;
+    {=# readers =}
+    is_{= name =}_{= index =}_readed = false;
+    {=/ readers =}
     {=# action =}
     {=# is_cmd =}
     {=# bytes =}
