@@ -1,7 +1,6 @@
 module Lexer
   ( reservedNameApp
   , reservedNameCommand
-  , reservedNameTelemetry
   , reservedNameFunction
   , reservedNameLoop
   , reservedNameSetup
@@ -60,16 +59,13 @@ import           Text.Parsec.Language (emptyDef)
 import           Text.Parsec.String   (Parser)
 import qualified Text.Parsec.Token    as Token
 
--- * Wasp element types
+-- * Gasp element types
 
 reservedNameApp :: String
 reservedNameApp = "app"
 
 reservedNameCommand :: String
 reservedNameCommand = "command"
-
-reservedNameTelemetry :: String
-reservedNameTelemetry = "telemetry"
 
 reservedNameFunction :: String
 reservedNameFunction = "func"
@@ -147,7 +143,6 @@ reservedNames =
     -- * Gasp element types
     [ reservedNameApp
     , reservedNameCommand
-    , reservedNameTelemetry
     , reservedNameFunction
     , reservedNameLoop
     , reservedNameSetup
