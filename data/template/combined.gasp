@@ -1096,7 +1096,7 @@ timer_{= name =}_sched bool = false
 {=/ timers =}
 
 {=# has_timer =}
-loop timer_{= name =}_loop {
+loop timer_loop {
     if (sys_timer_s > 0 && next_timer_event_ms <= get_cache_time_ms()) {
         {=# timers =}
         processTimer({= addr0 =}, {= addr1 =}, {= addr2 =}, &timer_{= name =}_sched);
