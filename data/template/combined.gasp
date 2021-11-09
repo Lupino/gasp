@@ -599,7 +599,7 @@ func set_attr_{= name =}_raw(unscaled_value {= type =}) void {
 }
 
 func set_attr_{= name =}(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
-    if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
+    if (jsonlookup(json, tokens, num_tokens, FC(F("data")), requestValue)) {
         int tp = isnum(requestValue);
         if (tp == -1) {
             sprintf(retval, FC(F("{\"err\": \"data only support number\"}")));
@@ -689,7 +689,7 @@ setup setup_metric_{= name =} {
 {=/ has_app =}
 
 func set_metric_{= name =}_threshold(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
-    if (jsonlookup(json, tokens, num_tokens, "data", requestValue)) {
+    if (jsonlookup(json, tokens, num_tokens, FC(F("data")), requestValue)) {
         int tp = isnum(requestValue);
         if (tp == -1) {
             sprintf(retval, FC(F("{\"err\": \"data only support number\"}")));
@@ -1096,6 +1096,14 @@ timer_{= name =}_sched bool = false
 {=/ timers =}
 
 {=# has_timer =}
+timer_buf[11] uint8_t
+
+// one week 7 * 24 * 60 * 60
+MAX_TIMER_DURATION = 604800
+
+// two month 60 * 24 * 60 * 60
+MAX_TIMER_PERIOD = 5184000
+
 loop timer_loop {
     if (sys_timer_s > 0 && next_timer_event_ms <= get_cache_time_ms()) {
         {=# timers =}
@@ -1127,38 +1135,57 @@ func swap_timer_event(delta_ms uint32_t) void {
     }
 }
 
-func get_value(json const char *, tokens jsmntok_t *, num_tokens int, name const char *) uint32_t {
-    if (jsonlookup(json, tokens, num_tokens, name, requestValue)) {
-        int tp = isnum(requestValue);
-        if (tp == -1) {
-            return 0;
-        }
-        long tmp;
-        if (tp == 0) {
-            tmp = (long)atol(requestValue);
-        } else {
-            tmp = (long)atof(requestValue);
-        }
+func get_value(buf const char *, start_ptr int *) uint32_t {
+    int length = strlen(buf);
+    int start = *start_ptr;
 
-        if (tmp > 0) {
-            return (uint32_t) tmp;
+    int n = 0;
+    while (start < length) {
+        if (buf[start] == ',') {
+            start += 1;
+            break;
         }
+        if (isdigit(buf[start])) {
+            timer_buf[n] = buf[start];
+            n += 1;
+        }
+        start += 1;
     }
-    return 0;
+
+    *start_ptr = start;
+    timer_buf[n] = '\0';
+
+    if (n > 0) {
+        return (uint32_t)atol(timer_buf);
+    } else {
+        return 0;
+    }
 }
 
 func set_timer_raw(json const char *, tokens jsmntok_t *, num_tokens int, addr0 int, addr1 int, addr2 int) void {
-    timer_schedat_s  = get_value(json, tokens, num_tokens, "sched_at");
-    timer_period_s   = get_value(json, tokens, num_tokens, "period");
-    timer_duration_s = get_value(json, tokens, num_tokens, "duration");
-    EEPROM.put(addr0, timer_schedat_s);
-    EEPROM.put(addr1, timer_period_s);
-    EEPROM.put(addr2, timer_duration_s);
-    #ifdef EEPROM_NEED_COMMIT
-    EEPROM.commit();
-    #endif
-    timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
-    swap_timer_event(timer_delta0_ms);
+    if (jsonlookup(json, tokens, num_tokens, FC(F("data")), requestValue)) {
+        int pos = 0;
+        timer_schedat_s  = get_value(requestValue, &pos);
+        timer_period_s   = get_value(requestValue, &pos);
+        timer_duration_s = get_value(requestValue, &pos);
+
+        if (timer_duration_s > MAX_TIMER_DURATION) {
+            timer_duration_s = MAX_TIMER_DURATION - 100;
+        }
+
+        if (timer_period_s > MAX_TIMER_PERIOD) {
+            timer_period_s = MAX_TIMER_PERIOD - 100;
+        }
+
+        EEPROM.put(addr0, timer_schedat_s);
+        EEPROM.put(addr1, timer_period_s);
+        EEPROM.put(addr2, timer_duration_s);
+        #ifdef EEPROM_NEED_COMMIT
+        EEPROM.commit();
+        #endif
+        timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
+        swap_timer_event(timer_delta0_ms);
+    }
 }
 
 func get_timer_raw(addr0 int, addr1 int, addr2 int, retval char *) bool {
@@ -1214,7 +1241,7 @@ func processTimer0(addr0 int, addr1 int, addr2 int, sched bool *) void {
     EEPROM.get(addr0, timer_schedat_s);
     EEPROM.get(addr2, timer_duration_s);
 
-    if (timer_duration_s == 0) {
+    if (timer_duration_s == 0 || timer_duration_s > MAX_TIMER_DURATION) {
         return;
     }
 

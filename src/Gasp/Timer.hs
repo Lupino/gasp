@@ -42,6 +42,7 @@ timerNameLen = length . timerName
 timerRspLength :: Int
 timerRspLength = 70
 
--- {"sched_at": 1617503208, "period": 1617503208, "duration": 1617503208, "method": "set_timer", "name": "vv"}
+--           sched_at   period     duration
+-- {"data": "1617503208,1617503208,1617503208", "method": "set_timer", "name": "vv"}
 setTimerLength :: Timer -> Int
-setTimerLength = (105 +) . timerNameLen
+setTimerLength = (80 +) . timerNameLen

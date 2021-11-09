@@ -276,7 +276,7 @@ getMaxCommandLength = maximum . map getCommandLength . gaspExprs
 getRequestValueLength :: Expr -> Int
 getRequestValueLength (ExprAttr attr) = getAttrValueLength attr
 getRequestValueLength (ExprMetric m)  = getMetricValueLength m
-getRequestValueLength (ExprTimer _)   = 10
+getRequestValueLength (ExprTimer _)   = 36
 getRequestValueLength _               = 0
 
 
