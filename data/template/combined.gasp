@@ -41,9 +41,9 @@ loop givelink_loop {
             DEBUG_SERIAL.print(obj.id);
             DEBUG_SERIAL.print(F(" Type: "));
             DEBUG_SERIAL.print(obj.type);
-            if (obj.length > TYPE_LENGTH) {
+            if (obj.length > PACKET_TYPE_LENGTH) {
                 DEBUG_SERIAL.print(F(" Data: "));
-                for (uint16_t i = 0; i < obj.length - TYPE_LENGTH; i ++) {
+                for (uint16_t i = 0; i < obj.length - PACKET_TYPE_LENGTH; i ++) {
                     DEBUG_SERIAL.write(obj.data[i]);
                 }
             }
@@ -54,6 +54,14 @@ loop givelink_loop {
                 {=# production =}
                 save_addr();
                 {=/ production =}
+            }
+            if (obj.type == GETSETTOKEN) {
+                {=# production =}
+                if (obj.length > PACKET_TYPE_LENGTH) {
+                    save_token();
+                }
+                {=/ production =}
+                send_token();
             }
             if (obj.type == REQUEST) {
                 wantSendData[0] = '\0';
@@ -100,8 +108,8 @@ loop givelink_loop {
             }
             {=# has_timer =}
             if (obj.type == SYNCTIME) {
-                sys_timer_can_sync = true;
                 sys_timer_s = (uint32_t)atol((const char *)obj.data);
+                sys_timer_synced_ms = get_cache_time_ms();
             }
             {=/ has_timer =}
             {=# ctrl_mode =}
@@ -191,7 +199,7 @@ func load_addr() {
     givelink_context_set_auth(true);
 }
 
-setup setup_givelink {
+func setup_givelink {
     givelink_context_init(&ctx, ctx_buff);
     givelink_context_set_key(key, {= key_len =});
     {=# production =}
@@ -206,6 +214,10 @@ setup setup_givelink {
     givelink_init(&obj, obj_buff);
 }
 
+setup setup_givelink {
+    setup_givelink();
+}
+
 func save_addr {
     for (int i = 0; i < {= addr_len =}; i ++) {
         EEPROM.write({= addr_addr =} + i, obj.data[i]);
@@ -213,6 +225,37 @@ func save_addr {
     #ifdef EEPROM_NEED_COMMIT
     EEPROM.commit();
     #endif
+}
+
+func save_token {
+    for (int i = 0; i < {= token_len =}; i ++) {
+        EEPROM.write({= token_addr =} + i, obj.data[i]);
+    }
+    #ifdef EEPROM_NEED_COMMIT
+    EEPROM.commit();
+    #endif
+    setup_givelink();
+}
+
+
+func send_token() {
+    int idx = 0;
+    uint8_t *buf = (uint8_t *) wantSendData;
+    buf[idx] = {= key_len =};
+    idx ++;
+    for (int i = 0; i < {= key_len =}; i ++) {
+        buf[idx] = key[i];
+        idx ++;
+    }
+    buf[idx] = {= token_len =};
+    idx ++;
+    for (int i = 0; i < {= token_len =}; i ++) {
+        buf[idx] = token[i];
+        idx ++;
+    }
+
+    givelink_set_data(buf, idx);
+    send_packet();
 }
 {=/ app =}
 
@@ -366,16 +409,12 @@ func mainAction() void {
     }
 
     {=# has_timer =}
-    if (sys_timer_can_sync) {
-        if (sys_timer_s < 1000) {
-            send_packet_0(SYNCTIME);
-            sys_timer_can_sync = false;
-        }
+    if (sys_timer_s < 1000) {
+        send_packet_0(SYNCTIME);
+    }
 
-        if (sys_timer_sync_ms + SYNCTIME_DELAY_MS < get_cache_time_ms()) {
-            send_packet_0(SYNCTIME);
-            sys_timer_can_sync = false;
-        }
+    if (sys_timer_synced_ms + SYNCTIME_DELAY_MS < get_cache_time_ms()) {
+        send_packet_0(SYNCTIME);
     }
     {=/ has_timer =}
 }
@@ -462,6 +501,12 @@ func next_packet(type const uint8_t) void {
         report_metric_packet_id = lastPayloadId;
         report_timer_ms = get_cache_time_ms();
     }
+
+    {=# has_timer =}
+    if (type == SYNCTIME) {
+        report_timer_ms = get_cache_time_ms();
+    }
+    {=/ has_timer =}
 
     givelink_reset();
     givelink_set_id(lastPayloadId);
@@ -1080,7 +1125,7 @@ func doneReportAttribute() void {
 {=/ low_memory =}
 
 sys_timer_s         uint32_t = 0
-sys_timer_sync_ms   uint32_t = 0
+sys_timer_synced_ms uint32_t = 0
 next_timer_event_ms uint32_t = 0
 timer_delta0_ms     uint32_t = 0
 timer_delta1_ms     uint32_t = 0
@@ -1089,7 +1134,6 @@ timer_period_s      uint32_t = 0
 timer_duration_s    uint32_t = 0
 timer_action uint8_t = 0
 SYNCTIME_DELAY_MS = 3600000
-sys_timer_can_sync bool = true
 
 {=# timers =}
 timer_{= name =}_sched bool = false
@@ -1183,8 +1227,7 @@ func set_timer_raw(json const char *, tokens jsmntok_t *, num_tokens int, addr0 
         #ifdef EEPROM_NEED_COMMIT
         EEPROM.commit();
         #endif
-        timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
-        swap_timer_event(timer_delta0_ms);
+        swap_timer_event(get_cache_time_ms() + 5);
     }
 }
 
@@ -1211,23 +1254,42 @@ func getset_timer(json const char *, tokens jsmntok_t *, num_tokens int, retval 
     return false;
 }
 
-func finishTimer(addr0 int, addr1 int, sched bool *) void {
-    if (*sched) {
-        timer_delta1_ms = (timer_schedat_s - sys_timer_s + timer_duration_s) * 1000 + sys_timer_sync_ms;
-        if (timer_delta1_ms <= get_cache_time_ms()) {
+func finishTimer(addr0 int, addr2 int, sched bool *) void {
+    timer_delta1_ms = (timer_schedat_s - sys_timer_s + timer_duration_s) * 1000 + sys_timer_synced_ms;
+    if (timer_delta1_ms <= get_cache_time_ms()) {
+        if (*sched) {
             *sched = false;
             timer_action = 2;
-            EEPROM.get(addr1, timer_period_s);
-            if (timer_period_s > 0) {
-                timer_schedat_s += timer_period_s;
-                EEPROM.put(addr0, timer_schedat_s);
-                #ifdef EEPROM_NEED_COMMIT
-                EEPROM.commit();
-                #endif
-                timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
-            }
+        }
+        if (timer_period_s > timer_duration_s && timer_period_s < MAX_TIMER_PERIOD) {
+            timer_schedat_s += timer_period_s;
+            EEPROM.put(addr0, timer_schedat_s);
+            #ifdef EEPROM_NEED_COMMIT
+            EEPROM.commit();
+            #endif
+            timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_synced_ms;
+        } else {
+            stopTimer(addr2);
         }
     }
+}
+
+func startTimer(addr0 int, addr2 int, sched bool *) void {
+    timer_delta1_ms = (timer_schedat_s + timer_duration_s - sys_timer_s) * 1000 + sys_timer_synced_ms;
+    if (timer_delta1_ms > get_cache_time_ms()) {
+        *sched = true;
+        timer_action = 1;
+    } else {
+        finishTimer(addr0, addr2, sched);
+    }
+    return;
+}
+
+func stopTimer(addr2 int) void {
+    EEPROM.put(addr2, 0);
+    #ifdef EEPROM_NEED_COMMIT
+    EEPROM.commit();
+    #endif
 }
 
 func processTimer(addr0 int, addr1 int, addr2 int, sched bool *) void {
@@ -1239,23 +1301,50 @@ func processTimer(addr0 int, addr1 int, addr2 int, sched bool *) void {
 func processTimer0(addr0 int, addr1 int, addr2 int, sched bool *) void {
     timer_action = 0;
     EEPROM.get(addr0, timer_schedat_s);
+    EEPROM.get(addr1, timer_period_s);
     EEPROM.get(addr2, timer_duration_s);
+
+    if (*sched) {
+        finishTimer(addr0, addr2, sched);
+        return;
+    }
+
 
     if (timer_duration_s == 0 || timer_duration_s > MAX_TIMER_DURATION) {
         return;
     }
 
-    if (timer_schedat_s < sys_timer_s || *sched) {
-        finishTimer(addr0, addr1, sched);
-        return;
+    if (timer_schedat_s < sys_timer_s) {
+        if (timer_schedat_s + timer_duration_s < sys_timer_s) {
+            if (timer_period_s == 0 || timer_period_s > MAX_TIMER_PERIOD) {
+                stopTimer(addr2);
+                return;
+            }
+            for (int i = 0; i < 1000; i ++) {
+                timer_schedat_s += timer_period_s;
+                if (timer_schedat_s > sys_timer_s) {
+                    break;
+                }
+            }
+            if (timer_schedat_s < sys_timer_s) {
+                stopTimer(addr2);
+                return;
+            } else {
+                EEPROM.put(addr0, timer_schedat_s);
+                #ifdef EEPROM_NEED_COMMIT
+                EEPROM.commit();
+                #endif
+            }
+        } else {
+            startTimer(addr0, addr2, sched);
+            return;
+        }
     }
 
-    timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_sync_ms;
-    timer_delta1_ms = timer_duration_s * 1000 + timer_delta0_ms;
+    timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_synced_ms;
 
-    if (timer_delta0_ms <= get_cache_time_ms() && timer_delta1_ms > get_cache_time_ms()) {
-        *sched = true;
-        timer_action = 1;
+    if (timer_delta0_ms <= get_cache_time_ms()) {
+        startTimer(addr0, addr2, sched);
     }
 }
 
