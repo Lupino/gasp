@@ -261,6 +261,7 @@ func send_token() {
         idx ++;
     }
 
+    givelink_set_type(GETSETTOKEN);
     givelink_set_data(buf, idx);
     send_packet();
 }
