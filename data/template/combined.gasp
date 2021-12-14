@@ -6,6 +6,7 @@ import <EEPROM.h>
 GL_SERIAL_availabled_timer_ms unsigned long = 0
 GL_SERIAL_received_timer_ms unsigned long = 0
 GL_SERIAL_received bool = false
+packet_sended bool = true;
 
 setup a_setup_eeprom {
     #ifdef EEPROM_SIZE
@@ -34,6 +35,9 @@ loop givelink_loop {
     if (GL_SERIAL_received) {
         GL_SERIAL_received_timer_ms = get_current_time_ms();
         GL_SERIAL_received = false;
+        {=# ctrl_mode =}
+        packet_sended = false;
+        {=/ ctrl_mode =}
         if (givelink_from_binary(readedPayload, readedLen)) {
             GL_SERIAL_received_timer_ms = get_current_time_ms();
             {=# has_debug =}
@@ -132,6 +136,9 @@ loop givelink_loop {
     if (!givelink_context_authed()) {
         requireReportAttribute = true;
         if (auth_timer_ms + AUTH_DELAY_MS < get_cache_time_ms()) {
+            {=# ctrl_mode =}
+            packet_sended = false;
+            {=/ ctrl_mode =}
             send_packet_0(AUTHREQ);
             auth_timer_ms = get_cache_time_ms();
         }
@@ -432,6 +439,12 @@ func send_packet_raw(buf uint8_t *, length uint16_t) void {
 }
 
 func send_packet() void {
+    {=# ctrl_mode =}
+    if (packet_sended) {
+        return;
+    }
+    packet_sended = true;
+    {=/ ctrl_mode =}
     {=# has_debug =}
     DEBUG_SERIAL.print(F("Send Id: "));
     DEBUG_SERIAL.print(obj.id);
