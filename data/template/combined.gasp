@@ -1673,6 +1673,9 @@ loop {= name =}_poll_loop {
 func {= name =}_poll() void {
     if ({= name =}.available() > 0) {
         {= name =}_availabled_timer_ms = get_current_time_ms();
+        {=# readers =}
+        is_{= name =}_{= index =}_readed = false;
+        {=/ readers =}
         while ({= name =}.available() > 0) {
             uint8_t outByte = {= name =}.read();
             {=# readers =}
@@ -1692,6 +1695,10 @@ func {= name =}_poll() void {
     if (is_{= name =}_{= index =}_readed_flag) {
         is_{= name =}_{= index =}_readed_flag = false;
         is_{= name =}_{= index =}_readed = true;
+    }
+    {=/ readers =}
+    {=# readers =}
+    if (is_{= name =}_{= index =}_readed) {
         {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
         {= name =}_read_{= index =}_buffer_len = 0;
     }
