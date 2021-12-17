@@ -24,7 +24,7 @@ loop givelink_loop {
                 GL_SERIAL_received = givelink_recv(readedPayload, &readedLen, GL_SERIAL.read());
                 if (readedLen >= MAX_GL_PAYLOAD_LENGTH) {
                     {=# has_debug =}
-                    DEBUG_SERIAL.println(F("Error: payload to large"));
+                    DEBUG_SERIAL.println(TO_ROM("Error: payload to large"));
                     {=/ has_debug =}
                     givelink_shift_data(readedPayload, &readedLen);
                 }
@@ -41,12 +41,12 @@ loop givelink_loop {
         if (givelink_from_binary(readedPayload, readedLen)) {
             GL_SERIAL_received_timer_ms = get_current_time_ms();
             {=# has_debug =}
-            DEBUG_SERIAL.print(F("Recv Id: "));
+            DEBUG_SERIAL.print(TO_ROM("Recv Id: "));
             DEBUG_SERIAL.print(obj.id);
-            DEBUG_SERIAL.print(F(" Type: "));
+            DEBUG_SERIAL.print(TO_ROM(" Type: "));
             DEBUG_SERIAL.print(obj.type);
             if (obj.length > PACKET_TYPE_LENGTH) {
-                DEBUG_SERIAL.print(F(" Data: "));
+                DEBUG_SERIAL.print(TO_ROM(" Data: "));
                 for (uint16_t i = 0; i < obj.length - PACKET_TYPE_LENGTH; i ++) {
                     DEBUG_SERIAL.write(obj.data[i]);
                 }
@@ -72,9 +72,9 @@ loop givelink_loop {
                 bool ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
                 if (wantSendData[0] == '\0') {
                     if (ret) {
-                        sprintf(wantSendData, FC(F("{\"result\": \"OK\"}")));
+                        sprintf(wantSendData, FROM_ROM(TO_ROM("{\"result\": \"OK\"}")));
                     } else {
-                        sprintf(wantSendData, FC(F("{\"err\": \"not support\"}")));
+                        sprintf(wantSendData, FROM_ROM(TO_ROM("{\"err\": \"not support\"}")));
                     }
                 }
                 send_packet_rsp(wantSendData);
@@ -153,7 +153,7 @@ loop givelink_loop {
 
 {=# has_debug =}
 setup w_setup_debug_print {
-    DEBUG_SERIAL.println(F("Setup"));
+    DEBUG_SERIAL.println(TO_ROM("Setup"));
 }
 {=/ has_debug =}
 
@@ -447,12 +447,12 @@ func send_packet() void {
     packet_sended = true;
     {=/ ctrl_mode =}
     {=# has_debug =}
-    DEBUG_SERIAL.print(F("Send Id: "));
+    DEBUG_SERIAL.print(TO_ROM("Send Id: "));
     DEBUG_SERIAL.print(obj.id);
-    DEBUG_SERIAL.print(F(" Type: "));
+    DEBUG_SERIAL.print(TO_ROM(" Type: "));
     DEBUG_SERIAL.print(obj.type);
     if (givelink_get_data_length() > 0) {
-        DEBUG_SERIAL.print(F(" Data: "));
+        DEBUG_SERIAL.print(TO_ROM(" Data: "));
         for (uint16_t i = 0; i < givelink_get_data_length(); i ++) {
             DEBUG_SERIAL.write(obj.data[i]);
         }
@@ -534,7 +534,8 @@ func incrLastPayloadId() {
     lastPayloadId ++;
 }
 
-func FC(ifsh const __FlashStringHelper *) char * {
+TO_ROM = F
+func FROM_ROM(ifsh const __FlashStringHelper *) char * {
     PGM_P p = reinterpret_cast<PGM_P>(ifsh);
     size_t n = 0;
     while (n < MAX_TMPL_LENGTH) {
@@ -658,10 +659,10 @@ func set_attr_{= name =}_raw(unscaled_value {= type =}) void {
 }
 
 func set_attr_{= name =}(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
-    if (jsonlookup(json, tokens, num_tokens, FC(F("data")), requestValue)) {
+    if (jsonlookup(json, tokens, num_tokens, FROM_ROM(TO_ROM("data")), requestValue)) {
         int tp = isnum(requestValue);
         if (tp == -1) {
-            sprintf(retval, FC(F("{\"err\": \"data only support number\"}")));
+            sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"data only support number\"}")));
             return false;
         }
         {=# is_float =}
@@ -682,7 +683,7 @@ func set_attr_{= name =}(json const char *, tokens jsmntok_t *, num_tokens int, 
         }
         if (tmp < {= min =} || tmp > {= max =}) {
         {=/ is_float =}
-          sprintf(retval, FC(F("{\"err\": \"data must between: [{= min =}, {= max =}]\"}")));
+          sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"data must between: [{= min =}, {= max =}]\"}")));
           return false;
         }
         set_attr_{= name =}_raw(({= type =})tmp);
@@ -694,15 +695,15 @@ func set_attr_{= name =}(json const char *, tokens jsmntok_t *, num_tokens int, 
 func get_attr_{= name =}(retval char *) bool {
     {=^ is_float =}
     {=# is_long =}
-    sprintf(retval, FC(F("{\"{= name =}\": %ld}")), ({= type =})attr_{= name =} / {= scale =});
+    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}\": %ld}")), ({= type =})attr_{= name =} / {= scale =});
     {=/ is_long =}
     {=^ is_long =}
-    sprintf(retval, FC(F("{\"{= name =}\": %d}")), ({= type =})attr_{= name =} / {= scale =});
+    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}\": %d}")), ({= type =})attr_{= name =} / {= scale =});
     {=/ is_long =}
     {=/ is_float =}
     {=# is_float =}
     dtostrf(({= type =})attr_{= name =} / {= scale =}, {= width =}, {= prec =}, requestValue);
-    sprintf(retval, FC(F("{\"{= name =}\": %s}")), ltrim(requestValue));
+    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}\": %s}")), ltrim(requestValue));
     {=/ is_float =}
     return true;
 }
@@ -748,10 +749,10 @@ setup setup_metric_{= name =} {
 {=/ has_app =}
 
 func set_metric_{= name =}_threshold(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
-    if (jsonlookup(json, tokens, num_tokens, FC(F("data")), requestValue)) {
+    if (jsonlookup(json, tokens, num_tokens, FROM_ROM(TO_ROM("data")), requestValue)) {
         int tp = isnum(requestValue);
         if (tp == -1) {
-            sprintf(retval, FC(F("{\"err\": \"data only support number\"}")));
+            sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"data only support number\"}")));
             return false;
         }
         {=# is_float =}
@@ -772,7 +773,7 @@ func set_metric_{= name =}_threshold(json const char *, tokens jsmntok_t *, num_
         }
         if (tmp < {= min_threshold =} || tmp > {= max_threshold =}) {
         {=/ is_float =}
-          sprintf(retval, FC(F("{\"err\": \"data must between: [{= min_threshold =}, {= max_threshold =}]\"}")));
+          sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"data must between: [{= min_threshold =}, {= max_threshold =}]\"}")));
           return false;
         }
         metric_{= name =}_threshold = ({= type =})tmp;
@@ -794,15 +795,15 @@ func set_metric_{= name =}_threshold(json const char *, tokens jsmntok_t *, num_
 func get_metric_{= name =}_threshold(retval char *) bool {
     {=^ is_float =}
     {=# is_long =}
-    sprintf(retval, FC(F("{\"{= name =}_threshold\": %ld}")), metric_{= name =}_threshold);
+    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}_threshold\": %ld}")), metric_{= name =}_threshold);
     {=/ is_long =}
     {=^ is_long =}
-    sprintf(retval, FC(F("{\"{= name =}_threshold\": %d}")), metric_{= name =}_threshold);
+    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}_threshold\": %d}")), metric_{= name =}_threshold);
     {=/ is_long =}
     {=/ is_float =}
     {=# is_float =}
     dtostrf(metric_{= name =}_threshold, {= width =}, {= prec =}, requestValue);
-    sprintf(retval, FC(F("{\"{= name =}_threshold\": %s}")), ltrim(requestValue));
+    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}_threshold\": %s}")), ltrim(requestValue));
     {=/ is_float =}
     return true;
 }
@@ -818,7 +819,7 @@ func check_metric_{= name =}() bool {
 }
 
 func invalid_metric_{= name =}_error(retval char *) bool {
-    sprintf(retval, FC(F("{\"err\": \"{= name =} is invalid\"}")));
+    sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"{= name =} is invalid\"}")));
     return false;
 }
 
@@ -828,15 +829,15 @@ func get_metric_{= name =}(retval char *) bool {
     }
     {=^ is_float =}
     {=# is_long =}
-    sprintf(retval, FC(F("{\"{= name =}\": %ld}")), metric_{= name =});
+    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}\": %ld}")), metric_{= name =});
     {=/ is_long =}
     {=^ is_long =}
-    sprintf(retval, FC(F("{\"{= name =}\": %d}")), metric_{= name =});
+    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}\": %d}")), metric_{= name =});
     {=/ is_long =}
     {=/ is_float =}
     {=# is_float =}
     dtostrf(metric_{= name =}, {= width =}, {= prec =}, requestValue);
-    sprintf(retval, FC(F("{\"{= name =}\": %s}")), ltrim(requestValue));
+    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}\": %s}")), ltrim(requestValue));
     {=/ is_float =}
     return true;
 }
@@ -852,7 +853,7 @@ func processRequest(json const char *, length int, retval char *) bool {
     int num_tokens = jsmn_parse(&requestJsmnParser, json, length, requestJsmnTokens, MAX_NUM_TOKENS);
 
     if (num_tokens < 0) {
-        sprintf(retval, FC(F("{\"err\": \"Failed to parse JSON: %d\"}")), num_tokens);
+        sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"Failed to parse JSON: %d\"}")), num_tokens);
         return false;
     }
 
@@ -860,12 +861,12 @@ func processRequest(json const char *, length int, retval char *) bool {
 
     if (token > 1) {
         {=# commands =}
-        if (jsoneq(json, &requestJsmnTokens[token], FC(F("{= name =}")))) {
+        if (jsoneq(json, &requestJsmnTokens[token], FROM_ROM(TO_ROM("{= name =}")))) {
             if ({= fn =}({=# argv =}{= name =}{=^ last =}, {=/ last =}{=/ argv =})) {
                 return true;
             } else {
                 {=# error =}
-                sprintf(retval, FC(F("{\"err\": \"{= error =}\"}")));
+                sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"{= error =}\"}")));
                 {=/ error =}
                 return false;
             }
@@ -873,32 +874,32 @@ func processRequest(json const char *, length int, retval char *) bool {
         {=/ commands =}
         {=# attrs =}
         {=# gen_set =}
-        if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_{= name =}")))) {
+        if (jsoneq(json, &requestJsmnTokens[token], FROM_ROM(TO_ROM("set_{= name =}")))) {
             return set_attr_{= name =}(json, requestJsmnTokens, num_tokens, retval);
         }
         {=/ gen_set =}
-        if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}")))) {
+        if (jsoneq(json, &requestJsmnTokens[token], FROM_ROM(TO_ROM("get_{= name =}")))) {
             return get_attr_{= name =}(retval);
         }
         {=/ attrs =}
         {=# metrics =}
         {=# auto =}
-        if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_{= name =}_threshold")))) {
+        if (jsoneq(json, &requestJsmnTokens[token], FROM_ROM(TO_ROM("set_{= name =}_threshold")))) {
             return set_metric_{= name =}_threshold(json, requestJsmnTokens, num_tokens, retval);
         }
-        if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}_threshold")))) {
+        if (jsoneq(json, &requestJsmnTokens[token], FROM_ROM(TO_ROM("get_{= name =}_threshold")))) {
             return get_metric_{= name =}_threshold(retval);
         }
         {=/ auto =}
-        if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_{= name =}")))) {
+        if (jsoneq(json, &requestJsmnTokens[token], FROM_ROM(TO_ROM("get_{= name =}")))) {
             return get_metric_{= name =}(retval);
         }
         {=/ metrics =}
         {=# has_timer =}
-        if (jsoneq(json, &requestJsmnTokens[token], FC(F("set_timer")))) {
+        if (jsoneq(json, &requestJsmnTokens[token], FROM_ROM(TO_ROM("set_timer")))) {
             return getset_timer(json, requestJsmnTokens, num_tokens, retval, true);
         }
-        if (jsoneq(json, &requestJsmnTokens[token], FC(F("get_timer")))) {
+        if (jsoneq(json, &requestJsmnTokens[token], FROM_ROM(TO_ROM("get_timer")))) {
             return getset_timer(json, requestJsmnTokens, num_tokens, retval, false);
         }
         {=/ has_timer =}
@@ -1221,7 +1222,7 @@ func get_value(buf const char *, start_ptr int *) uint32_t {
 }
 
 func set_timer_raw(json const char *, tokens jsmntok_t *, num_tokens int, addr0 int, addr1 int, addr2 int) void {
-    if (jsonlookup(json, tokens, num_tokens, FC(F("data")), requestValue)) {
+    if (jsonlookup(json, tokens, num_tokens, FROM_ROM(TO_ROM("data")), requestValue)) {
         int pos = 0;
         timer_schedat_s  = get_value(requestValue, &pos);
         timer_period_s   = get_value(requestValue, &pos);
@@ -1249,7 +1250,7 @@ func get_timer_raw(addr0 int, addr1 int, addr2 int, retval char *) bool {
     EEPROM.get(addr0, timer_schedat_s);
     EEPROM.get(addr1, timer_period_s);
     EEPROM.get(addr2, timer_duration_s);
-    sprintf(retval, FC(F("{\"sched_at\": %ld, \"period\": %ld, \"duration\": %ld}")), timer_schedat_s, timer_period_s, timer_duration_s);
+    sprintf(retval, FROM_ROM(TO_ROM("{\"sched_at\": %ld, \"period\": %ld, \"duration\": %ld}")), timer_schedat_s, timer_period_s, timer_duration_s);
     return true;
 }
 
@@ -1257,7 +1258,7 @@ func getset_timer(json const char *, tokens jsmntok_t *, num_tokens int, retval 
     int token = jsonfind(json, tokens, num_tokens, "name");
     if (token > 1) {
         {=# timers =}
-        if (jsoneq(json, &tokens[token], FC(F("{= name =}")))) {
+        if (jsoneq(json, &tokens[token], FROM_ROM(TO_ROM("{= name =}")))) {
             if (set) {
                 set_timer_raw(json, tokens, num_tokens, {= addr0 =}, {= addr1 =}, {= addr2 =});
             }
