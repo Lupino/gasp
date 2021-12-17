@@ -194,7 +194,7 @@ token[{= token_len =}] uint8_t
 addr[{= addr_len =}] uint8_t
 {=/ production =}
 {=^ production =}
-token[{= token_len =}] uint8_t = {{= token_hex_array =}}
+token[{= token_len =}] const uint8_t = {{= token_hex_array =}}
 addr[{= addr_len =}] uint8_t = {{= addr_hex_array =}}
 {=/ production =}
 
