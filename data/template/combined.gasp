@@ -15,6 +15,11 @@ setup a_setup_eeprom {
 }
 
 loop givelink_loop {
+    GL_SERIAL_poll();
+    GL_SERIAL_main();
+}
+
+func GL_SERIAL_poll {
     if (GL_SERIAL.available() > 0) {
         GL_SERIAL_availabled_timer_ms = get_current_time_ms();
         while (GL_SERIAL.available() > 0) {
@@ -33,106 +38,109 @@ loop givelink_loop {
     }
 
     if (GL_SERIAL_received) {
-        GL_SERIAL_received_timer_ms = get_current_time_ms();
         GL_SERIAL_received = false;
-        {=# ctrl_mode =}
-        packet_sended = false;
-        {=/ ctrl_mode =}
-        if (givelink_from_binary(readedPayload, readedLen)) {
-            GL_SERIAL_received_timer_ms = get_current_time_ms();
-            {=# has_debug =}
-            DEBUG_SERIAL.print(TO_ROM("Recv Id: "));
-            DEBUG_SERIAL.print(obj.id);
-            DEBUG_SERIAL.print(TO_ROM(" Type: "));
-            DEBUG_SERIAL.print(obj.type);
-            if (obj.length > PACKET_TYPE_LENGTH) {
-                DEBUG_SERIAL.print(TO_ROM(" Data: "));
-                for (uint16_t i = 0; i < obj.length - PACKET_TYPE_LENGTH; i ++) {
-                    DEBUG_SERIAL.write(obj.data[i]);
-                }
-            }
-            DEBUG_SERIAL.println();
-
-            {=/ has_debug =}
-            if (obj.type == AUTHRES) {
-                {=# production =}
-                save_addr();
-                {=/ production =}
-            }
-            if (obj.type == GETSETTOKEN) {
-                {=# production =}
-                if (obj.length > PACKET_TYPE_LENGTH) {
-                    save_token();
-                }
-                {=/ production =}
-                send_token();
-            }
-            if (obj.type == REQUEST) {
-                wantSendData[0] = '\0';
-                bool ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
-                if (wantSendData[0] == '\0') {
-                    if (ret) {
-                        sprintf(wantSendData, FROM_ROM(TO_ROM("{\"result\": \"OK\"}")));
-                    } else {
-                        sprintf(wantSendData, FROM_ROM(TO_ROM("{\"err\": \"not support\"}")));
-                    }
-                }
-                send_packet_rsp(wantSendData);
-            }
-            if (obj.type == SUCCESS) {
-                ping_failed = 0;
-                if (lastPayloadId == ping_packet_id) {
-                    ping_timer_ms = get_cache_time_ms();
-                    {=# low_memory =}
-                    incrLastPayloadId();
-                    {=/ low_memory =}
-                }
-                {=^ low_memory =}
-                {=# auto_retry =}
-                if (lastPayloadId == report_attr_packet_id) {
-                    need_retry = false;
-                }
-                if (lastPayloadId == report_metric_packet_id) {
-                    need_retry = false;
-                }
-                {=/ auto_retry =}
-                {=/ low_memory =}
-                {=# low_memory =}
-                if (lastPayloadId == report_attr_packet_id) {
-                    doneReportAttribute();
-                    incrLastPayloadId();
-                }
-                {=# has_metric =}
-                if (lastPayloadId == report_metric_packet_id) {
-                    doneReportMetric();
-                    incrLastPayloadId();
-                }
-                {=/ has_metric =}
-                {=/ low_memory =}
-            }
-            {=# has_timer =}
-            if (obj.type == SYNCTIME) {
-                sys_timer_s = (uint32_t)atol((const char *)obj.data);
-                sys_timer_synced_ms = get_cache_time_ms();
-            }
-            {=/ has_timer =}
-            {=# ctrl_mode =}
-            if (obj.type == CTRLREQ) {
-                mainAction();
-                send_packet_0(CTRLRES);
-            }
-            if (obj.type == CTRLREQ1) {
-                mainAction();
-                if (report_timer_ms + REPORT_DELAY_MS < get_cache_time_ms()) {
-                    send_packet_0(PING);
-                }
-                send_packet_0(CTRLRES);
-            }
-            {=/ ctrl_mode =}
-        }
+        GL_SERIAL_parse(readedPayload, len);
         readedLen = 0;
     }
+}
 
+func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
+    GL_SERIAL_received_timer_ms = get_current_time_ms();
+    {=# ctrl_mode =}
+    packet_sended = false;
+    {=/ ctrl_mode =}
+    if (givelink_from_binary(buffer, len)) {
+        {=# has_debug =}
+        DEBUG_SERIAL.print(TO_ROM("Recv Id: "));
+        DEBUG_SERIAL.print(obj.id);
+        DEBUG_SERIAL.print(TO_ROM(" Type: "));
+        DEBUG_SERIAL.print(obj.type);
+        if (obj.length > PACKET_TYPE_LENGTH) {
+            DEBUG_SERIAL.print(TO_ROM(" Data: "));
+            for (uint16_t i = 0; i < obj.length - PACKET_TYPE_LENGTH; i ++) {
+                DEBUG_SERIAL.write(obj.data[i]);
+            }
+        }
+        DEBUG_SERIAL.println();
+
+        {=/ has_debug =}
+        if (obj.type == AUTHRES) {
+            save_addr();
+        }
+        if (obj.type == GETSETTOKEN) {
+            {=# production =}
+            if (obj.length > PACKET_TYPE_LENGTH) {
+                save_token();
+            }
+            {=/ production =}
+            send_token();
+        }
+        if (obj.type == REQUEST) {
+            wantSendData[0] = '\0';
+            bool ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
+            if (wantSendData[0] == '\0') {
+                if (ret) {
+                    sprintf(wantSendData, FROM_ROM(TO_ROM("{\"result\": \"OK\"}")));
+                } else {
+                    sprintf(wantSendData, FROM_ROM(TO_ROM("{\"err\": \"not support\"}")));
+                }
+            }
+            send_packet_rsp(wantSendData);
+        }
+        if (obj.type == SUCCESS) {
+            ping_failed = 0;
+            if (lastPayloadId == ping_packet_id) {
+                ping_timer_ms = get_cache_time_ms();
+                {=# low_memory =}
+                incrLastPayloadId();
+                {=/ low_memory =}
+            }
+            {=^ low_memory =}
+            {=# auto_retry =}
+            if (lastPayloadId == report_attr_packet_id) {
+                need_retry = false;
+            }
+            if (lastPayloadId == report_metric_packet_id) {
+                need_retry = false;
+            }
+            {=/ auto_retry =}
+            {=/ low_memory =}
+            {=# low_memory =}
+            if (lastPayloadId == report_attr_packet_id) {
+                doneReportAttribute();
+                incrLastPayloadId();
+            }
+            {=# has_metric =}
+            if (lastPayloadId == report_metric_packet_id) {
+                doneReportMetric();
+                incrLastPayloadId();
+            }
+            {=/ has_metric =}
+            {=/ low_memory =}
+        }
+        {=# has_timer =}
+        if (obj.type == SYNCTIME) {
+            sys_timer_s = (uint32_t)atol((const char *)obj.data);
+            sys_timer_synced_ms = get_cache_time_ms();
+        }
+        {=/ has_timer =}
+        {=# ctrl_mode =}
+        if (obj.type == CTRLREQ) {
+            mainAction();
+            send_packet_0(CTRLRES);
+        }
+        if (obj.type == CTRLREQ1) {
+            mainAction();
+            if (report_timer_ms + REPORT_DELAY_MS < get_cache_time_ms()) {
+                send_packet_0(PING);
+            }
+            send_packet_0(CTRLRES);
+        }
+        {=/ ctrl_mode =}
+    }
+}
+
+func GL_SERIAL_main {
     if (!givelink_context_authed()) {
         requireReportAttribute = true;
         if (auth_timer_ms + AUTH_DELAY_MS < get_cache_time_ms()) {
@@ -147,7 +155,6 @@ loop givelink_loop {
         mainAction();
     {=/ ctrl_mode =}
     }
-
 }
 {=/ has_app =}
 
