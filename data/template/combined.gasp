@@ -1699,19 +1699,19 @@ func {= name =}_poll() void {
             }
             {=/ readers =}
         }
+        {=# readers =}
+        if (is_{= name =}_{= index =}_readed_flag) {
+            is_{= name =}_{= index =}_readed_flag = false;
+            is_{= name =}_{= index =}_readed = true;
+        }
+        {=/ readers =}
+        {=# readers =}
+        if (is_{= name =}_{= index =}_readed) {
+            {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
+            {= name =}_read_{= index =}_buffer_len = 0;
+        }
+        {=/ readers =}
     }
-    {=# readers =}
-    if (is_{= name =}_{= index =}_readed_flag) {
-        is_{= name =}_{= index =}_readed_flag = false;
-        is_{= name =}_{= index =}_readed = true;
-    }
-    {=/ readers =}
-    {=# readers =}
-    if (is_{= name =}_{= index =}_readed) {
-        {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
-        {= name =}_read_{= index =}_buffer_len = 0;
-    }
-    {=/ readers =}
 }
 
 {=# writers =}
