@@ -1344,7 +1344,7 @@ func processTimer0(addr0 int, addr1 int, addr2 int, sched bool *) void {
                 stopTimer(addr2);
                 return;
             }
-            for (int i = 0; i < 1000; i ++) {
+            for (int i = 0; i < 100000; i ++) {
                 timer_schedat_s += timer_period_s;
                 if (timer_schedat_s > sys_timer_s) {
                     break;
