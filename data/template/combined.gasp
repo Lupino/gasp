@@ -39,7 +39,7 @@ func GL_SERIAL_poll {
 
     if (GL_SERIAL_received) {
         GL_SERIAL_received = false;
-        GL_SERIAL_parse(READED_PAYLOAD, len);
+        GL_SERIAL_parse(READED_PAYLOAD, readedLen);
         readedLen = 0;
     }
 }
