@@ -225,7 +225,7 @@ func setup_givelink {
     {=# production =}
     load_addr();
     {=/ production =}
-    givelink_init(&obj, obj_buff);
+    givelink_init(&obj);
 }
 
 setup setup_givelink {
@@ -277,7 +277,6 @@ func send_token() {
 {=/ app =}
 
 obj givelink_t
-obj_buff[MAX_BUFFER_LENGTH] uint8_t
 
 lastPayloadId uint16_t = 100
 readedLen uint16_t = 0
