@@ -26,12 +26,12 @@ func GL_SERIAL_poll {
             if (GL_SERIAL_received) {
                 GL_SERIAL.read();
             } else {
-                GL_SERIAL_received = givelink_recv(readedPayload, &readedLen, GL_SERIAL.read());
+                GL_SERIAL_received = givelink_recv(READED_PAYLOAD, &readedLen, GL_SERIAL.read());
                 if (readedLen >= MAX_GL_PAYLOAD_LENGTH) {
                     {=# has_debug =}
                     DEBUG_SERIAL.println(TO_ROM("Error: payload to large"));
                     {=/ has_debug =}
-                    givelink_shift_data(readedPayload, &readedLen);
+                    givelink_shift_data(READED_PAYLOAD, &readedLen);
                 }
             }
         }
@@ -39,7 +39,7 @@ func GL_SERIAL_poll {
 
     if (GL_SERIAL_received) {
         GL_SERIAL_received = false;
-        GL_SERIAL_parse(readedPayload, len);
+        GL_SERIAL_parse(READED_PAYLOAD, len);
         readedLen = 0;
     }
 }
@@ -282,6 +282,7 @@ obj_buff[MAX_BUFFER_LENGTH] uint8_t
 lastPayloadId uint16_t = 100
 readedLen uint16_t = 0
 readedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
+READED_PAYLOAD = readedPayload
 report_attr_packet_id uint16_t = 0
 report_metric_packet_id uint16_t = 0
 report_timer_ms unsigned long = 4000
@@ -469,8 +470,8 @@ func send_packet() void {
     DEBUG_SERIAL.println();
     {=/ has_debug =}
     {=# low_memory =}
-    givelink_to_binary(readedPayload);
-    send_packet_raw(readedPayload, givelink_get_length());
+    givelink_to_binary(READED_PAYLOAD);
+    send_packet_raw(READED_PAYLOAD, givelink_get_length());
     {=/ low_memory =}
     {=^ low_memory =}
     {=# auto_retry =}
