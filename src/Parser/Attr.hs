@@ -18,6 +18,7 @@ data AttrProperty
     | Keep   !Bool
     | Scale  !Double
     | Prec   !Integer
+    | Event  !String
     deriving (Show, Eq)
 
 -- | Parses gasp property along with the key, "key: value".
@@ -34,6 +35,7 @@ cusL = do
     "gen_set" -> GenSet <$> bool
     "keep"    -> Keep <$> bool
     "prec"    -> Prec <$> integer
+    "event"   -> Event <$> identifier
     _         -> fail $ "no such " ++ key
 
 -- | Parses supported app properties, expects format "key1: value1, key2: value2, ..."
@@ -64,4 +66,5 @@ attr = do
         , Attr.attrScale  = scale
         , Attr.attrPrec   = fromIntegral $ getFromList 2 [t | Prec t <- props]
         , Attr.attrIdx    = 0
+        , Attr.attrEvent  = getFromList "" [t | Event t <- props]
         }

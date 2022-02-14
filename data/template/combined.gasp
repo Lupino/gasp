@@ -696,6 +696,9 @@ func set_attr_{= name =}(json const char *, tokens jsmntok_t *, num_tokens int, 
           return false;
         }
         set_attr_{= name =}_raw(({= type =})tmp);
+        {=# has_event =}
+        {= event =}(({= type =})tmp);
+        {=/ has_event =}
     }
     get_attr_{= name =}(retval);
     return true;
