@@ -7,3 +7,40 @@ func err_data_between(retval char *, min float, max float) bool {
     sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"data must between: [%f, %f]\"}")), min, max);
     return false;
 }
+
+
+func prepare_float(ret float *, retval char *, requestValue char *, min float, max float) bool {
+    int tp = isnum(requestValue);
+    if (tp == -1) {
+        return err_only_support_number(retval);
+    }
+    float tmp;
+    if (tp == 0) {
+        tmp = (float)atol(requestValue);
+    } else {
+        tmp = (float)atof(requestValue);
+    }
+    if (!is_valid_float(tmp, min, max)) {
+        return err_data_between(retval, min, max);
+    }
+    *ret = tmp;
+    return true;
+}
+
+func prepare_long(ret long *, retval char *, requestValue char *, min long, max long) bool {
+    int tp = isnum(requestValue);
+    if (tp == -1) {
+        return err_only_support_number(retval);
+    }
+    long tmp;
+    if (tp == 0) {
+        tmp = (long)atol(requestValue);
+    } else {
+        tmp = (long)atof(requestValue);
+    }
+    if (tmp < min || tmp > max) {
+        return err_data_between(retval, min, max);
+    }
+    *ret = tmp;
+    return true;
+}

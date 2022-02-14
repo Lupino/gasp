@@ -667,31 +667,19 @@ func set_attr_{= name =}_raw(unscaled_value {= type =}) void {
     {=/ keep =}
 }
 
+
 func set_attr_{= name =}(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
     if (jsonlookup(json, tokens, num_tokens, FROM_ROM(TO_ROM("data")), requestValue)) {
-        int tp = isnum(requestValue);
-        if (tp == -1) {
-            return err_only_support_number(retval);
-        }
         {=# is_float =}
         float tmp;
-        if (tp == 0) {
-            tmp = (float)atol(requestValue);
-        } else {
-            tmp = (float)atof(requestValue);
-        }
-        if (!is_valid_float(tmp, {= min =}, {= max =})) {
+        bool r = prepare_float(&tmp, retval, requestValue, {= min =}, {= max =});
         {=/ is_float =}
         {=^ is_float =}
         long tmp;
-        if (tp == 0) {
-            tmp = (long)atol(requestValue);
-        } else {
-            tmp = (long)atof(requestValue);
-        }
-        if (tmp < {= min =} || tmp > {= max =}) {
+        bool r = prepare_long(&tmp, retval, requestValue, {= min =}, {= max =});
         {=/ is_float =}
-            return err_data_between(retval, {= min =}, {= max =});
+        if (!r) {
+            return false;
         }
         set_attr_{= name =}_raw(({= type =})tmp);
         {=# has_event =}
@@ -760,29 +748,16 @@ setup setup_metric_{= name =} {
 
 func set_metric_{= name =}_threshold(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
     if (jsonlookup(json, tokens, num_tokens, FROM_ROM(TO_ROM("data")), requestValue)) {
-        int tp = isnum(requestValue);
-        if (tp == -1) {
-            return err_only_support_number(retval);
-        }
         {=# is_float =}
         float tmp;
-        if (tp == 0) {
-            tmp = (float)atol(requestValue);
-        } else {
-            tmp = (float)atof(requestValue);
-        }
-        if (!is_valid_float(tmp, {= min_threshold =}, {= max_threshold =})) {
+        bool r = prepare_float(&tmp, retval, requestValue, {= min =}, {= max =});
         {=/ is_float =}
         {=^ is_float =}
         long tmp;
-        if (tp == 0) {
-            tmp = (long)atol(requestValue);
-        } else {
-            tmp = (long)atof(requestValue);
-        }
-        if (tmp < {= min_threshold =} || tmp > {= max_threshold =}) {
+        bool r = prepare_long(&tmp, retval, requestValue, {= min =}, {= max =});
         {=/ is_float =}
-            return err_data_between(retval, {= min =}, {= max =});
+        if (!r) {
+            return false;
         }
         metric_{= name =}_threshold = ({= type =})tmp;
         metric_{= name =}_threshold_force = true;
