@@ -1,3 +1,125 @@
+TO_ROM = F
+func FROM_ROM(ifsh const __FlashStringHelper *) char * {
+    PGM_P p = reinterpret_cast<PGM_P>(ifsh);
+    size_t n = 0;
+    while (n < MAX_TMPL_LENGTH) {
+        unsigned char c = pgm_read_byte(p++);
+        wantSendDataTpl[n] = c;
+        n++;
+        if (c == 0) break;
+    }
+    return wantSendDataTpl;
+}
+
+func ltrim(s char *) char * {
+  while (*s == ' ') s++;
+  return s;
+}
+
+func jsoneq(json const char *, token jsmntok_t *, s const char *) bool {
+  if (token->type == JSMN_STRING && (int)strlen(s) == token->end - token->start &&
+      strncmp(json + token->start, s, token->end - token->start) == 0) {
+    return true;
+  }
+  return false;
+}
+
+func jsonfind(json const char *, tokens jsmntok_t *, num_tokens int, name const char *) int {
+    /* Assume the top-level element is an object */
+    if (num_tokens < 1 || tokens[0].type != JSMN_OBJECT) {
+      return 0;
+    }
+    /* Loop over all keys of the root object */
+    for (int i = 1; i < num_tokens; i++) {
+        if (jsoneq(json, &tokens[i], name)) {
+            return i + 1;
+        }
+    }
+    return 0;
+}
+
+func jsonlookup(json const char *, tokens jsmntok_t *, num_tokens int, name const char *, value char *) bool {
+    int token = jsonfind(json, tokens, num_tokens, name);
+
+    if (token > 1) {
+        memcpy(value, json+tokens[token].start, tokens[token].end - tokens[token].start);
+        value[tokens[token].end - tokens[token].start] = '\0';
+        return true;
+    }
+    return false;
+}
+
+func merge_json(dst char *, src char *, total_length int *) void {
+    src[0] = ' ';
+    // fix compile error {
+    while (*src != '}') {
+        dst[*total_length]=*src++;
+        *total_length += 1;
+    }
+    dst[*total_length] = ',';
+    *total_length += 1;
+}
+
+func get_json_length(src const char *) int {
+    int length = 1;
+    // fix compile error {
+    while (*src != '}') {
+        *src++;
+        length += 1;
+    }
+    return length;
+}
+
+// -1 non num
+//  0 int
+//  1 float
+func isnum(buf const char *) int {
+    int length = strlen(buf);
+
+    if (length == 0) {
+        return -1;
+    }
+
+    if (!isdigit(buf[0])) {
+        if (length == 1) {
+            return -1;
+        }
+        if (buf[0] != '-') {
+            return -1;
+        }
+    }
+
+    if (buf[0] != '-' && !isdigit(buf[0])) {
+        return -1;
+    }
+
+    int f = 0;
+
+    for (int i = 1; i < length; i++) {
+        if (!isdigit(buf[i])) {
+            if (buf[i] == '.') {
+                if (f == 1) {
+                    return -1;
+                } else {
+                    f = 1;
+                }
+            } else {
+                return -1;
+            }
+        }
+    }
+
+    return f;
+}
+
+func is_valid_float(number float, min float, max float) bool {
+    if (isnan(number)) return false;
+    if (isinf(number)) return false;
+    if (number > max) return false;  // constant determined empirically
+    if (number < min) return false;  // constant determined empirically
+    return true;
+}
+
 func err_only_support_number(retval char *) bool {
     sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"data only support number\"}")));
     return false;
