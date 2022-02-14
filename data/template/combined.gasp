@@ -677,14 +677,9 @@ func check_metric_{= name =}() bool {
     {=/ is_float =}
 }
 
-func invalid_metric_{= name =}_error(retval char *) bool {
-    sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"{= name =} is invalid\"}")));
-    return false;
-}
-
 func get_metric_{= name =}(retval char *) bool {
     if (!check_metric_{= name =}()) {
-        return invalid_metric_{= name =}_error(retval);
+        return err_invalid(retval);
     }
     {=^ is_float =}
     {=# is_long =}

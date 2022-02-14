@@ -130,6 +130,11 @@ func err_data_between(retval char *, min float, max float) bool {
     return false;
 }
 
+func err_invalid(retval char *) bool {
+    sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"invalid\"}")));
+    return false;
+}
+
 
 func prepare_float(ret float *, retval char *, requestValue char *, min float, max float) bool {
     int tp = isnum(requestValue);
