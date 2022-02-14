@@ -671,8 +671,7 @@ func set_attr_{= name =}(json const char *, tokens jsmntok_t *, num_tokens int, 
     if (jsonlookup(json, tokens, num_tokens, FROM_ROM(TO_ROM("data")), requestValue)) {
         int tp = isnum(requestValue);
         if (tp == -1) {
-            sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"data only support number\"}")));
-            return false;
+            return err_only_support_number(retval);
         }
         {=# is_float =}
         float tmp;
@@ -692,8 +691,7 @@ func set_attr_{= name =}(json const char *, tokens jsmntok_t *, num_tokens int, 
         }
         if (tmp < {= min =} || tmp > {= max =}) {
         {=/ is_float =}
-          sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"data must between: [{= min =}, {= max =}]\"}")));
-          return false;
+            return err_data_between(retval, {= min =}, {= max =});
         }
         set_attr_{= name =}_raw(({= type =})tmp);
         {=# has_event =}
@@ -764,8 +762,7 @@ func set_metric_{= name =}_threshold(json const char *, tokens jsmntok_t *, num_
     if (jsonlookup(json, tokens, num_tokens, FROM_ROM(TO_ROM("data")), requestValue)) {
         int tp = isnum(requestValue);
         if (tp == -1) {
-            sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"data only support number\"}")));
-            return false;
+            return err_only_support_number(retval);
         }
         {=# is_float =}
         float tmp;
@@ -785,8 +782,7 @@ func set_metric_{= name =}_threshold(json const char *, tokens jsmntok_t *, num_
         }
         if (tmp < {= min_threshold =} || tmp > {= max_threshold =}) {
         {=/ is_float =}
-          sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"data must between: [{= min_threshold =}, {= max_threshold =}]\"}")));
-          return false;
+            return err_data_between(retval, {= min =}, {= max =});
         }
         metric_{= name =}_threshold = ({= type =})tmp;
         metric_{= name =}_threshold_force = true;
@@ -1805,3 +1801,5 @@ func {= name =}_write() void {
 }
 
 {=/ uarts =}
+
+require ./utils

@@ -1,0 +1,9 @@
+func err_only_support_number(retval char *) bool {
+    sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"data only support number\"}")));
+    return false;
+}
+
+func err_data_between(retval char *, min float, max float) bool {
+    sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"data must between: [%f, %f]\"}")), min, max);
+    return false;
+}
