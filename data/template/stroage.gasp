@@ -1,0 +1,13 @@
+{{={= =}=}}
+
+{=^ disable_eeprom =}
+import <EEPROM.h>
+{=/ disable_eeprom =}
+
+STROAGE_READ = EEPROM.read
+STROAGE_WRITE = EEPROM.write
+STROAGE_GET = EEPROM.get
+STROAGE_PUT = EEPROM.put
+STROAGE_COMMIT = noop
+
+func noop() {}

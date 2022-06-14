@@ -2,17 +2,10 @@
 {=# has_app =}
 import <givelink.h> https://github.com/Lupino/givelink.git
 import <jsmn.h> https://github.com/zserge/jsmn.git
-import <EEPROM.h>
 GL_SERIAL_availabled_timer_ms unsigned long = 0
 GL_SERIAL_received_timer_ms unsigned long = 0
 GL_SERIAL_received bool = false
 packet_sended bool = true;
-
-setup a_setup_eeprom {
-    #ifdef EEPROM_SIZE
-    EEPROM.begin(EEPROM_SIZE);
-    #endif
-}
 
 loop givelink_loop {
     GL_SERIAL_poll();
@@ -185,9 +178,6 @@ MAX_NUM_TOKENS = 12
 MAX_REQUEST_VALUE_LENGTH = {= max_req_len =}
 MAX_TMPL_LENGTH = {= max_tpl_len =}
 
-// EEPROM_SIZE = 1024
-// EEPROM_NEED_COMMIT
-
 ping_timer_ms  unsigned long = 0
 ping_packet_id uint16_t = 0
 ping_failed uint8_t = 0
@@ -207,7 +197,7 @@ addr[{= addr_len =}] uint8_t = {{= addr_hex_array =}}
 
 func load_addr() {
     for (int i = 0; i < {= addr_len =}; i ++) {
-        addr[i] = EEPROM.read({= addr_addr =} + i);
+        addr[i] = STROAGE_READ({= addr_addr =} + i);
     }
     givelink_context_set_addr(addr, {= addr_len =});
     givelink_context_set_auth(true);
@@ -218,7 +208,7 @@ func setup_givelink {
     givelink_context_set_key(key, {= key_len =});
     {=# production =}
     for (int i = 0; i < {= token_len =}; i ++) {
-        token[i] = EEPROM.read({= token_addr =} + i);
+        token[i] = STROAGE_READ({= token_addr =} + i);
     }
     {=/ production =}
     givelink_context_set_token(token, {= token_len =});
@@ -235,21 +225,17 @@ setup setup_givelink {
 func save_addr {
     {=# production =}
     for (int i = 0; i < {= addr_len =}; i ++) {
-        EEPROM.write({= addr_addr =} + i, obj.data[i]);
+        STROAGE_WRITE({= addr_addr =} + i, obj.data[i]);
     }
-    #ifdef EEPROM_NEED_COMMIT
-    EEPROM.commit();
-    #endif
+    STROAGE_COMMIT();
     {=/ production =}
 }
 
 func save_token {
     for (int i = 0; i < {= token_len =}; i ++) {
-        EEPROM.write({= token_addr =} + i, obj.data[i]);
+        STROAGE_WRITE({= token_addr =} + i, obj.data[i]);
     }
-    #ifdef EEPROM_NEED_COMMIT
-    EEPROM.commit();
-    #endif
+    STROAGE_COMMIT();
     setup_givelink();
 }
 
@@ -505,10 +491,10 @@ attr_{= name =}_reported bool = false
 {=# keep =}
 setup setup_attr_{= name =} {
     {=# onebyte =}
-    attr_{= name =} = EEPROM.read({= addr =});
+    attr_{= name =} = STROAGE_READ({= addr =});
     {=/ onebyte =}
     {=^ onebyte =}
-    EEPROM.get({= addr =}, attr_{= name =});
+    STROAGE_GET({= addr =}, attr_{= name =});
     {=/ onebyte =}
     {=# is_float =}
     if (!is_valid_float(attr_{= name =}, {= scaled_min =}, {= scaled_max =})) {
@@ -532,14 +518,12 @@ func set_attr_{= name =}_raw(unscaled_value {= type =}) void {
     attr_{= name =} = unscaled_value * {= scale =};
     {=# keep =}
     {=# onebyte =}
-    EEPROM.write({= addr =}, attr_{= name =});
+    STROAGE_WRITE({= addr =}, attr_{= name =});
     {=/ onebyte =}
     {=^ onebyte =}
-    EEPROM.put({= addr =}, attr_{= name =});
+    STROAGE_PUT({= addr =}, attr_{= name =});
     {=/ onebyte =}
-    #ifdef EEPROM_NEED_COMMIT
-    EEPROM.commit();
-    #endif
+    STROAGE_COMMIT();
     {=/ keep =}
 }
 
@@ -601,10 +585,10 @@ metric_{= name =}_threshold_reported bool = false
 {=# has_app =}
 setup setup_metric_{= name =} {
     {=# onebyte =}
-    metric_{= name =}_threshold = EEPROM.read({= addr =});
+    metric_{= name =}_threshold = STROAGE_READ({= addr =});
     {=/ onebyte =}
     {=^ onebyte =}
-    EEPROM.get({= addr =}, metric_{= name =}_threshold);
+    STROAGE_GET({= addr =}, metric_{= name =}_threshold);
     {=/ onebyte =}
     {=# is_float =}
     if (!is_valid_float(metric_{= name =}_threshold, {= min_threshold =}, {= max_threshold =})) {
@@ -638,14 +622,12 @@ func set_metric_{= name =}_threshold(json const char *, tokens jsmntok_t *, num_
         metric_{= name =}_threshold = ({= type =})tmp;
         metric_{= name =}_threshold_force = true;
         {=# onebyte =}
-        EEPROM.write({= addr =}, metric_{= name =}_threshold);
+        STROAGE_WRITE({= addr =}, metric_{= name =}_threshold);
         {=/ onebyte =}
         {=^ onebyte =}
-        EEPROM.put({= addr =}, metric_{= name =}_threshold);
+        STROAGE_PUT({= addr =}, metric_{= name =}_threshold);
         {=/ onebyte =}
-        #ifdef EEPROM_NEED_COMMIT
-        EEPROM.commit();
-        #endif
+        STROAGE_COMMIT();
     }
     get_metric_{= name =}_threshold(retval);
     return true;
@@ -1090,20 +1072,18 @@ func set_timer_raw(json const char *, tokens jsmntok_t *, num_tokens int, addr0 
             timer_period_s = MAX_TIMER_PERIOD - 100;
         }
 
-        EEPROM.put(addr0, timer_schedat_s);
-        EEPROM.put(addr1, timer_period_s);
-        EEPROM.put(addr2, timer_duration_s);
-        #ifdef EEPROM_NEED_COMMIT
-        EEPROM.commit();
-        #endif
+        STROAGE_PUT(addr0, timer_schedat_s);
+        STROAGE_PUT(addr1, timer_period_s);
+        STROAGE_PUT(addr2, timer_duration_s);
+        STROAGE_COMMIT();
         swap_timer_event(get_cache_time_ms() + 5);
     }
 }
 
 func get_timer_raw(addr0 int, addr1 int, addr2 int, retval char *) bool {
-    EEPROM.get(addr0, timer_schedat_s);
-    EEPROM.get(addr1, timer_period_s);
-    EEPROM.get(addr2, timer_duration_s);
+    STROAGE_GET(addr0, timer_schedat_s);
+    STROAGE_GET(addr1, timer_period_s);
+    STROAGE_GET(addr2, timer_duration_s);
     sprintf(retval, FROM_ROM(TO_ROM("{\"sched_at\": %ld, \"period\": %ld, \"duration\": %ld}")), timer_schedat_s, timer_period_s, timer_duration_s);
     return true;
 }
@@ -1132,10 +1112,8 @@ func finishTimer(addr0 int, addr2 int, sched bool *) void {
         }
         if (timer_period_s > timer_duration_s && timer_period_s < MAX_TIMER_PERIOD) {
             timer_schedat_s += timer_period_s;
-            EEPROM.put(addr0, timer_schedat_s);
-            #ifdef EEPROM_NEED_COMMIT
-            EEPROM.commit();
-            #endif
+            STROAGE_PUT(addr0, timer_schedat_s);
+            STROAGE_COMMIT();
             timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_synced_ms;
         } else {
             stopTimer(addr2);
@@ -1155,10 +1133,8 @@ func startTimer(addr0 int, addr2 int, sched bool *) void {
 }
 
 func stopTimer(addr2 int) void {
-    EEPROM.put(addr2, 0);
-    #ifdef EEPROM_NEED_COMMIT
-    EEPROM.commit();
-    #endif
+    STROAGE_PUT(addr2, 0);
+    STROAGE_COMMIT();
 }
 
 func processTimer(addr0 int, addr1 int, addr2 int, sched bool *) void {
@@ -1169,9 +1145,9 @@ func processTimer(addr0 int, addr1 int, addr2 int, sched bool *) void {
 
 func processTimer0(addr0 int, addr1 int, addr2 int, sched bool *) void {
     timer_action = 0;
-    EEPROM.get(addr0, timer_schedat_s);
-    EEPROM.get(addr1, timer_period_s);
-    EEPROM.get(addr2, timer_duration_s);
+    STROAGE_GET(addr0, timer_schedat_s);
+    STROAGE_GET(addr1, timer_period_s);
+    STROAGE_GET(addr2, timer_duration_s);
 
     if (*sched) {
         finishTimer(addr0, addr2, sched);
@@ -1199,10 +1175,8 @@ func processTimer0(addr0 int, addr1 int, addr2 int, sched bool *) void {
                 stopTimer(addr2);
                 return;
             } else {
-                EEPROM.put(addr0, timer_schedat_s);
-                #ifdef EEPROM_NEED_COMMIT
-                EEPROM.commit();
-                #endif
+                STROAGE_PUT(addr0, timer_schedat_s);
+                STROAGE_COMMIT();
             }
         } else {
             startTimer(addr0, addr2, sched);
@@ -1649,3 +1623,4 @@ func {= name =}_write() void {
 {=/ uarts =}
 
 require ./utils
+require ./stroage
