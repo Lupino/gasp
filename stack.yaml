@@ -18,7 +18,7 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver: lts-18.13
+resolver: lts-19.9
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -37,11 +37,7 @@ packages:
 - .
 
 extra-deps:
-- aeson-2.0.1.0
-- semialign-1.2
-- yaml-0.11.7.0
-- git: https://github.com/Lupino/mustache.git
-  commit: d3a01729f1cff9f2a93b6e9551392f3cae91c11d
+- mustache-2.4.1@sha256:dc92ddbf90e3a64c3f2ec7785cf2937d6dcf6ffcebbc38ad9c8b33b6a70bb298,3180
 # Dependency packages to be pulled from upstream that are not in the resolver
 # using the same syntax as the packages field.
 # (e.g., acme-missiles-0.3)

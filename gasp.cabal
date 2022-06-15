@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 95960ce2dd9b59cd8fd24eb476f123d2a4242e636684da123077cd87ffad3cb5
+-- hash: 4d8140395038a2548a8677ce785946ef21786c9e63a285679304ac8ff839d2b0
 
 name:           gasp
 version:        0.1.0.1
@@ -27,6 +27,8 @@ data-files:
     template/config.mk
     template/doc.md
     template/Makefile
+    template/stroage.gasp
+    template/utils.gasp
 data-dir:       data/
 
 source-repository head
