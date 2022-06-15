@@ -54,10 +54,11 @@ metric = do
     let tp = getFromList (DataType "float") [t | Type t <- props]
         tpMax = maxValue tp
         tpMin = minValue tp
+        prec = fromIntegral $ getFromList 2 [t | Prec t <- props]
         maxv = min tpMax $ getFromList (maxValue tp) [t | Max t <- props]
         minv = max tpMin $ getFromList (minValue tp) [t | Min t <- props]
         maxt = (maxv - minv) / 2
-        mint = maxt / 50
+        mint = max (10 ^^ (0-prec)) (maxt / 50)
 
     return Metric.Metric
         { Metric.metricName         = Metric.MetricName metricName
@@ -67,7 +68,7 @@ metric = do
         , Metric.metricMaxThreshold = min maxv $ getFromList maxt [t | MaxThreshold t <- props]
         , Metric.metricMinThreshold = max minv $ getFromList mint [t | MinThreshold t <- props]
         , Metric.metricThreshold    = getFromList mint [t | Threshold t <- props]
-        , Metric.metricPrec         = fromIntegral $ getFromList 2 [t | Prec t <- props]
+        , Metric.metricPrec         = prec
         , Metric.metricAddr         = 0
         , Metric.metricAuto         = isAuto props
         , Metric.metricIdx          = 0
