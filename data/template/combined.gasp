@@ -610,11 +610,11 @@ func set_metric_{= name =}_threshold(json const char *, tokens jsmntok_t *, num_
     if (jsonlookup(json, tokens, num_tokens, FROM_ROM(TO_ROM("data")), requestValue)) {
         {=# is_float =}
         float tmp;
-        bool r = prepare_float(&tmp, retval, requestValue, {= min =}, {= max =});
+        bool r = prepare_float(&tmp, retval, requestValue, {= min_threshold =}, {= max_threshold =});
         {=/ is_float =}
         {=^ is_float =}
         long tmp;
-        bool r = prepare_long(&tmp, retval, requestValue, {= min =}, {= max =});
+        bool r = prepare_long(&tmp, retval, requestValue, {= min_threshold =}, {= max_threshold =});
         {=/ is_float =}
         if (!r) {
             return false;
