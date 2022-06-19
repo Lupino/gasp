@@ -21,7 +21,11 @@ $(TARGET_APP): $(TARGET_INO) $(LIBRARIES)
 else
 $(TARGET_APP): $(TARGET_INO) $(LIBRARIES)
 	$(ARDUINO_COMPILE) $(dir $<)
-	cp $(BUILD_PATH)/$(notdir $<).with_bootloader.hex $@
+	@if [ -f $(BUILD_PATH)/$(notdir $<).with_bootloader.hex ]; then \
+        cp $(BUILD_PATH)/$(notdir $<).with_bootloader.hex $@; \
+    else \
+        cp $(BUILD_PATH)/$(notdir $<).hex $@; \
+    fi
 endif
 
 upload:
