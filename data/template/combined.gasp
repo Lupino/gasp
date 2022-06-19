@@ -1,6 +1,6 @@
 {{={= =}=}}
 {=# has_app =}
-import <givelink.h> https://github.com/Lupino/givelink.git
+import <givelink_raw.h> https://github.com/Lupino/givelink.git
 import <jsmn.h> https://github.com/zserge/jsmn.git
 GL_SERIAL_availabled_timer_ms unsigned long = 0
 GL_SERIAL_received_timer_ms unsigned long = 0
@@ -19,7 +19,7 @@ func GL_SERIAL_poll {
             if (GL_SERIAL_received) {
                 GL_SERIAL.read();
             } else {
-                GL_SERIAL_received = givelink_recv(READED_PAYLOAD, &readedLen, GL_SERIAL.read());
+                GL_SERIAL_received = givelink_raw_recv(READED_PAYLOAD, &readedLen, GL_SERIAL.read());
                 if (readedLen >= MAX_GL_PAYLOAD_LENGTH) {
                     {=# has_debug =}
                     DEBUG_SERIAL.println(TO_ROM("Error: payload to large"));
@@ -32,109 +32,133 @@ func GL_SERIAL_poll {
 
     if (GL_SERIAL_received) {
         GL_SERIAL_received = false;
-        GL_SERIAL_parse(READED_PAYLOAD, readedLen);
+        if (is_self(READED_PAYLOAD, readedLen)) {
+            GL_SERIAL_parse(READED_PAYLOAD, readedLen);
+        }
         readedLen = 0;
     }
 }
 
 func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
     GL_SERIAL_received_timer_ms = get_current_time_ms();
+    givelink_type = givelink_raw_get_type(buffer);
+    givelink_id = givelink_raw_get_id(buffer);
+    givelink_raw_get_data(buffer, PACKET_DATA, &packet_data_length);
+    PACKET_DATA[packet_data_length] = '\0';
     {=# ctrl_mode =}
     packet_sended = false;
     {=/ ctrl_mode =}
-    if (givelink_from_binary(buffer, len)) {
-        {=# has_debug =}
-        DEBUG_SERIAL.print(TO_ROM("Recv Id: "));
-        DEBUG_SERIAL.print(obj.id);
-        DEBUG_SERIAL.print(TO_ROM(" Type: "));
-        DEBUG_SERIAL.print(obj.type);
-        if (obj.length > PACKET_TYPE_LENGTH) {
-            DEBUG_SERIAL.print(TO_ROM(" Data: "));
-            for (uint16_t i = 0; i < obj.length - PACKET_TYPE_LENGTH; i ++) {
-                DEBUG_SERIAL.write(obj.data[i]);
-            }
+    {=# has_debug =}
+    DEBUG_SERIAL.print(TO_ROM("Recv Id: "));
+    DEBUG_SERIAL.print(givelink_id);
+    DEBUG_SERIAL.print(TO_ROM(" Type: "));
+    DEBUG_PRINT_TYPE(givelink_type);
+    if (packet_data_length > 0) {
+        DEBUG_SERIAL.print(TO_ROM(" Data Length: "));
+        DEBUG_SERIAL.print(packet_data_length);
+        DEBUG_SERIAL.print(TO_ROM(" Data: "));
+        for (uint16_t i = 0; i < packet_data_length; i ++) {
+            DEBUG_SERIAL.write(PACKET_DATA[i]);
         }
+        DEBUG_SERIAL.print(TO_ROM(" Data HEX: "));
+        DEBUG_PRINT_HEX(PACKET_DATA, packet_data_length);
+    } else {
         DEBUG_SERIAL.println();
+    }
+    DEBUG_PRINT_HEX(buffer, len);
 
-        {=/ has_debug =}
-        if (obj.type == AUTHRES) {
-            save_addr();
+    {=/ has_debug =}
+    if (givelink_type == AUTHRES) {
+        {=# app =}
+        for (int i = 0; i < {= addr_len =}; i ++) {
+            givelink_addr[i] = PACKET_DATA[i];
         }
-        if (obj.type == GETSETTOKEN) {
-            {=# production =}
-            if (obj.length > PACKET_TYPE_LENGTH) {
-                save_token();
-            }
-            {=/ production =}
-            send_token();
+        {=/ app =}
+        givelink_authed = true;
+        save_addr();
+        {=# low_memory =}
+        incrLastPayloadId();
+        {=/ low_memory =}
+    }
+    if (givelink_type == GETSETTOKEN) {
+        {=# production =}
+        if (packet_data_length > 0) {
+            save_token();
         }
-        if (obj.type == REQUEST) {
-            wantSendData[0] = '\0';
-            bool ret = processRequest((const char *)obj.data, givelink_get_data_length(), wantSendData);
-            if (wantSendData[0] == '\0') {
-                if (ret) {
-                    sprintf(wantSendData, FROM_ROM(TO_ROM("{\"result\": \"OK\"}")));
-                } else {
-                    sprintf(wantSendData, FROM_ROM(TO_ROM("{\"err\": \"not support\"}")));
-                }
+        {=/ production =}
+        send_token();
+    }
+    if (givelink_type == REQUEST) {
+        wantSendData[0] = '\0';
+        bool ret = processRequest((const char *)PACKET_DATA, packet_data_length, wantSendData);
+        if (wantSendData[0] == '\0') {
+            if (ret) {
+                sprintf(wantSendData, FROM_ROM(TO_ROM("{\"result\": \"OK\"}")));
+            } else {
+                sprintf(wantSendData, FROM_ROM(TO_ROM("{\"err\": \"not support\"}")));
             }
-            send_packet_rsp(wantSendData);
         }
-        if (obj.type == SUCCESS) {
-            ping_failed = 0;
-            if (lastPayloadId == ping_packet_id) {
-                ping_timer_ms = get_cache_time_ms();
-                {=# low_memory =}
-                incrLastPayloadId();
-                {=/ low_memory =}
-            }
-            {=^ low_memory =}
-            {=# auto_retry =}
-            if (lastPayloadId == report_attr_packet_id) {
-                need_retry = false;
-            }
-            if (lastPayloadId == report_metric_packet_id) {
-                need_retry = false;
-            }
-            {=/ auto_retry =}
-            {=/ low_memory =}
+        send_packet_rsp(wantSendData);
+    }
+    if (givelink_type == SUCCESS) {
+        ping_failed = 0;
+        if (lastPayloadId == ping_packet_id) {
+            ping_timer_ms = get_cache_time_ms();
             {=# low_memory =}
-            if (lastPayloadId == report_attr_packet_id) {
-                doneReportAttribute();
-                incrLastPayloadId();
-            }
-            {=# has_metric =}
-            if (lastPayloadId == report_metric_packet_id) {
-                doneReportMetric();
-                incrLastPayloadId();
-            }
-            {=/ has_metric =}
+            incrLastPayloadId();
             {=/ low_memory =}
         }
-        {=# has_timer =}
-        if (obj.type == SYNCTIME) {
-            sys_timer_s = (uint32_t)atol((const char *)obj.data);
-            sys_timer_synced_ms = get_cache_time_ms();
-        }
-        {=/ has_timer =}
+        {=^ low_memory =}
+        {=# auto_retry =}
         {=# ctrl_mode =}
-        if (obj.type == CTRLREQ) {
-            mainAction();
-            send_packet_0(CTRLRES);
+        if (lastPayloadId == report_attr_packet_id) {
+            need_retry = false;
         }
-        if (obj.type == CTRLREQ1) {
-            mainAction();
-            if (report_timer_ms + REPORT_DELAY_MS < get_cache_time_ms()) {
-                send_packet_0(PING);
-            }
-            send_packet_0(CTRLRES);
+        if (lastPayloadId == report_metric_packet_id) {
+            need_retry = false;
         }
         {=/ ctrl_mode =}
+        {=^ ctrl_mode =}
+        need_retry = false;
+        {=/ ctrl_mode =}
+        {=/ auto_retry =}
+        {=/ low_memory =}
+        {=# low_memory =}
+        if (lastPayloadId == report_attr_packet_id) {
+            doneReportAttribute();
+            incrLastPayloadId();
+        }
+        {=# has_metric =}
+        if (lastPayloadId == report_metric_packet_id) {
+            doneReportMetric();
+            incrLastPayloadId();
+        }
+        {=/ has_metric =}
+        {=/ low_memory =}
     }
+    {=# has_timer =}
+    if (givelink_type == SYNCTIME) {
+        sys_timer_s = (uint32_t)atol((const char *)PACKET_DATA);
+        sys_timer_synced_ms = get_cache_time_ms();
+    }
+    {=/ has_timer =}
+    {=# ctrl_mode =}
+    if (givelink_type == CTRLREQ) {
+        mainAction();
+        send_packet_0(CTRLRES);
+    }
+    if (givelink_type == CTRLREQ1) {
+        mainAction();
+        if (report_timer_ms + REPORT_DELAY_MS < get_cache_time_ms()) {
+            send_packet_0(PING);
+        }
+        send_packet_0(CTRLRES);
+    }
+    {=/ ctrl_mode =}
 }
 
 func GL_SERIAL_main {
-    if (!givelink_context_authed()) {
+    if (!givelink_authed) {
         requireReportAttribute = true;
         if (auth_timer_ms + AUTH_DELAY_MS < get_cache_time_ms()) {
             {=# ctrl_mode =}
@@ -182,9 +206,7 @@ ping_timer_ms  unsigned long = 0
 ping_packet_id uint16_t = 0
 ping_failed uint8_t = 0
 
-ctx givelink_context_t
 {=# app =}
-ctx_buff[{= context_len =}] uint8_t
 key[{= key_len =}] const uint8_t = {{= key_hex_array =}}
 {=# production =}
 token[{= token_len =}] uint8_t
@@ -197,25 +219,20 @@ addr[{= addr_len =}] uint8_t = {{= addr_hex_array =}}
 
 func load_addr() {
     for (int i = 0; i < {= addr_len =}; i ++) {
-        addr[i] = STROAGE_READ({= addr_addr =} + i);
+        givelink_addr[i] = STROAGE_READ({= addr_addr =} + i);
     }
-    givelink_context_set_addr(addr, {= addr_len =});
-    givelink_context_set_auth(true);
+    givelink_authed = true;
 }
 
 func setup_givelink {
-    givelink_context_init(&ctx, ctx_buff);
-    givelink_context_set_key(key, {= key_len =});
     {=# production =}
     for (int i = 0; i < {= token_len =}; i ++) {
         token[i] = STROAGE_READ({= token_addr =} + i);
     }
     {=/ production =}
-    givelink_context_set_token(token, {= token_len =});
     {=# production =}
     load_addr();
     {=/ production =}
-    givelink_init(&obj);
 }
 
 setup setup_givelink {
@@ -225,7 +242,7 @@ setup setup_givelink {
 func save_addr {
     {=# production =}
     for (int i = 0; i < {= addr_len =}; i ++) {
-        STROAGE_WRITE({= addr_addr =} + i, obj.data[i]);
+        STROAGE_WRITE({= addr_addr =} + i, PACKET_DATA[i]);
     }
     STROAGE_COMMIT();
     {=/ production =}
@@ -233,7 +250,7 @@ func save_addr {
 
 func save_token {
     for (int i = 0; i < {= token_len =}; i ++) {
-        STROAGE_WRITE({= token_addr =} + i, obj.data[i]);
+        STROAGE_WRITE({= token_addr =} + i, PACKET_DATA[i]);
     }
     STROAGE_COMMIT();
     setup_givelink();
@@ -256,13 +273,20 @@ func send_token() {
         idx ++;
     }
 
-    givelink_set_type(GETSETTOKEN);
-    givelink_set_data(buf, idx);
+    givelink_type = GETSETTOKEN;
+    memcpy(PACKET_DATA, buf, idx);
+    packet_data_length = idx;
     send_packet();
 }
 {=/ app =}
 
-obj givelink_t
+givelink_authed bool = true
+givelink_type uint8_t
+packet_data[MAX_BUFFER_LENGTH] uint8_t
+PACKET_DATA = packet_data
+packet_data_length uint16_t
+givelink_addr[4] uint8_t
+givelink_id uint8_t
 
 lastPayloadId uint16_t = 100
 readedLen uint16_t = 0
@@ -382,6 +406,96 @@ func send_packet_raw(buf uint8_t *, length uint16_t) void {
     GL_SERIAL.write('\r');
     GL_SERIAL.write('\n');
     GL_SERIAL.flush();
+    {=# has_debug =}
+    DEBUG_PRINT_HEX(buf, length);
+    {=/ has_debug =}
+}
+
+
+func gen_packet(pkt uint8_t *) {
+    givelink_raw_set_magic(pkt);
+    if (givelink_authed) {
+        givelink_raw_set_key(pkt, givelink_addr, 4);
+        givelink_raw_set_token(pkt, NULL, 0);
+    } else {
+        {=# app =}
+        givelink_raw_set_key(pkt, key, {= key_len =});
+        givelink_raw_set_token(pkt, token, {= token_len =});
+        {=/ app =}
+    }
+    givelink_raw_set_id(pkt, givelink_id);
+    givelink_raw_set_type(pkt, givelink_type);
+    givelink_raw_set_data(pkt, PACKET_DATA, packet_data_length);
+    givelink_raw_set_crc16(pkt);
+}
+
+func is_self(buffer const uint8_t *, len const int) bool {
+    givelink_raw_get_key(buffer, PACKET_DATA, &packet_data_length);
+
+    {=# app =}
+    if (packet_data_length == {= addr_len =} && equal(PACKET_DATA, givelink_addr, packet_data_length)) {
+        return true;
+    }
+
+    if (packet_data_length == {= key_len =} && equal(PACKET_DATA, key, packet_data_length)) {
+        givelink_raw_get_token(buffer, PACKET_DATA, &packet_data_length);
+        if (packet_data_length == {= token_len =} && equal(PACKET_DATA, token, packet_data_length)) {
+            return true;
+        }
+    }
+    {=/ app =}
+
+    return false;
+}
+
+func DEBUG_PRINT_TYPE(type uint8_t) {
+    if (type == REQUEST) {
+        DEBUG_SERIAL.print("REQUEST");
+    } else if (type == RESPONSE) {
+        DEBUG_SERIAL.print("RESPONSE");
+    } else if (type == ATTRIBUTE) {
+        DEBUG_SERIAL.print("ATTRIBUTE");
+    } else if (type == TELEMETRY) {
+        DEBUG_SERIAL.print("TELEMETRY");
+    } else if (type == PING) {
+        DEBUG_SERIAL.print("PING");
+    } else if (type == SUCCESS) {
+        DEBUG_SERIAL.print("SUCCESS");
+    } else if (type == ERROR) {
+        DEBUG_SERIAL.print("ERROR");
+    } else if (type == AUTHREQ) {
+        DEBUG_SERIAL.print("AUTHREQ");
+    } else if (type == AUTHRES) {
+        DEBUG_SERIAL.print("AUTHRES");
+    } else if (type == TRNS) {
+        DEBUG_SERIAL.print("TRNS");
+    } else if (type == CTRLREQ) {
+        DEBUG_SERIAL.print("CTRLREQ");
+    } else if (type == CTRLRES) {
+        DEBUG_SERIAL.print("CTRLRES");
+    } else if (type == CTRLREQ1) {
+        DEBUG_SERIAL.print("CTRLREQ1");
+    } else if (type == DROP) {
+        DEBUG_SERIAL.print("DROP");
+    } else if (type == SWITCH) {
+        DEBUG_SERIAL.print("SWITCH");
+    } else if (type == SWITCHBEAT) {
+        DEBUG_SERIAL.print("SWITCHBEAT");
+    } else if (type == SYNCTIME) {
+        DEBUG_SERIAL.print("SYNCTIME");
+    } else if (type == GETSETTOKEN) {
+        DEBUG_SERIAL.print("GETSETTOKEN");
+    }
+}
+
+func DEBUG_PRINT_HEX(v const uint8_t *, len int) {
+    for (int i=0; i< len; i++) {
+        if (v[i] < 16) {
+            DEBUG_SERIAL.print("0");
+        }
+        DEBUG_SERIAL.print(v[i], HEX);
+    }
+    DEBUG_SERIAL.println();
 }
 
 func send_packet() void {
@@ -393,37 +507,42 @@ func send_packet() void {
     {=/ ctrl_mode =}
     {=# has_debug =}
     DEBUG_SERIAL.print(TO_ROM("Send Id: "));
-    DEBUG_SERIAL.print(obj.id);
+    DEBUG_SERIAL.print(givelink_id);
     DEBUG_SERIAL.print(TO_ROM(" Type: "));
-    DEBUG_SERIAL.print(obj.type);
-    if (givelink_get_data_length() > 0) {
+    DEBUG_PRINT_TYPE(givelink_type);
+    if (packet_data_length > 0) {
+        DEBUG_SERIAL.print(TO_ROM(" Data Length: "));
+        DEBUG_SERIAL.print(packet_data_length);
         DEBUG_SERIAL.print(TO_ROM(" Data: "));
-        for (uint16_t i = 0; i < givelink_get_data_length(); i ++) {
-            DEBUG_SERIAL.write(obj.data[i]);
+        for (uint16_t i = 0; i < packet_data_length; i ++) {
+            DEBUG_SERIAL.write(PACKET_DATA[i]);
         }
+        DEBUG_SERIAL.print(TO_ROM(" Data HEX: "));
+        DEBUG_PRINT_HEX(PACKET_DATA, packet_data_length);
+    } else {
+        DEBUG_SERIAL.println();
     }
-    DEBUG_SERIAL.println();
     {=/ has_debug =}
     {=# low_memory =}
-    givelink_to_binary(READED_PAYLOAD);
-    send_packet_raw(READED_PAYLOAD, givelink_get_length());
+    gen_packet(READED_PAYLOAD);
+    send_packet_raw(READED_PAYLOAD, givelink_raw_get_length(READED_PAYLOAD));
     {=/ low_memory =}
     {=^ low_memory =}
     {=# auto_retry =}
-    if (obj.type == ATTRIBUTE || obj.type == TELEMETRY) {
-        givelink_to_binary(retryPayload);
-        retryLen = givelink_get_length();
+    if (givelink_type == ATTRIBUTE || givelink_type == TELEMETRY) {
+        gen_packet(retryPayload);
+        retryLen = , givelink_raw_get_length(retryPayload);
         need_retry = true;
 
         send_packet_raw(retryPayload, retryLen);
     } else {
-        givelink_to_binary(sendedPayload);
-        send_packet_raw(sendedPayload, givelink_get_length());
+        gen_packet(sendedPayload);
+        send_packet_raw(sendedPayload, givelink_raw_get_length(sendedPayload));
     }
     {=/ auto_retry =}
     {=^ auto_retry =}
-    givelink_to_binary(sendedPayload);
-    send_packet_raw(sendedPayload, givelink_get_length());
+    gen_packet(sendedPayload);
+    send_packet_raw(sendedPayload, givelink_raw_get_length(sendedPayload));
     {=/ auto_retry =}
     {=/ low_memory =}
 }
@@ -435,13 +554,15 @@ func send_packet_0(type const uint8_t) void {
 
 func send_packet_1(type const uint8_t, data_ const char *, length const int) void {
     next_packet(type);
-    givelink_set_data((const uint8_t*)data_, length);
+    packet_data_length = length;
+    memcpy(PACKET_DATA, data_, length);
     send_packet();
 }
 
 func send_packet_rsp(data_ const char *) void {
-    givelink_set_type(RESPONSE);
-    givelink_set_data((const uint8_t*)data_, get_json_length(data_));
+    givelink_type = RESPONSE;
+    packet_data_length = get_json_length(data_);
+    memcpy(PACKET_DATA, (const uint8_t *)data_, packet_data_length);
     send_packet();
 }
 
@@ -467,9 +588,9 @@ func next_packet(type const uint8_t) void {
     }
     {=/ has_timer =}
 
-    givelink_reset();
-    givelink_set_id(lastPayloadId);
-    givelink_set_type(type);
+    givelink_id = lastPayloadId;
+    givelink_type = type;
+    packet_data_length = 0;
     {=^ low_memory =}
     incrLastPayloadId();
     {=/ low_memory =}

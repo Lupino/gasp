@@ -171,3 +171,13 @@ func prepare_long(ret long *, retval char *, requestValue char *, min long, max 
     *ret = tmp;
     return true;
 }
+
+
+func equal(v0 const uint8_t *, v1 const uint8_t *, len const uint16_t) bool {
+    for (uint8_t i = 0; i < len; i ++) {
+        if (v0[i] !=  v1[i]) {
+            return false;
+        }
+    }
+    return true;
+}
