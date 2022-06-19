@@ -286,7 +286,7 @@ packet_data[MAX_BUFFER_LENGTH] uint8_t
 PACKET_DATA = packet_data
 packet_data_length uint16_t
 givelink_addr[4] uint8_t
-givelink_id uint8_t
+givelink_id uint16_t
 
 lastPayloadId uint16_t = 100
 readedLen uint16_t = 0
