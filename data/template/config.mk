@@ -1,6 +1,7 @@
 {{={= =}=}}
 ARDUINO_CLI ?= arduino-cli
 BOARD_TAG ?= arduino:avr:pro
+UPLOAD_FLAGS ?= -P usbasp
 BUILD_PATH ?= $(CURDIR)/arduino_build
 
 {=# app =}
