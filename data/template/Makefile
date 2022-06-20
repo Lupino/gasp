@@ -7,8 +7,6 @@ LIBRARIES += $(patsubst %.git, $(ARDUINO_LIB_PATH)/%, $(notdir $(LIBRARIES_URL))
 CLI_FLAGS += -b $(BOARD_TAG)
 ARDUINO_COMPILE = $(ARDUINO_CLI) compile --build-path $(BUILD_PATH) $(CLI_FLAGS)
 
-UPLOAD_FLAGS += -b $(BOARD_TAG)
-
 all: $(TARGET_APP)
 
 $(ARDUINO_LIB_PATH)/%:
@@ -29,7 +27,7 @@ $(TARGET_APP): $(TARGET_INO) $(LIBRARIES)
 endif
 
 upload:
-	$(ARDUINO_CLI) upload $(UPLOAD_FLAGS) --input-dir $(BUILD_PATH)
+	$(ARDUINO_CLI) upload $(UPLOAD_FLAGS) --input-dir $(BUILD_PATH) -b $(BOARD_TAG)
 
 burn-bootloader:
-	$(ARDUINO_CLI) burn-bootloader $(UPLOAD_FLAGS)
+	$(ARDUINO_CLI) burn-bootloader $(UPLOAD_FLAGS) -b $(BOARD_TAG)
