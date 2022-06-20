@@ -69,11 +69,9 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
 
     {=/ has_debug =}
     if (givelink_type == AUTHRES) {
-        {=# app =}
-        for (int i = 0; i < {= addr_len =}; i ++) {
+        for (int i = 0; i < PACKET_ADDR_LENGTH; i ++) {
             givelink_addr[i] = PACKET_DATA[i];
         }
-        {=/ app =}
         givelink_authed = true;
         save_addr();
         {=# low_memory =}
@@ -210,15 +208,15 @@ ping_failed uint8_t = 0
 key[{= key_len =}] const uint8_t = {{= key_hex_array =}}
 {=# production =}
 token[{= token_len =}] uint8_t
-addr[{= addr_len =}] uint8_t
+givelink_addr[PACKET_ADDR_LENGTH] uint8_t
 {=/ production =}
 {=^ production =}
 token[{= token_len =}] const uint8_t = {{= token_hex_array =}}
-addr[{= addr_len =}] uint8_t = {{= addr_hex_array =}}
+givelink_addr[PACKET_ADDR_LENGTH] uint8_t = {{= addr_hex_array =}}
 {=/ production =}
 
 func load_addr() {
-    for (int i = 0; i < {= addr_len =}; i ++) {
+    for (int i = 0; i < PACKET_ADDR_LENGTH; i ++) {
         givelink_addr[i] = STROAGE_READ({= addr_addr =} + i);
     }
     givelink_authed = true;
@@ -241,7 +239,7 @@ setup setup_givelink {
 
 func save_addr {
     {=# production =}
-    for (int i = 0; i < {= addr_len =}; i ++) {
+    for (int i = 0; i < PACKET_ADDR_LENGTH; i ++) {
         STROAGE_WRITE({= addr_addr =} + i, PACKET_DATA[i]);
     }
     STROAGE_COMMIT();
@@ -285,7 +283,6 @@ givelink_type uint8_t
 packet_data[MAX_BUFFER_LENGTH] uint8_t
 PACKET_DATA = packet_data
 packet_data_length uint16_t
-givelink_addr[4] uint8_t
 givelink_id uint16_t
 
 lastPayloadId uint16_t = 100
@@ -415,7 +412,7 @@ func send_packet_raw(buf uint8_t *, length uint16_t) void {
 func gen_packet(pkt uint8_t *) {
     givelink_raw_set_magic(pkt);
     if (givelink_authed) {
-        givelink_raw_set_key(pkt, givelink_addr, 4);
+        givelink_raw_set_key(pkt, givelink_addr, PACKET_ADDR_LENGTH);
         givelink_raw_set_token(pkt, NULL, 0);
     } else {
         {=# app =}
@@ -439,11 +436,11 @@ func is_self(buffer const uint8_t *, len const int) bool {
         }
     }
 
-    {=# app =}
-    if (packet_data_length == {= addr_len =} && equal(PACKET_DATA, givelink_addr, packet_data_length)) {
+    if (packet_data_length == PACKET_ADDR_LENGTH && equal(PACKET_DATA, givelink_addr, packet_data_length)) {
         return true;
     }
 
+    {=# app =}
     if (packet_data_length == {= key_len =} && equal(PACKET_DATA, key, packet_data_length)) {
         givelink_raw_get_token(buffer, PACKET_DATA, &packet_data_length);
         if (packet_data_length == {= token_len =} && equal(PACKET_DATA, token, packet_data_length)) {
