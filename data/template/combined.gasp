@@ -432,6 +432,13 @@ func gen_packet(pkt uint8_t *) {
 func is_self(buffer const uint8_t *, len const int) bool {
     givelink_raw_get_key(buffer, PACKET_DATA, &packet_data_length);
 
+    if (packet_data_length == 0) {
+        givelink_raw_get_token(buffer, PACKET_DATA, &packet_data_length);
+        if (packet_data_length == 0) {
+            return true;
+        }
+    }
+
     {=# app =}
     if (packet_data_length == {= addr_len =} && equal(PACKET_DATA, givelink_addr, packet_data_length)) {
         return true;
