@@ -28,9 +28,7 @@ instance ToJSON App where
       , "token_hex_array".= hexArray (toHex token)
       , "addr_addr"      .= (appStartAddr app + appTokenLen app)
       , "addr"           .= addr
-      , "addr_len"       .= appAddrLen app
       , "addr_hex_array" .= hexArray (toHex addr)
-      , "context_len"    .= appContexLen app
       ]
       where key        = appKey app
             token      = appToken app
@@ -67,9 +65,6 @@ appContexLen app =
   magicLen
   + 1 + appKeyLen app
   + 1 + appTokenLen app
-  + magicLen
-  + 1 + appAddrLen app
-  + 1
 
 startAddr :: Bool -> App -> Int
 startAddr True app  = appStartAddr app + appTokenLen app + appAddrLen app
