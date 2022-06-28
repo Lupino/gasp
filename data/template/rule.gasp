@@ -1,0 +1,108 @@
+{{={= =}=}}
+
+// start rules
+rule_depends_checked bool = false
+{=# rules =}
+{=# has_later =}
+rule_{= id =}_do_yes_timer_ms unsigned long = 0
+{=/ has_later =}
+{=# has_else_later =}
+rule_{= id =}_do_else_timer_ms unsigned long = 0
+{=/ has_else_later =}
+rule_{= id =}_do_yes bool = true
+{=# has_else =}
+rule_{= id =}_do_else bool = true
+{=/ has_else =}
+func rule_{= id =}_poll() void {
+    {=# has_later =}
+    if ({=& condition =}) {
+        if (rule_{= id =}_do_yes && rule_{= id =}_do_yes_timer_ms + {= later =} < get_cache_time_ms()) {
+            rule_{= id =}_do_yes = false;
+            {= action =}();
+        }
+        {=# has_else =}
+        rule_{= id =}_do_else = true;
+        {=# has_else_later =}
+        rule_{= id =}_do_else_timer_ms = get_cache_time_ms();
+        {=/ has_else_later =}
+        {=/ has_else =}
+    } else {
+        rule_{= id =}_do_yes = true;
+        rule_{= id =}_do_yes_timer_ms = get_cache_time_ms();
+        {=# has_else =}
+        if (rule_{= id =}_do_else) {
+            rule_{= id =}_do_else = false;
+            {=# has_else_later =}
+            if (rule_{= id =}_do_else && rule_{= id =}_do_else_timer_ms + {= else_later =} < get_cache_time_ms()) {
+                {= else_action =}();
+            }
+            {=/ has_else_later =}
+            {=^ has_else_later =}
+            {= else_action =}();
+            {=/ has_else_later =}
+        }
+        {=/ has_else =}
+    }
+    {=/ has_later =}
+    {=^ has_later =}
+    if ({=& condition =}) {
+        if (rule_{= id =}_do_yes) {
+            rule_{= id =}_do_yes = false;
+            {= action =}();
+        }
+        {=# has_else =}
+        rule_{= id =}_do_else = true;
+        {=# has_else_later =}
+        rule_{= id =}_do_else_timer_ms = get_cache_time_ms();
+        {=/ has_else_later =}
+        {=/ has_else =}
+    } else {
+        rule_{= id =}_do_yes = true;
+        {=# has_else =}
+        if (rule_{= id =}_do_else) {
+            rule_{= id =}_do_else = false;
+            {=# has_else_later =}
+            if (rule_{= id =}_do_else_timer_ms + {= else_later =} < get_cache_time_ms()) {
+                {= else_action =}();
+            }
+            {=/ has_else_later =}
+            {=^ has_else_later =}
+            {= else_action =}();
+            {=/ has_else_later =}
+        }
+        {=/ has_else =}
+    }
+    {=/ has_later =}
+}
+
+loop rule_{= id =}_loop {
+    {=# has_dep =}
+    rule_depends_checked = true;
+    {=# depends =}
+    if (!check_metric_{= . =}()) {
+        rule_depends_checked = false;
+    }
+    {=/ depends =}
+    {=# has_on =}
+    if (rule_depends_checked && ({=& on_condition =})) {
+    {=/ has_on =}
+    {=^ has_on =}
+    if (rule_depends_checked) {
+    {=/ has_on =}
+        rule_{= id =}_poll();
+    }
+    {=/ has_dep =}
+    {=^ has_dep =}
+    {=# has_on =}
+    if ({=& on_condition =}) {
+        rule_{= id =}_poll();
+    }
+    {=/ has_on =}
+    {=^ has_on =}
+    rule_{= id =}_poll();
+    {=/ has_on =}
+    {=/ has_dep =}
+}
+{=/ rules =}
+// end rules
+

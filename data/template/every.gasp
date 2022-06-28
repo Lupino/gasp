@@ -1,0 +1,21 @@
+{{={= =}=}}
+
+every_unused_timer_ms unsigned long = 0
+
+// start actions
+{=# actions =}
+every_{= id =}_timer_ms unsigned long = 0
+loop every_{= id =}_loop {
+    {=# has_on =}
+    if ({=& on =} && every_{= id =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
+    {=/ has_on =}
+    {=^ has_on =}
+    if (every_{= id =}_timer_ms + {= delay_ms =} < get_cache_time_ms()) {
+    {=/ has_on =}
+        {= fn =}();
+        every_{= id =}_timer_ms = get_cache_time_ms();
+    }
+}
+{=/ actions =}
+// end actions
+

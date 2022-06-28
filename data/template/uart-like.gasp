@@ -1,0 +1,149 @@
+{{={= =}=}}
+
+unused_availabled_timer_ms unsigned long
+
+{=# uarts =}
+{= name =}_availabled_timer_ms unsigned long
+{= name =}_writer_timer_ms unsigned long
+{=# readers =}
+{= name =}_read_{= index =}_buffer[{= buf_len =} + 1] uint8_t
+{= name =}_read_{= index =}_buffer_len int = 0
+is_{= name =}_{= index =}_readed bool = false
+is_{= name =}_{= index =}_readed_flag bool = false
+{=/ readers =}
+{=# writers =}
+is_{= name =}_write_{= wname =} bool = false
+{=# action =}
+{=# is_gen =}
+{= name =}_write_{= wname =}_buffer[{= buf_len =} + 1] uint8_t
+{= name =}_write_{= wname =}_buffer_len int = 0
+{=/ is_gen =}
+{=/ action =}
+{=/ writers =}
+{= name =}_write_index uint8_t = 0
+loop {= name =}_poll_loop {
+    {= name =}_poll();
+}
+func {= name =}_poll() void {
+    if ({= name =}.available() > 0) {
+        {= name =}_availabled_timer_ms = get_current_time_ms();
+        {=# readers =}
+        is_{= name =}_{= index =}_readed = false;
+        {=/ readers =}
+        while ({= name =}.available() > 0) {
+            uint8_t outByte = {= name =}.read();
+            {=# readers =}
+            if (!is_{= name =}_{= index =}_readed_flag{=# has_on =} && ({=& on =}){=/ has_on =}) {
+                if ({= reader =}(outByte, {= name =}_read_{= index =}_buffer, &{= name =}_read_{= index =}_buffer_len)) {
+                    is_{= name =}_{= index =}_readed_flag = true;
+                }
+                if ({= name =}_read_{= index =}_buffer_len > {= buf_len =}) {
+                    givelink_shift_data_raw({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
+                    {= name =}_read_{= index =}_buffer_len -= 1;
+                }
+            }
+            {=/ readers =}
+        }
+        {=# readers =}
+        if (is_{= name =}_{= index =}_readed_flag) {
+            is_{= name =}_{= index =}_readed_flag = false;
+            is_{= name =}_{= index =}_readed = true;
+        }
+        {=/ readers =}
+        {=# readers =}
+        if (is_{= name =}_{= index =}_readed) {
+            {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
+            {= name =}_read_{= index =}_buffer_len = 0;
+        }
+        {=/ readers =}
+    }
+}
+
+{=# writers =}
+func {= name =}_write_{= wname =}() void {
+    prepare_{= name =}_write();
+    is_{= name =}_write_{= wname =} = true;
+    {=# readers =}
+    is_{= name =}_{= index =}_readed = false;
+    {=/ readers =}
+    {=# action =}
+    {=# is_cmd =}
+    {=# bytes =}
+    {= name =}.write((uint8_t)0x{= . =});
+    {=/ bytes =}
+    {=/ is_cmd =}
+    {=# is_gen =}
+    {= gen =}({= name =}_write_{= wname =}_buffer, &{= name =}_write_{= wname =}_buffer_len);
+    for (int i = 0; i < {= name =}_write_{= wname =}_buffer_len; i ++) {
+      {= name =}.write({= name =}_write_{= wname =}_buffer[i]);
+    }
+    {=/ is_gen =}
+    {=/ action =}
+}
+
+{=/ writers =}
+func {= name =}_is_valid_index() bool {
+    {=# writers =}
+    {=# auto =}
+    {=# has_on =}
+    if ({=& on =}) {
+        if ({= name =}_write_index == {= index =}) {
+            return true;
+        }
+    }
+    {=/ has_on =}
+    {=^ has_on =}
+    if ({= name =}_write_index == {= index =}) {
+        return true;
+    }
+    {=/ has_on =}
+    {=/ auto =}
+    {=/ writers =}
+    return false;
+}
+
+func {= name =}_write_next_index() void {
+    for (int i = 0; i < {= wcount =}; i ++) {
+        {= name =}_write_index += 1;
+        if ({= name =}_write_index >= {= wcount =}) {
+            {= name =}_write_index = 0;
+        }
+        if ({= name =}_is_valid_index()) {
+            break;
+        }
+    }
+}
+
+func prepare_{= name =}_write() void {
+    if ({= name =}_writer_timer_ms + 200 > get_current_time_ms()) {
+        while ({= name =}_writer_timer_ms + 200 > get_current_time_ms()) {
+            {= name =}_poll();
+        }
+    }
+    {=# writers =}
+    is_{= name =}_write_{= wname =} = false;
+    {=/ writers =}
+    {= name =}_writer_timer_ms = get_current_time_ms();
+}
+
+func {= name =}_write() void {
+    {=# writers =}
+    {=# auto =}
+    {=# has_on =}
+    if ({=& on =}) {
+        if ({= name =}_write_index == {= index =}) {
+            {= name =}_write_{= wname =}();
+        }
+    }
+    {=/ has_on =}
+    {=^ has_on =}
+    if ({= name =}_write_index == {= index =}) {
+        {= name =}_write_{= wname =}();
+    }
+    {=/ has_on =}
+    {=/ auto =}
+    {=/ writers =}
+    {= name =}_write_next_index();
+}
+
+{=/ uarts =}

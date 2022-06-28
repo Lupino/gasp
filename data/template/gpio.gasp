@@ -1,0 +1,157 @@
+{{={= =}=}}
+
+DEBOUNCE_DELAY_MS = 50
+gpio_reading uint8_t = 0
+
+{=# gpios =}
+{=# bind =}
+gpio_{= name =}_state uint8_t = {= state =}
+{=# is_fn =}
+last_gpio_{= name =}_debounce_time_ms unsigned long = 0
+last_gpio_{= name =}_state uint8_t = {= state =}
+{=/ is_fn =}
+{=/ bind =}
+setup setup_gpio_{= name =} {
+    {=# bind =}
+    {=# is_link =}
+    pinMode({= pin =}, OUTPUT);
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+    {=/ is_link =}
+    {=# is_fn =}
+    pinMode({= pin =}, INPUT);
+    {=/ is_fn =}
+    {=# is_pwm =}
+    analogWrite({= pin =}, gpio_{= name =}_state);
+    {=/ is_pwm =}
+    {=# is_no_bind =}
+    pinMode({= pin =}, OUTPUT);
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+    {=/ is_no_bind =}
+    {=/ bind =}
+}
+loop gpio_{= name =}_loop {
+    {=# bind =}
+    {=# is_fn =}
+    gpio_reading = digitalRead({= pin =});
+    if (gpio_reading != last_gpio_{= name =}_state) {
+        last_gpio_{= name =}_debounce_time_ms = get_cache_time_ms();
+    }
+    if ((get_cache_time_ms() - last_gpio_{= name =}_debounce_time_ms) > DEBOUNCE_DELAY_MS) {
+        if (gpio_reading != gpio_{= name =}_state) {
+          gpio_{= name =}_state = gpio_reading;
+          if (gpio_{= name =}_state == {= emit =}) {
+            {= fn =}();
+          }
+        }
+    }
+    last_gpio_{= name =}_state = gpio_reading;
+
+    {=/ is_fn =}
+    {=# is_link =}
+    {=# reverse =}
+    if (attr_{= link =} == gpio_{= name =}_state) {
+        if (attr_{= link =} == {= open =}) {
+            close_gpio_{= name =}_raw();
+        } else {
+            open_gpio_{= name =}_raw();
+        }
+    }
+    {=/ reverse =}
+    {=^ reverse =}
+    if (attr_{= link =} != gpio_{= name =}_state) {
+        if (attr_{= link =} == {= open =}) {
+            open_gpio_{= name =}_raw();
+        } else {
+            close_gpio_{= name =}_raw();
+        }
+    }
+    {=/ reverse =}
+
+    {=/ is_link =}
+    {=# is_pwm =}
+    if (attr_{= link =} != gpio_{= name =}_state) {
+      gpio_{= name =}_state = attr_{= link =};
+      analogWrite({= pin =}, gpio_{= name =}_state);
+    }
+    {=/ is_pwm =}
+    {=/ bind =}
+}
+{=# bind =}
+{=# is_link =}
+func open_gpio_{= name =}_raw() void {
+    gpio_{= name =}_state = {= open =};
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+}
+
+func close_gpio_{= name =}_raw() void {
+    gpio_{= name =}_state = {= close =};
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+}
+
+func open_gpio_{= name =}() void {
+    {=# reverse =}
+    set_attr_{= link =}_raw({= close =});
+    {=/ reverse =}
+    {=^ reverse =}
+    set_attr_{= link =}_raw({= open =});
+    {=/ reverse =}
+}
+
+func close_gpio_{= name =}() void {
+    {=# reverse =}
+    set_attr_{= link =}_raw({= open =});
+    {=/ reverse =}
+    {=^ reverse =}
+    set_attr_{= link =}_raw({= close =});
+    {=/ reverse =}
+}
+
+func toggle_gpio_{= name =}() void {
+    if (attr_{= link =} == {= open =}) {
+        set_attr_{= link =}_raw({= close =});
+    } else {
+        set_attr_{= link =}_raw({= open =});
+    }
+}
+
+{=/ is_link =}
+{=# is_no_bind =}
+func open_gpio_{= name =}() void {
+    gpio_{= name =}_state = {= open =};
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+}
+
+func close_gpio_{= name =}() void {
+    gpio_{= name =}_state = {= close =};
+    digitalWrite({= pin =}, gpio_{= name =}_state);
+}
+
+func toggle_gpio_{= name =}() void {
+    if (gpio_{= name =}_state == {= open =}) {
+        close_gpio_{= name =}();
+    } else {
+        open_gpio_{= name =}();
+    }
+}
+
+{=/ is_no_bind =}
+{=/ bind =}
+{=/ gpios =}
+
+{=# agpios =}
+{=# bind =}
+{=# is_no_bind =}
+agpio_{= name =}_value uint16_t = 0
+{=/ is_no_bind =}
+{=/ bind =}
+loop agpio_{= name =}_loop {
+    {=# bind =}
+    {=# is_link =}
+    metric_{= link =} = analogRead({= pin =});
+    {=/ is_link =}
+    {=# is_no_bind =}
+    agpio_{= name =}_value = analogRead({= pin =});
+    {=/ is_no_bind =}
+    {=/ bind =}
+}
+{=/ agpios =}
