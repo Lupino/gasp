@@ -1,0 +1,85 @@
+{{={= =}=}}
+
+{=# has_debug =}
+setup w_setup_debug_print {
+    DEBUG_SERIAL.println(TO_ROM("Setup"));
+}
+{=/ has_debug =}
+
+
+func DEBUG_PRINT_TYPE(type uint8_t) {
+    if (type == REQUEST) {
+        DEBUG_SERIAL.print("REQUEST");
+    } else if (type == RESPONSE) {
+        DEBUG_SERIAL.print("RESPONSE");
+    } else if (type == ATTRIBUTE) {
+        DEBUG_SERIAL.print("ATTRIBUTE");
+    } else if (type == TELEMETRY) {
+        DEBUG_SERIAL.print("TELEMETRY");
+    } else if (type == PING) {
+        DEBUG_SERIAL.print("PING");
+    } else if (type == SUCCESS) {
+        DEBUG_SERIAL.print("SUCCESS");
+    } else if (type == ERROR) {
+        DEBUG_SERIAL.print("ERROR");
+    } else if (type == AUTHREQ) {
+        DEBUG_SERIAL.print("AUTHREQ");
+    } else if (type == AUTHRES) {
+        DEBUG_SERIAL.print("AUTHRES");
+    } else if (type == TRNS) {
+        DEBUG_SERIAL.print("TRNS");
+    } else if (type == CTRLREQ) {
+        DEBUG_SERIAL.print("CTRLREQ");
+    } else if (type == CTRLRES) {
+        DEBUG_SERIAL.print("CTRLRES");
+    } else if (type == CTRLREQ1) {
+        DEBUG_SERIAL.print("CTRLREQ1");
+    } else if (type == DROP) {
+        DEBUG_SERIAL.print("DROP");
+    } else if (type == SWITCH) {
+        DEBUG_SERIAL.print("SWITCH");
+    } else if (type == SWITCHBEAT) {
+        DEBUG_SERIAL.print("SWITCHBEAT");
+    } else if (type == SYNCTIME) {
+        DEBUG_SERIAL.print("SYNCTIME");
+    } else if (type == GETSETTOKEN) {
+        DEBUG_SERIAL.print("GETSETTOKEN");
+    }
+}
+
+func DEBUG_PRINT_HEX(v const uint8_t *, len int) {
+    for (int i=0; i< len; i++) {
+        if (v[i] < 16) {
+            DEBUG_SERIAL.print("0");
+        }
+        DEBUG_SERIAL.print(v[i], HEX);
+    }
+    DEBUG_SERIAL.println();
+}
+
+
+func DEBUG_PRINT_PACKET(buffer const uint8_t *, len const uint16_t, is_recv const bool) {
+    {=# has_debug =}
+    if (is_recv) {
+        DEBUG_SERIAL.print(TO_ROM("Recv Id: "));
+    } else {
+        DEBUG_SERIAL.print(TO_ROM("Send Id: "));
+    }
+    DEBUG_SERIAL.print(givelink_id);
+    DEBUG_SERIAL.print(TO_ROM(" Type: "));
+    DEBUG_PRINT_TYPE(givelink_type);
+    if (packet_data_length > 0) {
+        DEBUG_SERIAL.print(TO_ROM(" Data Length: "));
+        DEBUG_SERIAL.print(packet_data_length);
+        DEBUG_SERIAL.print(TO_ROM(" Data: "));
+        for (uint16_t i = 0; i < packet_data_length; i ++) {
+            DEBUG_SERIAL.write(PACKET_DATA[i]);
+        }
+        DEBUG_SERIAL.print(TO_ROM(" Data HEX: "));
+        DEBUG_PRINT_HEX(PACKET_DATA, packet_data_length);
+    } else {
+        DEBUG_SERIAL.println();
+    }
+    DEBUG_PRINT_HEX(buffer, len);
+    {=/ has_debug =}
+}

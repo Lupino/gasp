@@ -7,6 +7,7 @@ GL_SERIAL_availabled_timer_ms unsigned long = 0
 GL_SERIAL_received_timer_ms unsigned long = 0
 GL_SERIAL_received bool = false
 packet_sended bool = true;
+GL_SERIAL_EVENT = DEBUG_PRINT_PACKET
 
 loop givelink_loop {
     GL_SERIAL_poll();
@@ -49,26 +50,7 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
     {=# ctrl_mode =}
     packet_sended = false;
     {=/ ctrl_mode =}
-    {=# has_debug =}
-    DEBUG_SERIAL.print(TO_ROM("Recv Id: "));
-    DEBUG_SERIAL.print(givelink_id);
-    DEBUG_SERIAL.print(TO_ROM(" Type: "));
-    DEBUG_PRINT_TYPE(givelink_type);
-    if (packet_data_length > 0) {
-        DEBUG_SERIAL.print(TO_ROM(" Data Length: "));
-        DEBUG_SERIAL.print(packet_data_length);
-        DEBUG_SERIAL.print(TO_ROM(" Data: "));
-        for (uint16_t i = 0; i < packet_data_length; i ++) {
-            DEBUG_SERIAL.write(PACKET_DATA[i]);
-        }
-        DEBUG_SERIAL.print(TO_ROM(" Data HEX: "));
-        DEBUG_PRINT_HEX(PACKET_DATA, packet_data_length);
-    } else {
-        DEBUG_SERIAL.println();
-    }
-    DEBUG_PRINT_HEX(buffer, len);
-
-    {=/ has_debug =}
+    GL_SERIAL_EVENT(buffer, len, true);
     if (givelink_type == AUTHRES) {
         for (int i = 0; i < PACKET_ADDR_LENGTH; i ++) {
             givelink_addr[i] = PACKET_DATA[i];
@@ -173,12 +155,6 @@ func GL_SERIAL_main {
     }
 }
 {=/ has_app =}
-
-{=# has_debug =}
-setup w_setup_debug_print {
-    DEBUG_SERIAL.println(TO_ROM("Setup"));
-}
-{=/ has_debug =}
 
 current_time_ms unsigned long = 0
 
@@ -390,17 +366,15 @@ func mainAction() void {
 
 func PING_FAILED_CB() void {}
 
-func send_packet_raw(buf uint8_t *, length uint16_t) void {
+func send_packet_raw(buffer const uint8_t *, len const uint16_t) void {
     delay(5);
-    for (uint16_t i = 0; i < length; i ++) {
-        GL_SERIAL.write(buf[i]);
+    for (uint16_t i = 0; i < len; i ++) {
+        GL_SERIAL.write(buffer[i]);
     }
     GL_SERIAL.write('\r');
     GL_SERIAL.write('\n');
     GL_SERIAL.flush();
-    {=# has_debug =}
-    DEBUG_PRINT_HEX(buf, length);
-    {=/ has_debug =}
+    GL_SERIAL_EVENT(buffer, len, false);
 }
 
 
@@ -447,56 +421,6 @@ func is_self(buffer const uint8_t *, len const int) bool {
     return false;
 }
 
-func DEBUG_PRINT_TYPE(type uint8_t) {
-    if (type == REQUEST) {
-        DEBUG_SERIAL.print("REQUEST");
-    } else if (type == RESPONSE) {
-        DEBUG_SERIAL.print("RESPONSE");
-    } else if (type == ATTRIBUTE) {
-        DEBUG_SERIAL.print("ATTRIBUTE");
-    } else if (type == TELEMETRY) {
-        DEBUG_SERIAL.print("TELEMETRY");
-    } else if (type == PING) {
-        DEBUG_SERIAL.print("PING");
-    } else if (type == SUCCESS) {
-        DEBUG_SERIAL.print("SUCCESS");
-    } else if (type == ERROR) {
-        DEBUG_SERIAL.print("ERROR");
-    } else if (type == AUTHREQ) {
-        DEBUG_SERIAL.print("AUTHREQ");
-    } else if (type == AUTHRES) {
-        DEBUG_SERIAL.print("AUTHRES");
-    } else if (type == TRNS) {
-        DEBUG_SERIAL.print("TRNS");
-    } else if (type == CTRLREQ) {
-        DEBUG_SERIAL.print("CTRLREQ");
-    } else if (type == CTRLRES) {
-        DEBUG_SERIAL.print("CTRLRES");
-    } else if (type == CTRLREQ1) {
-        DEBUG_SERIAL.print("CTRLREQ1");
-    } else if (type == DROP) {
-        DEBUG_SERIAL.print("DROP");
-    } else if (type == SWITCH) {
-        DEBUG_SERIAL.print("SWITCH");
-    } else if (type == SWITCHBEAT) {
-        DEBUG_SERIAL.print("SWITCHBEAT");
-    } else if (type == SYNCTIME) {
-        DEBUG_SERIAL.print("SYNCTIME");
-    } else if (type == GETSETTOKEN) {
-        DEBUG_SERIAL.print("GETSETTOKEN");
-    }
-}
-
-func DEBUG_PRINT_HEX(v const uint8_t *, len int) {
-    for (int i=0; i< len; i++) {
-        if (v[i] < 16) {
-            DEBUG_SERIAL.print("0");
-        }
-        DEBUG_SERIAL.print(v[i], HEX);
-    }
-    DEBUG_SERIAL.println();
-}
-
 func send_packet() void {
     {=# ctrl_mode =}
     if (packet_sended) {
@@ -504,24 +428,6 @@ func send_packet() void {
     }
     packet_sended = true;
     {=/ ctrl_mode =}
-    {=# has_debug =}
-    DEBUG_SERIAL.print(TO_ROM("Send Id: "));
-    DEBUG_SERIAL.print(givelink_id);
-    DEBUG_SERIAL.print(TO_ROM(" Type: "));
-    DEBUG_PRINT_TYPE(givelink_type);
-    if (packet_data_length > 0) {
-        DEBUG_SERIAL.print(TO_ROM(" Data Length: "));
-        DEBUG_SERIAL.print(packet_data_length);
-        DEBUG_SERIAL.print(TO_ROM(" Data: "));
-        for (uint16_t i = 0; i < packet_data_length; i ++) {
-            DEBUG_SERIAL.write(PACKET_DATA[i]);
-        }
-        DEBUG_SERIAL.print(TO_ROM(" Data HEX: "));
-        DEBUG_PRINT_HEX(PACKET_DATA, packet_data_length);
-    } else {
-        DEBUG_SERIAL.println();
-    }
-    {=/ has_debug =}
     {=# low_memory =}
     gen_packet(READED_PAYLOAD);
     send_packet_raw(READED_PAYLOAD, givelink_raw_get_length(READED_PAYLOAD));
@@ -667,3 +573,4 @@ require ./gpio
 require ./uart-like
 require ./utils
 require ./stroage
+require ./debug
