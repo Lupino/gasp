@@ -75,7 +75,7 @@ data UartReader = UartReader
   { uartRId     :: Int
   , uartRFn     :: FuncName
   , uartRPFn    :: FuncName
-  , uartRBufLen :: Int
+  , uartRBufLen :: String
   , uartROn     :: !String
   } deriving (Show, Eq)
 

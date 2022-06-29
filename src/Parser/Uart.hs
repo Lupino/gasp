@@ -12,14 +12,14 @@ import           Text.Parsec.String (Parser)
 reader :: Parser UartReader
 reader = do
   reserved reservedNameUartRead
-  v <- decimal
+  v <- (show <$> decimal) <|> identifier
   whiteSpace
   rfn <- FuncName <$> identifier
   pfn <- FuncName <$> identifier
   on <- option "" $ block "on" "\n"
   return UartReader
     { uartRId = 0
-    , uartRBufLen = fromIntegral v
+    , uartRBufLen = v
     , uartRFn = rfn
     , uartRPFn = pfn
     , uartROn = on
