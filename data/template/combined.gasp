@@ -35,6 +35,8 @@ func GL_SERIAL_poll {
     if (GL_SERIAL_received) {
         GL_SERIAL_received = false;
         if (is_self(READED_PAYLOAD, readedLen)) {
+            GL_SERIAL_received_timer_ms = get_current_time_ms();
+            GL_SERIAL_EVENT(buffer, len, true);
             GL_SERIAL_parse(READED_PAYLOAD, readedLen);
         }
         readedLen = 0;
@@ -42,7 +44,6 @@ func GL_SERIAL_poll {
 }
 
 func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
-    GL_SERIAL_received_timer_ms = get_current_time_ms();
     givelink_type = givelink_raw_get_type(buffer);
     givelink_id = givelink_raw_get_id(buffer);
     givelink_raw_get_data(buffer, PACKET_DATA, &packet_data_length);
@@ -50,7 +51,6 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
     {=# ctrl_mode =}
     packet_sended = false;
     {=/ ctrl_mode =}
-    GL_SERIAL_EVENT(buffer, len, true);
     if (givelink_type == AUTHRES) {
         for (int i = 0; i < PACKET_ADDR_LENGTH; i ++) {
             givelink_addr[i] = PACKET_DATA[i];
