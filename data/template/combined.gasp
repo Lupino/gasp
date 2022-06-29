@@ -82,7 +82,6 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
         send_packet_rsp(wantSendData);
     }
     if (givelink_type == SUCCESS) {
-        ping_failed = 0;
         if (lastPayloadId == ping_packet_id) {
             ping_timer_ms = get_cache_time_ms();
             {=# low_memory =}
@@ -174,7 +173,6 @@ auth_timer_ms unsigned long = 0
 
 AUTH_DELAY_MS = 1000
 PING_DELAY_MS = 300000
-MAX_PING_FAILED = 10
 MAX_GL_PAYLOAD_LENGTH = {= max_gl_len =}
 MAX_BUFFER_LENGTH = {= max_buf_len =}
 MAX_NUM_TOKENS = 12
@@ -183,7 +181,6 @@ MAX_TMPL_LENGTH = {= max_tpl_len =}
 
 ping_timer_ms  unsigned long = 0
 ping_packet_id uint16_t = 0
-ping_failed uint8_t = 0
 
 {=# app =}
 key[{= key_len =}] const uint8_t = {{= key_hex_array =}}
@@ -298,13 +295,8 @@ func mainAction() void {
         return;
     }
 
-    if (ping_failed > MAX_PING_FAILED) {
-        PING_FAILED_CB();
-    }
-
     {=# low_memory =}
     if (!reportAttribute()) {
-        ping_failed += 1;
         return;
     }
 
@@ -314,7 +306,6 @@ func mainAction() void {
             setReportMetricAll();
         }
     } else {
-        ping_failed += 1;
         metric_timer_ms = get_cache_time_ms();
         return;
     }
@@ -350,7 +341,6 @@ func mainAction() void {
     {=/ low_memory =}
     if (ping_timer_ms + PING_DELAY_MS < get_cache_time_ms()) {
         send_packet_0(PING);
-        ping_failed += 1;
     }
 
     {=# has_timer =}
@@ -363,8 +353,6 @@ func mainAction() void {
     }
     {=/ has_timer =}
 }
-
-func PING_FAILED_CB() void {}
 
 func send_packet_raw(buffer const uint8_t *, len const uint16_t) void {
     delay(5);
