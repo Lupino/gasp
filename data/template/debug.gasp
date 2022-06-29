@@ -60,6 +60,11 @@ func DEBUG_PRINT_HEX(v const uint8_t *, len int) {
 
 func DEBUG_PRINT_PACKET(buffer const uint8_t *, len const uint16_t, is_recv const bool) {
     {=# has_debug =}
+    givelink_type = givelink_raw_get_type(buffer);
+    givelink_id = givelink_raw_get_id(buffer);
+    givelink_raw_get_data(buffer, PACKET_DATA, &packet_data_length);
+    PACKET_DATA[packet_data_length] = '\0';
+
     if (is_recv) {
         DEBUG_SERIAL.print(TO_ROM("Recv Id: "));
     } else {
