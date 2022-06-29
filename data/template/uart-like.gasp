@@ -146,4 +146,20 @@ func {= name =}_write() void {
     {= name =}_write_next_index();
 }
 
+{= name =}_DELAY = 12000
+{= name =}_checked_timer_ms unsigned long = 0
+
+func {= name =}_timeout_event() {}
+
+func check_{= name =}_state {
+    if ({= name =}_checked_timer_ms + {= name =}_DELAY < get_cache_time_ms()) {
+        if ({= name =}_availabled_timer_ms + {= name =}_DELAY < get_cache_time_ms()) {
+            {= name =}_timeout_event();
+            {= name =}_checked_timer_ms = get_current_time_ms();
+        }
+    }
+}
+
+every check_{= name =}_state 1000
+
 {=/ uarts =}
