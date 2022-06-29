@@ -16,7 +16,7 @@ module Gasp.Function
 
 import           Data.Aeson (ToJSON (..), object, (.=))
 import           Data.List  (partition)
-import           Data.Text  (Text)
+import           Data.Text  (Text, stripStart)
 import qualified Data.Text  as T (breakOnEnd, dropEnd, intercalate, length,
                                   null, pack, take, takeEnd, takeWhileEnd)
 
@@ -105,7 +105,7 @@ instance Eq Function where
 instance ToJSON Function where
   toJSON func = object
     [ "name"     .= funcName func
-    , "code"     .= funcCode func
+    , "code"     .= stripStart (funcCode func)
     , "argv"     .= assignLast argv
     , "type"     .= funcType func
     ]

@@ -15,7 +15,7 @@ module Gasp.Block
   ) where
 
 import           Data.Aeson (ToJSON (..), Value, object, (.=))
-import           Data.Text  (Text)
+import           Data.Text  (Text, stripStart)
 
 data Loop = Loop
   { loopName :: String
@@ -31,7 +31,7 @@ instance Ord Loop where
 
 instance ToJSON Loop where
   toJSON loop = object
-    [ "code" .= loopCode loop
+    [ "code" .= stripStart (loopCode loop)
     , "name" .= loopName loop
     ]
 
@@ -49,7 +49,7 @@ instance Ord Setup where
 
 instance ToJSON Setup where
   toJSON setup = object
-    [ "code" .= setupCode setup
+    [ "code" .= stripStart (setupCode setup)
     , "name" .= setupName setup
     ]
 
@@ -68,7 +68,7 @@ instance Ord Raw where
 
 instance ToJSON Raw where
   toJSON raw = object
-    [ "code" .= rawCode raw
+    [ "code" .= stripStart (rawCode raw)
     , "name" .= rawName raw
     ]
 
