@@ -162,6 +162,8 @@ func check_{= name =}_state {
     }
 }
 
-every check_{= name =}_state 1000
+loop check_{= name =}_state {
+    check_{= name =}_state();
+}
 
 {=/ uarts =}
