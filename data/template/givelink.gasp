@@ -376,7 +376,7 @@ func send_packet() void {
     {=# auto_retry =}
     if (givelink_type == ATTRIBUTE || givelink_type == TELEMETRY) {
         gen_packet(retryPayload);
-        retryLen = , givelink_raw_get_length(retryPayload);
+        retryLen = givelink_raw_get_length(retryPayload);
         need_retry = true;
 
         send_packet_raw(retryPayload, retryLen);
