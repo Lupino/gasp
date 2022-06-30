@@ -25,7 +25,7 @@ import           Parser.Rule            (rule)
 import           Parser.Timer           (timer)
 import           Parser.Uart            (uart)
 import           System.Directory       (canonicalizePath, doesFileExist)
-import           System.FilePath        (addExtension, (</>))
+import           System.FilePath        (addExtension, hasExtension, (</>))
 import           Text.Parsec            (ParseError, eof, many1, parse, (<|>))
 import           Text.Parsec.String     (Parser)
 import           Util.IO                (parent)
@@ -144,30 +144,58 @@ type GaspParser = ExceptT ParseError IO
 parseFile :: FilePath -> GaspParser [Expr]
 parseFile = ExceptT . runGaspParser gaspParser
 
-parseWithRequired :: IORef [FilePath] -> FilePath -> [Expr] -> GaspParser [Expr]
-parseWithRequired _ _ [] = return []
-parseWithRequired parsedH rootDir (ExprRequire (Require path) : xs) = do
+searchGaspFilePath :: FilePath -> FilePath -> IO (Bool, FilePath)
+searchGaspFilePath rootDir path = do
+  fp0 <- liftIO . canonicalizePath $ rootDir </> path
+  exist <- liftIO $ doesFileExist fp0
+  if exist
+    then return (True, fp0)
+    else
+      if hasExtension path
+        then return (False, path)
+        else searchGaspFilePath rootDir $ addExtension path ".gasp"
+
+scanGaspFile :: [FilePath] -> FilePath -> FilePath -> IO (Bool, FilePath)
+scanGaspFile _ rootDir path@('.':_) = searchGaspFilePath rootDir path
+scanGaspFile _ rootDir path@('/':_) = searchGaspFilePath rootDir path
+scanGaspFile [] _ path = return (False, path)
+scanGaspFile (x:xs) rootDir path = do
+  (exist, newPath) <- searchGaspFilePath x path
+  if exist then return (True, newPath)
+           else scanGaspFile xs rootDir path
+
+scanGaspFileAndParse
+  :: IORef [FilePath] -> FilePath -> FilePath -> FilePath -> GaspParser [Expr]
+scanGaspFileAndParse parsedH tempDir rootDir path = do
+  (_, fp) <- liftIO $ scanGaspFile [tempDir] rootDir path
+
   parsed <- liftIO $ readIORef parsedH
-  expr1 <- if path `notElem` parsed then do
-             fp0 <- liftIO . canonicalizePath $ rootDir </> path
-             exist <- liftIO $ doesFileExist fp0
-             let fp = if exist then fp0 else addExtension fp0 ".gasp"
-             expr0 <- parseFile fp
-             liftIO $! writeIORef parsedH $ path : parsed
-             parseWithRequired parsedH (parent fp) expr0
-             else return []
-  expr2 <- parseWithRequired parsedH rootDir xs
+  if fp `elem` parsed
+    then return []
+    else do
+      expr0 <- parseFile fp
+      liftIO $! writeIORef parsedH $ fp : parsed
+
+      parseWithRequired parsedH tempDir (parent fp) expr0
+
+
+parseWithRequired :: IORef [FilePath] -> FilePath -> FilePath -> [Expr] -> GaspParser [Expr]
+parseWithRequired _ _ _ [] = return []
+parseWithRequired parsedH tempDir rootDir (ExprRequire (Require path) : xs) = do
+  expr1 <- scanGaspFileAndParse parsedH tempDir rootDir path
+  expr2 <- parseWithRequired parsedH tempDir rootDir xs
   return $ expr1 ++ expr2
 
-parseWithRequired parsedH rootDir (x : xs) = (x:) <$> parseWithRequired parsedH rootDir xs
+parseWithRequired parsedH tempDir rootDir (x : xs) =
+  (x:) <$> parseWithRequired parsedH tempDir rootDir xs
 
-parseExpr :: FilePath -> GaspParser [Expr]
-parseExpr fp = do
+parseExpr :: FilePath -> FilePath -> GaspParser [Expr]
+parseExpr tempDir fp = do
   parsedH <- liftIO $ newIORef []
-  parseWithRequired parsedH (parent fp) =<< parseFile fp
+  parseWithRequired parsedH tempDir (parent fp) =<< parseFile fp
 
-parseGasp :: FilePath -> IO (Either ParseError Gasp)
-parseGasp fp = runExceptT $ fromGaspExprs <$> parseExpr fp
+parseGasp :: FilePath -> FilePath -> IO (Either ParseError Gasp)
+parseGasp tempDir fp = runExceptT $ fromGaspExprs <$> parseExpr tempDir fp
 
 parseGasp0 :: String -> String -> Either ParseError [Expr]
 parseGasp0 = parse gaspParser

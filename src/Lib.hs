@@ -37,7 +37,7 @@ compile
   -> CompileOptions
   -> IO (Either CompileError ())
 compile gaspFile options = do
-    r <- parseGasp gaspFile
+    r <- parseGasp tempDir gaspFile
 
     case r of
         Left err    -> return . Left $ show err

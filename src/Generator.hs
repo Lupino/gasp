@@ -13,7 +13,7 @@ writeAppCode gasp dstDir tmplDir = do
   files0 <- generateApp tmplDir gasp
   writeFileDrafts dstDir files0
 
-  r <- parseGasp $ dstDir </> fn
+  r <- parseGasp "" $ dstDir </> fn
   case r of
     Left err       -> error (show err)
     Right combined -> do
