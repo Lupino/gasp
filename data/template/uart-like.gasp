@@ -5,6 +5,7 @@ unused_availabled_timer_ms unsigned long
 {=# uarts =}
 {= name =}_availabled_timer_ms unsigned long
 {= name =}_writer_timer_ms unsigned long
+{= name =}_received_timer_ms unsigned long = 0
 {=# readers =}
 {= name =}_read_{= index =}_buffer[{= buf_len =} + 1] uint8_t
 {= name =}_read_{= index =}_buffer_len int = 0
@@ -52,6 +53,7 @@ func {= name =}_poll() void {
         {=/ readers =}
         {=# readers =}
         if (is_{= name =}_{= index =}_readed) {
+            {= name =}_received_timer_ms = get_current_time_ms();
             {= parser =}({= name =}_read_{= index =}_buffer, {= name =}_read_{= index =}_buffer_len);
             {= name =}_read_{= index =}_buffer_len = 0;
         }
