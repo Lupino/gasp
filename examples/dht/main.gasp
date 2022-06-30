@@ -3,6 +3,8 @@ app dht {
   token: "14b61d617a9c428a95542dbd097d7a0e"
 }
 
+require module/gl_serial
+
 GL_SERIAL = Serial
 DEBUG_SERIAL = Serial
 METRIC_DELAY_MS = attr_delay
