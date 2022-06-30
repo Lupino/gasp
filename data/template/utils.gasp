@@ -181,3 +181,18 @@ func equal(v0 const uint8_t *, v1 const uint8_t *, len const uint16_t) bool {
     }
     return true;
 }
+
+
+current_time_ms unsigned long = 0
+
+func get_current_time_ms() unsigned long {
+    return millis();
+}
+
+loop get_current_time_loop {
+    current_time_ms = get_current_time_ms();
+}
+
+func get_cache_time_ms() unsigned long {
+    return current_time_ms;
+}
