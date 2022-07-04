@@ -15,10 +15,10 @@ attr_{= name =}_reported bool = false
 {=# keep =}
 setup setup_attr_{= name =} {
     {=# onebyte =}
-    attr_{= name =} = STROAGE_READ({= addr =});
+    attr_{= name =} = {= STROAGE_READ =}({= addr =});
     {=/ onebyte =}
     {=^ onebyte =}
-    STROAGE_GET({= addr =}, attr_{= name =});
+    {= STROAGE_GET =}({= addr =}, attr_{= name =});
     {=/ onebyte =}
     {=# is_float =}
     if (!is_valid_float(attr_{= name =}, {= scaled_min =}, {= scaled_max =})) {
@@ -42,18 +42,18 @@ func set_attr_{= name =}_raw(unscaled_value {= type =}) void {
     attr_{= name =} = unscaled_value * {= scale =};
     {=# keep =}
     {=# onebyte =}
-    STROAGE_WRITE({= addr =}, attr_{= name =});
+    {= STROAGE_WRITE =}({= addr =}, attr_{= name =});
     {=/ onebyte =}
     {=^ onebyte =}
-    STROAGE_PUT({= addr =}, attr_{= name =});
+    {= STROAGE_PUT =}({= addr =}, attr_{= name =});
     {=/ onebyte =}
-    STROAGE_COMMIT();
+    {= STROAGE_COMMIT =}();
     {=/ keep =}
 }
 
 
 func set_attr_{= name =}(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
-    if (jsonlookup(json, tokens, num_tokens, FROM_ROM(TO_ROM("data")), requestValue)) {
+    if (jsonlookup(json, tokens, num_tokens, {= FROM_ROM =}({= TO_ROM =}("data")), requestValue)) {
         {=# is_float =}
         float tmp;
         bool r = prepare_float(&tmp, retval, requestValue, {= min =}, {= max =});
@@ -77,15 +77,15 @@ func set_attr_{= name =}(json const char *, tokens jsmntok_t *, num_tokens int, 
 func get_attr_{= name =}(retval char *) bool {
     {=^ is_float =}
     {=# is_long =}
-    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}\": %ld}")), ({= type =})attr_{= name =} / {= scale =});
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"{= name =}\": %ld}")), ({= type =})attr_{= name =} / {= scale =});
     {=/ is_long =}
     {=^ is_long =}
-    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}\": %d}")), ({= type =})attr_{= name =} / {= scale =});
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"{= name =}\": %d}")), ({= type =})attr_{= name =} / {= scale =});
     {=/ is_long =}
     {=/ is_float =}
     {=# is_float =}
     dtostrf(({= type =})attr_{= name =} / {= scale =}, {= width =}, {= prec =}, requestValue);
-    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}\": %s}")), ltrim(requestValue));
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"{= name =}\": %s}")), ltrim(requestValue));
     {=/ is_float =}
     return true;
 }
@@ -109,10 +109,10 @@ metric_{= name =}_threshold_reported bool = false
 {=# has_app =}
 setup setup_metric_{= name =} {
     {=# onebyte =}
-    metric_{= name =}_threshold = STROAGE_READ({= addr =});
+    metric_{= name =}_threshold = {= STROAGE_READ =}({= addr =});
     {=/ onebyte =}
     {=^ onebyte =}
-    STROAGE_GET({= addr =}, metric_{= name =}_threshold);
+    {= STROAGE_GET =}({= addr =}, metric_{= name =}_threshold);
     {=/ onebyte =}
     {=# is_float =}
     if (!is_valid_float(metric_{= name =}_threshold, {= min_threshold =}, {= max_threshold =})) {
@@ -131,7 +131,7 @@ setup setup_metric_{= name =} {
 {=/ has_app =}
 
 func set_metric_{= name =}_threshold(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
-    if (jsonlookup(json, tokens, num_tokens, FROM_ROM(TO_ROM("data")), requestValue)) {
+    if (jsonlookup(json, tokens, num_tokens, {= FROM_ROM =}({= TO_ROM =}("data")), requestValue)) {
         {=# is_float =}
         float tmp;
         bool r = prepare_float(&tmp, retval, requestValue, {= min_threshold =}, {= max_threshold =});
@@ -146,12 +146,12 @@ func set_metric_{= name =}_threshold(json const char *, tokens jsmntok_t *, num_
         metric_{= name =}_threshold = ({= type =})tmp;
         metric_{= name =}_threshold_force = true;
         {=# onebyte =}
-        STROAGE_WRITE({= addr =}, metric_{= name =}_threshold);
+        {= STROAGE_WRITE =}({= addr =}, metric_{= name =}_threshold);
         {=/ onebyte =}
         {=^ onebyte =}
-        STROAGE_PUT({= addr =}, metric_{= name =}_threshold);
+        {= STROAGE_PUT =}({= addr =}, metric_{= name =}_threshold);
         {=/ onebyte =}
-        STROAGE_COMMIT();
+        {= STROAGE_COMMIT =}();
     }
     get_metric_{= name =}_threshold(retval);
     return true;
@@ -160,15 +160,15 @@ func set_metric_{= name =}_threshold(json const char *, tokens jsmntok_t *, num_
 func get_metric_{= name =}_threshold(retval char *) bool {
     {=^ is_float =}
     {=# is_long =}
-    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}_threshold\": %ld}")), metric_{= name =}_threshold);
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"{= name =}_threshold\": %ld}")), metric_{= name =}_threshold);
     {=/ is_long =}
     {=^ is_long =}
-    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}_threshold\": %d}")), metric_{= name =}_threshold);
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"{= name =}_threshold\": %d}")), metric_{= name =}_threshold);
     {=/ is_long =}
     {=/ is_float =}
     {=# is_float =}
     dtostrf(metric_{= name =}_threshold, {= width =}, {= prec =}, requestValue);
-    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}_threshold\": %s}")), ltrim(requestValue));
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"{= name =}_threshold\": %s}")), ltrim(requestValue));
     {=/ is_float =}
     return true;
 }
@@ -189,15 +189,15 @@ func get_metric_{= name =}(retval char *) bool {
     }
     {=^ is_float =}
     {=# is_long =}
-    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}\": %ld}")), metric_{= name =});
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"{= name =}\": %ld}")), metric_{= name =});
     {=/ is_long =}
     {=^ is_long =}
-    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}\": %d}")), metric_{= name =});
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"{= name =}\": %d}")), metric_{= name =});
     {=/ is_long =}
     {=/ is_float =}
     {=# is_float =}
     dtostrf(metric_{= name =}, {= width =}, {= prec =}, requestValue);
-    sprintf(retval, FROM_ROM(TO_ROM("{\"{= name =}\": %s}")), ltrim(requestValue));
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"{= name =}\": %s}")), ltrim(requestValue));
     {=/ is_float =}
     return true;
 }

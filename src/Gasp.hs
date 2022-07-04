@@ -363,6 +363,7 @@ instance ToJSON Gasp where
         , "has_timer"   .= hasTimer
         ] ++ map (\(Flag k v) -> Key.fromString k .= v) flags
           ++ map (\(Data k v) -> Key.fromString k .= v) datas
+          ++ map (\(Constant {constName=k, constValue=v}) -> Key.fromString k .= v) consts
         where gasp = prepareGasp (maybe 0 (startAddr prod) app) (getFuncFlags gasp0) gasp0
               setups = getSetups gasp
               loops = getLoops gasp

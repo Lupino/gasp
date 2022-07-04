@@ -2,7 +2,7 @@
 
 {=# has_debug =}
 setup w_setup_debug_print {
-    DEBUG_SERIAL.println(TO_ROM("Setup"));
+    DEBUG_SERIAL.println({= TO_ROM =}("Setup"));
 }
 {=/ has_debug =}
 
@@ -62,26 +62,26 @@ func DEBUG_PRINT_PACKET(buffer const uint8_t *, len const uint16_t, is_recv cons
     {=# has_debug =}
     givelink_type = givelink_raw_get_type(buffer);
     givelink_id = givelink_raw_get_id(buffer);
-    givelink_raw_get_data(buffer, PACKET_DATA, &packet_data_length);
-    PACKET_DATA[packet_data_length] = '\0';
+    givelink_raw_get_data(buffer, {= PACKET_DATA =}, &packet_data_length);
+    {= PACKET_DATA =}[packet_data_length] = '\0';
 
     if (is_recv) {
-        DEBUG_SERIAL.print(TO_ROM("Recv Id: "));
+        DEBUG_SERIAL.print({= TO_ROM =}("Recv Id: "));
     } else {
-        DEBUG_SERIAL.print(TO_ROM("Send Id: "));
+        DEBUG_SERIAL.print({= TO_ROM =}("Send Id: "));
     }
     DEBUG_SERIAL.print(givelink_id);
-    DEBUG_SERIAL.print(TO_ROM(" Type: "));
+    DEBUG_SERIAL.print({= TO_ROM =}(" Type: "));
     DEBUG_PRINT_TYPE(givelink_type);
     if (packet_data_length > 0) {
-        DEBUG_SERIAL.print(TO_ROM(" Data Length: "));
+        DEBUG_SERIAL.print({= TO_ROM =}(" Data Length: "));
         DEBUG_SERIAL.print(packet_data_length);
-        DEBUG_SERIAL.print(TO_ROM(" Data: "));
+        DEBUG_SERIAL.print({= TO_ROM =}(" Data: "));
         for (uint16_t i = 0; i < packet_data_length; i ++) {
-            DEBUG_SERIAL.write(PACKET_DATA[i]);
+            DEBUG_SERIAL.write({= PACKET_DATA =}[i]);
         }
-        DEBUG_SERIAL.print(TO_ROM(" Data HEX: "));
-        DEBUG_PRINT_HEX(PACKET_DATA, packet_data_length);
+        DEBUG_SERIAL.print({= TO_ROM =}(" Data HEX: "));
+        DEBUG_PRINT_HEX({= PACKET_DATA =}, packet_data_length);
     } else {
         DEBUG_SERIAL.println();
     }

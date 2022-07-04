@@ -26,6 +26,7 @@ import           Gasp.Function
 import           Generator                  (writeAppCode)
 import           Generator.Template         (compileAndRenderTextTemplate)
 import           Parser                     (parseGasp, parseGasp0)
+import           System.FilePath            ((</>))
 import           Text.Printf                (printf)
 import qualified Util.Terminal              as Term
 
@@ -41,8 +42,10 @@ compile gaspFile options = do
 
     case r of
         Left err    -> return . Left $ show err
-        Right gasp ->
-          enrichGaspASTBasedOnCompileOptions gasp options
+        Right gasp -> do
+          Right r0 <- parseGasp tempDir $ tempDir </> "constants.gasp"
+          let gasp1 = setGaspExprs gasp (getGaspExprs gasp ++ getGaspExprs r0)
+          enrichGaspASTBasedOnCompileOptions gasp1 options
             >>= preprocessGasp >>= generateCode (CompileOptions.compileType options)
   where
     generateCode Compile gasp = writeAppCode gasp outDir tempDir >> return (Right ())

@@ -9,21 +9,14 @@ timer_schedat_s     uint32_t = 0
 timer_period_s      uint32_t = 0
 timer_duration_s    uint32_t = 0
 timer_action uint8_t = 0
-SYNCTIME_DELAY_MS = 3600000
 
 {=# timers =}
 timer_{= name =}_sched bool = false
 {=/ timers =}
 
-{=# has_timer =}
 timer_buf[11] uint8_t
 
-// one week 7 * 24 * 60 * 60
-MAX_TIMER_DURATION = 604800
-
-// two month 60 * 24 * 60 * 60
-MAX_TIMER_PERIOD = 5184000
-
+{=# has_timer =}
 loop timer_loop {
     if (sys_timer_s > 0 && next_timer_event_ms <= get_cache_time_ms()) {
         {=# timers =}
@@ -83,33 +76,33 @@ func get_value(buf const char *, start_ptr int *) uint32_t {
 }
 
 func set_timer_raw(json const char *, tokens jsmntok_t *, num_tokens int, addr0 int, addr1 int, addr2 int) void {
-    if (jsonlookup(json, tokens, num_tokens, FROM_ROM(TO_ROM("data")), requestValue)) {
+    if (jsonlookup(json, tokens, num_tokens, {= FROM_ROM =}({= TO_ROM =}("data")), requestValue)) {
         int pos = 0;
         timer_schedat_s  = get_value(requestValue, &pos);
         timer_period_s   = get_value(requestValue, &pos);
         timer_duration_s = get_value(requestValue, &pos);
 
-        if (timer_duration_s > MAX_TIMER_DURATION) {
-            timer_duration_s = MAX_TIMER_DURATION - 100;
+        if (timer_duration_s > {= MAX_TIMER_DURATION =}) {
+            timer_duration_s = {= MAX_TIMER_DURATION =} - 100;
         }
 
-        if (timer_period_s > MAX_TIMER_PERIOD) {
-            timer_period_s = MAX_TIMER_PERIOD - 100;
+        if (timer_period_s > {= MAX_TIMER_PERIOD =}) {
+            timer_period_s = {= MAX_TIMER_PERIOD =} - 100;
         }
 
-        STROAGE_PUT(addr0, timer_schedat_s);
-        STROAGE_PUT(addr1, timer_period_s);
-        STROAGE_PUT(addr2, timer_duration_s);
-        STROAGE_COMMIT();
+        {= STROAGE_PUT =}(addr0, timer_schedat_s);
+        {= STROAGE_PUT =}(addr1, timer_period_s);
+        {= STROAGE_PUT =}(addr2, timer_duration_s);
+        {= STROAGE_COMMIT =}();
         swap_timer_event(get_cache_time_ms() + 5);
     }
 }
 
 func get_timer_raw(addr0 int, addr1 int, addr2 int, retval char *) bool {
-    STROAGE_GET(addr0, timer_schedat_s);
-    STROAGE_GET(addr1, timer_period_s);
-    STROAGE_GET(addr2, timer_duration_s);
-    sprintf(retval, FROM_ROM(TO_ROM("{\"sched_at\": %ld, \"period\": %ld, \"duration\": %ld}")), timer_schedat_s, timer_period_s, timer_duration_s);
+    {= STROAGE_GET =}(addr0, timer_schedat_s);
+    {= STROAGE_GET =}(addr1, timer_period_s);
+    {= STROAGE_GET =}(addr2, timer_duration_s);
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"sched_at\": %ld, \"period\": %ld, \"duration\": %ld}")), timer_schedat_s, timer_period_s, timer_duration_s);
     return true;
 }
 
@@ -117,7 +110,7 @@ func getset_timer(json const char *, tokens jsmntok_t *, num_tokens int, retval 
     int token = jsonfind(json, tokens, num_tokens, "name");
     if (token > 1) {
         {=# timers =}
-        if (jsoneq(json, &tokens[token], FROM_ROM(TO_ROM("{= name =}")))) {
+        if (jsoneq(json, &tokens[token], {= FROM_ROM =}({= TO_ROM =}("{= name =}")))) {
             if (set) {
                 set_timer_raw(json, tokens, num_tokens, {= addr0 =}, {= addr1 =}, {= addr2 =});
             }
@@ -135,10 +128,10 @@ func finishTimer(addr0 int, addr2 int, sched bool *) void {
             *sched = false;
             timer_action = 2;
         }
-        if (timer_period_s > timer_duration_s && timer_period_s < MAX_TIMER_PERIOD) {
+        if (timer_period_s > timer_duration_s && timer_period_s < {= MAX_TIMER_PERIOD =}) {
             timer_schedat_s += timer_period_s;
-            STROAGE_PUT(addr0, timer_schedat_s);
-            STROAGE_COMMIT();
+            {= STROAGE_PUT =}(addr0, timer_schedat_s);
+            {= STROAGE_COMMIT =}();
             timer_delta0_ms = (timer_schedat_s - sys_timer_s) * 1000 + sys_timer_synced_ms;
         } else {
             stopTimer(addr2);
@@ -158,8 +151,8 @@ func startTimer(addr0 int, addr2 int, sched bool *) void {
 }
 
 func stopTimer(addr2 int) void {
-    STROAGE_PUT(addr2, 0);
-    STROAGE_COMMIT();
+    {= STROAGE_PUT =}(addr2, 0);
+    {= STROAGE_COMMIT =}();
 }
 
 func processTimer(addr0 int, addr1 int, addr2 int, sched bool *) void {
@@ -170,9 +163,9 @@ func processTimer(addr0 int, addr1 int, addr2 int, sched bool *) void {
 
 func processTimer0(addr0 int, addr1 int, addr2 int, sched bool *) void {
     timer_action = 0;
-    STROAGE_GET(addr0, timer_schedat_s);
-    STROAGE_GET(addr1, timer_period_s);
-    STROAGE_GET(addr2, timer_duration_s);
+    {= STROAGE_GET =}(addr0, timer_schedat_s);
+    {= STROAGE_GET =}(addr1, timer_period_s);
+    {= STROAGE_GET =}(addr2, timer_duration_s);
 
     if (*sched) {
         finishTimer(addr0, addr2, sched);
@@ -180,13 +173,13 @@ func processTimer0(addr0 int, addr1 int, addr2 int, sched bool *) void {
     }
 
 
-    if (timer_duration_s == 0 || timer_duration_s > MAX_TIMER_DURATION) {
+    if (timer_duration_s == 0 || timer_duration_s > {= MAX_TIMER_DURATION =}) {
         return;
     }
 
     if (timer_schedat_s < sys_timer_s) {
         if (timer_schedat_s + timer_duration_s < sys_timer_s) {
-            if (timer_period_s == 0 || timer_period_s > MAX_TIMER_PERIOD) {
+            if (timer_period_s == 0 || timer_period_s > {= MAX_TIMER_PERIOD =}) {
                 stopTimer(addr2);
                 return;
             }
@@ -200,8 +193,8 @@ func processTimer0(addr0 int, addr1 int, addr2 int, sched bool *) void {
                 stopTimer(addr2);
                 return;
             } else {
-                STROAGE_PUT(addr0, timer_schedat_s);
-                STROAGE_COMMIT();
+                {= STROAGE_PUT =}(addr0, timer_schedat_s);
+                {= STROAGE_COMMIT =}();
             }
         } else {
             startTimer(addr0, addr2, sched);

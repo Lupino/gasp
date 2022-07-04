@@ -5,7 +5,6 @@ import <jsmn.h> https://github.com/zserge/jsmn.git
 {=/ has_app =}
 
 packet_sended bool = true;
-GL_SERIAL_EVENT = DEBUG_PRINT_PACKET
 
 func givelink_reader(c uint8_t, buffer uint8_t *, len int *) bool {
     return givelink_raw_recv(buffer, (uint16_t *)len, c);
@@ -14,14 +13,14 @@ func givelink_reader(c uint8_t, buffer uint8_t *, len int *) bool {
 func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
     givelink_type = givelink_raw_get_type(buffer);
     givelink_id = givelink_raw_get_id(buffer);
-    givelink_raw_get_data(buffer, PACKET_DATA, &packet_data_length);
-    PACKET_DATA[packet_data_length] = '\0';
+    givelink_raw_get_data(buffer, {= PACKET_DATA =}, &{= PACKET_DATA_LENGTH =});
+    {= PACKET_DATA =}[{= PACKET_DATA_LENGTH =}] = '\0';
     {=# ctrl_mode =}
     packet_sended = false;
     {=/ ctrl_mode =}
     if (givelink_type == AUTHRES) {
         for (int i = 0; i < PACKET_ADDR_LENGTH; i ++) {
-            givelink_addr[i] = PACKET_DATA[i];
+            givelink_addr[i] = {= PACKET_DATA =}[i];
         }
         givelink_authed = true;
         save_addr();
@@ -31,7 +30,7 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
     }
     if (givelink_type == GETSETTOKEN) {
         {=# production =}
-        if (packet_data_length > 0) {
+        if ({= PACKET_DATA_LENGTH =} > 0) {
             save_token();
         }
         {=/ production =}
@@ -39,12 +38,12 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
     }
     if (givelink_type == REQUEST) {
         wantSendData[0] = '\0';
-        bool ret = processRequest((const char *)PACKET_DATA, packet_data_length, wantSendData);
+        bool ret = processRequest((const char *){= PACKET_DATA =}, {= PACKET_DATA_LENGTH =}, wantSendData);
         if (wantSendData[0] == '\0') {
             if (ret) {
-                sprintf(wantSendData, FROM_ROM(TO_ROM("{\"result\": \"OK\"}")));
+                sprintf(wantSendData, {= FROM_ROM =}({= TO_ROM =}("{\"result\": \"OK\"}")));
             } else {
-                sprintf(wantSendData, FROM_ROM(TO_ROM("{\"err\": \"not support\"}")));
+                sprintf(wantSendData, {= FROM_ROM =}({= TO_ROM =}("{\"err\": \"not support\"}")));
             }
         }
         send_packet_rsp(wantSendData);
@@ -86,7 +85,7 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
     }
     {=# has_timer =}
     if (givelink_type == SYNCTIME) {
-        sys_timer_s = (uint32_t)atol((const char *)PACKET_DATA);
+        sys_timer_s = (uint32_t)atol((const char *){= PACKET_DATA =});
         sys_timer_synced_ms = get_cache_time_ms();
     }
     {=/ has_timer =}
@@ -97,7 +96,7 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
     }
     if (givelink_type == CTRLREQ1) {
         mainAction();
-        if (report_timer_ms + REPORT_DELAY_MS < get_cache_time_ms()) {
+        if (report_timer_ms + {= REPORT_DELAY_MS =} < get_cache_time_ms()) {
             send_packet_0(PING);
         }
         send_packet_0(CTRLRES);
@@ -108,7 +107,7 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
 func GL_SERIAL_main {
     if (!givelink_authed) {
         requireReportAttribute = true;
-        if (auth_timer_ms + AUTH_DELAY_MS < get_cache_time_ms()) {
+        if (auth_timer_ms + {= AUTH_DELAY_MS =} < get_cache_time_ms()) {
             {=# ctrl_mode =}
             packet_sended = false;
             {=/ ctrl_mode =}
@@ -124,11 +123,8 @@ func GL_SERIAL_main {
 
 auth_timer_ms unsigned long = 0
 
-AUTH_DELAY_MS = 1000
-PING_DELAY_MS = 300000
 MAX_GL_PAYLOAD_LENGTH = {= max_gl_len =}
 MAX_BUFFER_LENGTH = {= max_buf_len =}
-MAX_NUM_TOKENS = 12
 MAX_REQUEST_VALUE_LENGTH = {= max_req_len =}
 MAX_TMPL_LENGTH = {= max_tpl_len =}
 
@@ -148,7 +144,7 @@ givelink_addr[PACKET_ADDR_LENGTH] uint8_t = {{= addr_hex_array =}}
 
 func load_addr() {
     for (int i = 0; i < PACKET_ADDR_LENGTH; i ++) {
-        givelink_addr[i] = STROAGE_READ({= addr_addr =} + i);
+        givelink_addr[i] = {= STROAGE_READ =}({= addr_addr =} + i);
     }
     givelink_authed = true;
 }
@@ -156,7 +152,7 @@ func load_addr() {
 func setup_givelink {
     {=# production =}
     for (int i = 0; i < {= token_len =}; i ++) {
-        token[i] = STROAGE_READ({= token_addr =} + i);
+        token[i] = {= STROAGE_READ =}({= token_addr =} + i);
     }
     {=/ production =}
     {=# production =}
@@ -171,17 +167,17 @@ setup setup_givelink {
 func save_addr {
     {=# production =}
     for (int i = 0; i < PACKET_ADDR_LENGTH; i ++) {
-        STROAGE_WRITE({= addr_addr =} + i, PACKET_DATA[i]);
+        {= STROAGE_WRITE =}({= addr_addr =} + i, {= PACKET_DATA =}[i]);
     }
-    STROAGE_COMMIT();
+    {= STROAGE_COMMIT =}();
     {=/ production =}
 }
 
 func save_token {
     for (int i = 0; i < {= token_len =}; i ++) {
-        STROAGE_WRITE({= token_addr =} + i, PACKET_DATA[i]);
+        {= STROAGE_WRITE =}({= token_addr =} + i, {= PACKET_DATA =}[i]);
     }
-    STROAGE_COMMIT();
+    {= STROAGE_COMMIT =}();
     setup_givelink();
 }
 
@@ -203,8 +199,8 @@ func send_token() {
     }
 
     givelink_type = GETSETTOKEN;
-    memcpy(PACKET_DATA, buf, idx);
-    packet_data_length = idx;
+    memcpy({= PACKET_DATA =}, buf, idx);
+    {= PACKET_DATA_LENGTH =} = idx;
     send_packet();
 }
 {=/ app =}
@@ -212,17 +208,14 @@ func send_token() {
 givelink_authed bool = true
 givelink_type uint8_t
 packet_data[MAX_BUFFER_LENGTH] uint8_t
-PACKET_DATA = packet_data
 packet_data_length uint16_t
 givelink_id uint16_t
 
 lastPayloadId uint16_t = 100
 readedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
-READED_PAYLOAD = readedPayload
 report_attr_packet_id uint16_t = 0
 report_metric_packet_id uint16_t = 0
 report_timer_ms unsigned long = 4000
-REPORT_DELAY_MS = 10
 sendedPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
 retryPayload[MAX_GL_PAYLOAD_LENGTH] uint8_t
 retryLen uint16_t = 0
@@ -230,20 +223,19 @@ need_retry bool = false
 
 
 requestJsmnParser jsmn_parser
-requestJsmnTokens[MAX_NUM_TOKENS] jsmntok_t
+requestJsmnTokens[{= MAX_NUM_TOKENS =}] jsmntok_t
 requestValue[MAX_REQUEST_VALUE_LENGTH] char
 wantSendData[MAX_BUFFER_LENGTH] char
 tempSendData[MAX_TMPL_LENGTH] char
 wantSendDataTpl[MAX_TMPL_LENGTH] char
 
-METRIC_DELAY_MS = 1800000
 metric_timer_ms unsigned long = 0
 requireReportAttribute bool = true
 requireReportMetric bool = true
 
 
 func mainAction() void {
-    if (report_timer_ms + REPORT_DELAY_MS > get_cache_time_ms()) {
+    if (report_timer_ms + {= REPORT_DELAY_MS =} > get_cache_time_ms()) {
         return;
     }
 
@@ -254,7 +246,7 @@ func mainAction() void {
 
     {=# has_metric =}
     if (reportMetric()) {
-        if (metric_timer_ms + METRIC_DELAY_MS < get_cache_time_ms()) {
+        if (metric_timer_ms + {= METRIC_DELAY_MS =} < get_cache_time_ms()) {
             setReportMetricAll();
         }
     } else {
@@ -279,7 +271,7 @@ func mainAction() void {
     }
 
     {=# has_metric =}
-    if (metric_timer_ms + METRIC_DELAY_MS < get_cache_time_ms()) {
+    if (metric_timer_ms + {= METRIC_DELAY_MS =} < get_cache_time_ms()) {
         requireReportMetric = true;
     }
 
@@ -291,7 +283,7 @@ func mainAction() void {
 
     {=/ has_metric =}
     {=/ low_memory =}
-    if (ping_timer_ms + PING_DELAY_MS < get_cache_time_ms()) {
+    if (ping_timer_ms + {= PING_DELAY_MS =} < get_cache_time_ms()) {
         send_packet_0(PING);
     }
 
@@ -300,7 +292,7 @@ func mainAction() void {
         send_packet_0(SYNCTIME);
     }
 
-    if (sys_timer_synced_ms + SYNCTIME_DELAY_MS < get_cache_time_ms()) {
+    if (sys_timer_synced_ms + {= SYNCTIME_DELAY_MS =} < get_cache_time_ms()) {
         send_packet_0(SYNCTIME);
     }
     {=/ has_timer =}
@@ -314,7 +306,7 @@ func send_packet_raw(buffer const uint8_t *, len const uint16_t) void {
     GL_SERIAL.write('\r');
     GL_SERIAL.write('\n');
     GL_SERIAL.flush();
-    GL_SERIAL_EVENT(buffer, len, false);
+    {= GL_SERIAL_EVENT =}(buffer, len, false);
 }
 
 
@@ -331,28 +323,28 @@ func gen_packet(pkt uint8_t *) {
     }
     givelink_raw_set_id(pkt, givelink_id);
     givelink_raw_set_type(pkt, givelink_type);
-    givelink_raw_set_data(pkt, PACKET_DATA, packet_data_length);
+    givelink_raw_set_data(pkt, {= PACKET_DATA =}, {= PACKET_DATA_LENGTH =});
     givelink_raw_set_crc16(pkt);
 }
 
 func is_self(buffer const uint8_t *, len const int) bool {
-    givelink_raw_get_key(buffer, PACKET_DATA, &packet_data_length);
+    givelink_raw_get_key(buffer, {= PACKET_DATA =}, &{= PACKET_DATA_LENGTH =});
 
-    if (packet_data_length == 0) {
-        givelink_raw_get_token(buffer, PACKET_DATA, &packet_data_length);
-        if (packet_data_length == 0) {
+    if ({= PACKET_DATA_LENGTH =} == 0) {
+        givelink_raw_get_token(buffer, {= PACKET_DATA =}, &{= PACKET_DATA_LENGTH =});
+        if ({= PACKET_DATA_LENGTH =} == 0) {
             return true;
         }
     }
 
-    if (packet_data_length == PACKET_ADDR_LENGTH && equal(PACKET_DATA, givelink_addr, packet_data_length)) {
+    if ({= PACKET_DATA_LENGTH =} == PACKET_ADDR_LENGTH && equal({= PACKET_DATA =}, givelink_addr, {= PACKET_DATA_LENGTH =})) {
         return true;
     }
 
     {=# app =}
-    if (packet_data_length == {= key_len =} && equal(PACKET_DATA, key, packet_data_length)) {
-        givelink_raw_get_token(buffer, PACKET_DATA, &packet_data_length);
-        if (packet_data_length == {= token_len =} && equal(PACKET_DATA, token, packet_data_length)) {
+    if ({= PACKET_DATA_LENGTH =} == {= key_len =} && equal({= PACKET_DATA =}, key, {= PACKET_DATA_LENGTH =})) {
+        givelink_raw_get_token(buffer, {= PACKET_DATA =}, &{= PACKET_DATA_LENGTH =});
+        if ({= PACKET_DATA_LENGTH =} == {= token_len =} && equal({= PACKET_DATA =}, token, {= PACKET_DATA_LENGTH =})) {
             return true;
         }
     }
@@ -369,8 +361,8 @@ func send_packet() void {
     packet_sended = true;
     {=/ ctrl_mode =}
     {=# low_memory =}
-    gen_packet(READED_PAYLOAD);
-    send_packet_raw(READED_PAYLOAD, givelink_raw_get_length(READED_PAYLOAD));
+    gen_packet({= READED_PAYLOAD =});
+    send_packet_raw({= READED_PAYLOAD =}, givelink_raw_get_length({= READED_PAYLOAD =}));
     {=/ low_memory =}
     {=^ low_memory =}
     {=# auto_retry =}
@@ -399,15 +391,15 @@ func send_packet_0(type const uint8_t) void {
 
 func send_packet_1(type const uint8_t, data_ const char *, length const int) void {
     next_packet(type);
-    packet_data_length = length;
-    memcpy(PACKET_DATA, data_, length);
+    {= PACKET_DATA_LENGTH =} = length;
+    memcpy({= PACKET_DATA =}, data_, length);
     send_packet();
 }
 
 func send_packet_rsp(data_ const char *) void {
     givelink_type = RESPONSE;
-    packet_data_length = get_json_length(data_);
-    memcpy(PACKET_DATA, (const uint8_t *)data_, packet_data_length);
+    {= PACKET_DATA_LENGTH =} = get_json_length(data_);
+    memcpy({= PACKET_DATA =}, (const uint8_t *)data_, {= PACKET_DATA_LENGTH =});
     send_packet();
 }
 
@@ -435,7 +427,7 @@ func next_packet(type const uint8_t) void {
 
     givelink_id = lastPayloadId;
     givelink_type = type;
-    packet_data_length = 0;
+    {= PACKET_DATA_LENGTH =} = 0;
     {=^ low_memory =}
     incrLastPayloadId();
     {=/ low_memory =}
@@ -448,10 +440,10 @@ func incrLastPayloadId() {
 func processRequest(json const char *, length int, retval char *) bool {
     /* Prepare parser */
     jsmn_init(&requestJsmnParser);
-    int num_tokens = jsmn_parse(&requestJsmnParser, json, length, requestJsmnTokens, MAX_NUM_TOKENS);
+    int num_tokens = jsmn_parse(&requestJsmnParser, json, length, requestJsmnTokens, {= MAX_NUM_TOKENS =});
 
     if (num_tokens < 0) {
-        sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"Failed to parse JSON: %d\"}")), num_tokens);
+        sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"err\": \"Failed to parse JSON: %d\"}")), num_tokens);
         return false;
     }
 
@@ -459,12 +451,12 @@ func processRequest(json const char *, length int, retval char *) bool {
 
     if (token > 1) {
         {=# commands =}
-        if (jsoneq(json, &requestJsmnTokens[token], FROM_ROM(TO_ROM("{= name =}")))) {
+        if (jsoneq(json, &requestJsmnTokens[token], {= FROM_ROM =}({= TO_ROM =}("{= name =}")))) {
             if ({= fn =}({=# argv =}{= name =}{=^ last =}, {=/ last =}{=/ argv =})) {
                 return true;
             } else {
                 {=# error =}
-                sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"{= error =}\"}")));
+                sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"err\": \"{= error =}\"}")));
                 {=/ error =}
                 return false;
             }
@@ -472,32 +464,32 @@ func processRequest(json const char *, length int, retval char *) bool {
         {=/ commands =}
         {=# attrs =}
         {=# gen_set =}
-        if (jsoneq(json, &requestJsmnTokens[token], FROM_ROM(TO_ROM("set_{= name =}")))) {
+        if (jsoneq(json, &requestJsmnTokens[token], {= FROM_ROM =}({= TO_ROM =}("set_{= name =}")))) {
             return set_attr_{= name =}(json, requestJsmnTokens, num_tokens, retval);
         }
         {=/ gen_set =}
-        if (jsoneq(json, &requestJsmnTokens[token], FROM_ROM(TO_ROM("get_{= name =}")))) {
+        if (jsoneq(json, &requestJsmnTokens[token], {= FROM_ROM =}({= TO_ROM =}("get_{= name =}")))) {
             return get_attr_{= name =}(retval);
         }
         {=/ attrs =}
         {=# metrics =}
         {=# auto =}
-        if (jsoneq(json, &requestJsmnTokens[token], FROM_ROM(TO_ROM("set_{= name =}_threshold")))) {
+        if (jsoneq(json, &requestJsmnTokens[token], {= FROM_ROM =}({= TO_ROM =}("set_{= name =}_threshold")))) {
             return set_metric_{= name =}_threshold(json, requestJsmnTokens, num_tokens, retval);
         }
-        if (jsoneq(json, &requestJsmnTokens[token], FROM_ROM(TO_ROM("get_{= name =}_threshold")))) {
+        if (jsoneq(json, &requestJsmnTokens[token], {= FROM_ROM =}({= TO_ROM =}("get_{= name =}_threshold")))) {
             return get_metric_{= name =}_threshold(retval);
         }
         {=/ auto =}
-        if (jsoneq(json, &requestJsmnTokens[token], FROM_ROM(TO_ROM("get_{= name =}")))) {
+        if (jsoneq(json, &requestJsmnTokens[token], {= FROM_ROM =}({= TO_ROM =}("get_{= name =}")))) {
             return get_metric_{= name =}(retval);
         }
         {=/ metrics =}
         {=# has_timer =}
-        if (jsoneq(json, &requestJsmnTokens[token], FROM_ROM(TO_ROM("set_timer")))) {
+        if (jsoneq(json, &requestJsmnTokens[token], {= FROM_ROM =}({= TO_ROM =}("set_timer")))) {
             return getset_timer(json, requestJsmnTokens, num_tokens, retval, true);
         }
-        if (jsoneq(json, &requestJsmnTokens[token], FROM_ROM(TO_ROM("get_timer")))) {
+        if (jsoneq(json, &requestJsmnTokens[token], {= FROM_ROM =}({= TO_ROM =}("get_timer")))) {
             return getset_timer(json, requestJsmnTokens, num_tokens, retval, false);
         }
         {=/ has_timer =}

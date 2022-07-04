@@ -1,6 +1,5 @@
 {{={= =}=}}
 
-DEBOUNCE_DELAY_MS = 50
 gpio_reading uint8_t = 0
 
 {=# gpios =}
@@ -36,7 +35,7 @@ loop gpio_{= name =}_loop {
     if (gpio_reading != last_gpio_{= name =}_state) {
         last_gpio_{= name =}_debounce_time_ms = get_cache_time_ms();
     }
-    if ((get_cache_time_ms() - last_gpio_{= name =}_debounce_time_ms) > DEBOUNCE_DELAY_MS) {
+    if ((get_cache_time_ms() - last_gpio_{= name =}_debounce_time_ms) > {= DEBOUNCE_DELAY_MS =}) {
         if (gpio_reading != gpio_{= name =}_state) {
           gpio_{= name =}_state = gpio_reading;
           if (gpio_{= name =}_state == {= emit =}) {

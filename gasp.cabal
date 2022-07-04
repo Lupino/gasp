@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c7b200a2eadecff1750f952f2ab971c1878c4a75f75260f7c5d37476412ddce4
+-- hash: a1e7689bc97d4e5de2fe0cbc08bf67c6dbd7a068646913208589df1444668a2b
 
 name:           gasp
 version:        0.1.0.1
@@ -26,6 +26,7 @@ data-files:
     template/attr_and_metric.gasp
     template/combined.gasp
     template/config.mk
+    template/constants.gasp
     template/debug.gasp
     template/doc.md
     template/every.gasp

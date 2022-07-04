@@ -5,8 +5,9 @@ uart GL_SERIAL {
 READED_PAYLOAD = GL_SERIAL_read_0_buffer
 
 func gl_parser(buffer uint8_t *, len int) {
+{{={= =}=}}
     if (is_self(buffer, len)) {
-        GL_SERIAL_EVENT(buffer, len, true);
+        {= GL_SERIAL_EVENT =}(buffer, len, true);
         GL_SERIAL_parse(buffer, len);
     }
 }

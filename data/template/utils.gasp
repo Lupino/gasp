@@ -1,5 +1,5 @@
-TO_ROM = F
-func FROM_ROM(ifsh const __FlashStringHelper *) char * {
+{{={= =}=}}
+func FC(ifsh const __FlashStringHelper *) char * {
     PGM_P p = reinterpret_cast<PGM_P>(ifsh);
     size_t n = 0;
     while (n < MAX_TMPL_LENGTH) {
@@ -121,17 +121,17 @@ func is_valid_float(number float, min float, max float) bool {
 }
 
 func err_only_support_number(retval char *) bool {
-    sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"data only support number\"}")));
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"err\": \"data only support number\"}")));
     return false;
 }
 
 func err_data_between(retval char *, min float, max float) bool {
-    sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"data must between: [%f, %f]\"}")), min, max);
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"err\": \"data must between: [%f, %f]\"}")), min, max);
     return false;
 }
 
 func err_invalid(retval char *) bool {
-    sprintf(retval, FROM_ROM(TO_ROM("{\"err\": \"invalid\"}")));
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"err\": \"invalid\"}")));
     return false;
 }
 
