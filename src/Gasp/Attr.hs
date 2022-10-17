@@ -32,6 +32,7 @@ data Attr = Attr
     , attrKeep   :: !Bool
     , attrIdx    :: !Int
     , attrEvent  :: !String
+    , attrReaded :: !Bool
     } deriving (Show, Eq)
 
 instance ToJSON Attr where
@@ -56,6 +57,7 @@ instance ToJSON Attr where
         , "index"      .= attrIdx attr
         , "event"      .= attrEvent attr
         , "has_event"  .= not (null $ attrEvent attr)
+        , "readed"     .= attrReaded attr
         ]
 
 calcAttrWidth :: Attr -> Int

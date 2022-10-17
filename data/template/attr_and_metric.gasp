@@ -10,7 +10,12 @@ cache_attr_{= name =} {= type =} = {= default =}
 last_attr_{= name =} {= type =} = {= default =}
 attr_{= name =}_force bool = true
 attr_{= name =}_reported bool = false
+{=# readed =}
+attr_{= name =}_readed bool = true
+{=/ readed =}
+{=^ readed =}
 attr_{= name =}_readed bool = false
+{=/ readed =}
 
 {=# has_app =}
 {=# keep =}
@@ -34,7 +39,6 @@ setup setup_attr_{= name =} {
     {=/ is_float =}
         attr_{= name =} = {= default =};
     }
-    set_attr_{= name =}_readed();
 }
 {=/ keep =}
 {=/ has_app =}
@@ -397,7 +401,7 @@ setup setup_report_attr_index {
 
 func reportAttribute() bool {
     {=# attrs =}
-    if ((last_attr_{= name =} != attr_{= name =} || !attr_{= name =}_reported) && report_attr_index == {= index =}) {
+    if (attr_{= name =}_readed &&((last_attr_{= name =} != attr_{= name =} || !attr_{= name =}_reported) && report_attr_index == {= index =})) {
         wantSendData[0] = '\0';
         if (get_attr_{= name =}(wantSendData)) {
             send_packet_1(ATTRIBUTE, wantSendData, get_json_length(wantSendData));

@@ -19,6 +19,7 @@ data AttrProperty
     | Scale  !Double
     | Prec   !Integer
     | Event  !String
+    | Readed !Bool
     deriving (Show, Eq)
 
 -- | Parses gasp property along with the key, "key: value".
@@ -36,6 +37,7 @@ cusL = do
     "keep"    -> Keep <$> bool
     "prec"    -> Prec <$> integer
     "event"   -> Event <$> identifier
+    "readed"  -> Readed <$> bool
     _         -> fail $ "no such " ++ key
 
 -- | Parses supported app properties, expects format "key1: value1, key2: value2, ..."
@@ -67,4 +69,5 @@ attr = do
         , Attr.attrPrec   = fromIntegral $ getFromList 2 [t | Prec t <- props]
         , Attr.attrIdx    = 0
         , Attr.attrEvent  = getFromList "" [t | Event t <- props]
+        , Attr.attrReaded = getFromList True [t | Readed t <- props]
         }

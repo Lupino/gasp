@@ -199,6 +199,7 @@ attr attrName {
     scale: 1,
     gen_set: true,
     prec: 2,
+    readed: true,
     keep: true
 }
 ```
