@@ -29,7 +29,9 @@ import           Text.Parsec.String (Parser, parseFromFile)
 
 -- | Runs given gasp parser on a specified input.
 runGaspParser :: Parser a -> FilePath -> IO (Either ParseError a)
-runGaspParser = parseFromFile
+runGaspParser parser fn = do
+  putStrLn $ "parse " ++ fn
+  parseFromFile parser fn
 
 -- TODO(matija): rename to just "gaspElement"?
 -- | Parses declaration of a gasp element (e.g. App or Page) and the closure content.
