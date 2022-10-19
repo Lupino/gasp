@@ -1,0 +1,10 @@
+METRIC_DELAY_MS = attr_delay
+
+attr delay {
+  type: unsigned long,
+  default: 1800,
+  min: 60,
+  max: 86400,
+  scale: 1000
+}
+

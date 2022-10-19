@@ -1,0 +1,135 @@
+MODBUS_ADDR = 0x01
+MODBUS_INIT_CRC = 0xFFFF
+
+require ./convert
+import <givelink_common.h>
+
+func modbus_crc(buffer const uint8_t *, len const int) bool {
+    const uint16_t except = givelink_crc16(buffer, len - 2, MODBUS_INIT_CRC);
+    const uint16_t got = bin2uint16(buffer[len - 1], buffer[len - 2]);
+    return except == got;
+}
+
+func checkReaderGen(fun uint8_t, a0 uint8_t, a1 uint8_t, c uint8_t, buffer uint8_t *, len int *) bool {
+    buffer[*len] = c;
+
+    *len += 1;
+
+    if (*len == 1 && c != MODBUS_ADDR) { // 0
+        *len = 0;
+        return false;
+    }
+
+    if (*len == 2 && c != fun) {  // 1
+        *len = 0;
+        return false;
+    }
+
+    if (*len == 3 && c != a0) {   // 2
+        *len = 0;
+        return false;
+    }
+
+    if (*len == 4 && c != a1) {   // 3
+        *len = 0;
+        return false;
+    }
+
+    if (*len >= 8) {
+        if (modbus_crc(buffer, *len)) {
+            return true;
+        } else {
+            *len = 0;
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
+
+func modbusReaderGen(fun uint8_t, c uint8_t, buffer uint8_t *, len int *) bool {
+    buffer[*len] = c;
+
+    *len += 1;
+
+    if (*len == 1 && c != MODBUS_ADDR) { // 0
+        *len = 0;
+        return false;
+    }
+
+    if (*len == 2 && c != fun) {  // 1
+        *len = 0;
+        return false;
+    }
+
+    if (*len == 3 && c == 0x00) {  // 2  except payload length > 0
+        *len = 0;
+        return false;
+    }
+
+    if (*len < 3) {
+        return false;
+    }
+
+    if (*len >= buffer[2] + 4 + 1) {
+        if (modbus_crc(buffer, *len)) {
+            return true;
+        } else {
+            *len = 0;
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
+func genLn8Cmd(method uint8_t,
+               addrH uint8_t, addrL uint8_t,
+               regLenH uint8_t, regLenL uint8_t,
+               buffer uint8_t *, len int *) void {
+
+    buffer[0] = MODBUS_ADDR;
+    buffer[1] = method;
+    buffer[2] = addrH;
+    buffer[3] = addrL;
+    buffer[4] = regLenH;
+    buffer[5] = regLenL;
+    const uint16_t crc = givelink_crc16(buffer, 6, MODBUS_INIT_CRC);
+    memcpy(buffer+6, &crc, 2);
+    *len = 8;
+}
+
+func gen03Cmd(addrH uint8_t, addrL uint8_t, regLenH uint8_t, regLenL uint8_t, buffer uint8_t *, len int *) void {
+    genLn8Cmd(0x03, addrH, addrL, regLenH, regLenL, buffer, len);
+}
+
+func gen04Cmd(addrH uint8_t, addrL uint8_t, regLenH uint8_t, regLenL uint8_t, buffer uint8_t *, len int *) void {
+    genLn8Cmd(0x04, addrH, addrL, regLenH, regLenL, buffer, len);
+}
+
+func gen06Cmd(addrH uint8_t, addrL uint8_t, cmdH uint8_t, cmdL uint8_t, buffer uint8_t *, len int *) void {
+    genLn8Cmd(0x06, addrH, addrL, cmdH, cmdL, buffer, len);
+}
+
+func gen10Cmd(addr0 uint8_t, addr1 uint8_t, dat0 uint8_t, dat1 uint8_t, buffer uint8_t *, len int *) void {
+    buffer[0] = MODBUS_ADDR;
+    buffer[1] = 0x10;
+    buffer[2] = addr0;
+    buffer[3] = addr1;
+    buffer[4] = 0x00;
+    buffer[5] = 0x01;
+    buffer[6] = 0x02;
+    buffer[7] = dat0;
+    buffer[8] = dat1;
+    const uint16_t crc = givelink_crc16(buffer, 9, MODBUS_INIT_CRC);
+    memcpy(buffer+9, &crc, 2);
+    *len = 11;
+}
+
+func gen10u16Cmd(addr0 uint8_t, addr1 uint8_t, dat uint16_t, buffer uint8_t *, len int *) void {
+    uint8_t h;
+    uint8_t l;
+    fromuint16(dat, &h, &l);
+    gen10Cmd(addr0, addr1, l, h, buffer, len);
+}
