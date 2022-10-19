@@ -1,0 +1,420 @@
+flag ctrl_mode false
+
+import <givelink_utils.h>
+import <givelink_raw.h>
+
+DEBUG_SERIAL           = Serial
+GL_SERIAL              = Serial
+MAIN_SERIAL            = Serial
+SUB_SERIAL             = Serial1
+
+REPORT_DELAY_MS        = 10000
+PING_DELAY_MS          = 120000
+MAIN_SERIAL_MAX_LENGTH = 512
+SUB_SERIAL_MAX_LENGTH  = 256
+
+raw givelink_addr_t {
+typedef struct {
+    uint8_t addr[PACKET_ADDR_LENGTH];
+    bool    online;
+    bool    enable;
+    uint8_t try_count;
+    bool    offline_sent;
+} givelink_addr_t;
+}
+
+uart MAIN_SERIAL {
+    read MAIN_SERIAL_MAX_LENGTH givelink_reader mainParser
+}
+
+uart SUB_SERIAL {
+    read SUB_SERIAL_MAX_LENGTH givelink_reader subParser
+}
+
+MAX_ADDR_LENGTH = 100
+devAddrList[MAX_ADDR_LENGTH] givelink_addr_t
+packetData[MAX_ADDR_LENGTH * PACKET_ADDR_LENGTH] uint8_t
+PACKET_DATA = packetData
+READED_PAYLOAD = MAIN_SERIAL_read_0_buffer
+
+func disableAddrList {
+    for (uint16_t i = 0; i < MAX_ADDR_LENGTH; i ++){
+        devAddrList[i].enable = false;
+    }
+}
+
+func addAddr(addr uint8_t *) bool {
+    for (uint16_t i = 0; i < MAX_ADDR_LENGTH; i ++){
+        if (!devAddrList[i].enable) {
+            memcpy(devAddrList[i].addr, addr, PACKET_ADDR_LENGTH);
+            devAddrList[i].enable       = true;
+            devAddrList[i].online       = false;
+            devAddrList[i].try_count    = 0;
+            devAddrList[i].offline_sent = true;
+            return true;
+        }
+    }
+    return false;
+}
+
+func equalAddr(addr0 const uint8_t *, addr1 const uint8_t *) bool {
+    return equal(addr0, addr1, PACKET_ADDR_LENGTH);
+}
+
+func removeAddr(addr uint8_t *) bool {
+    for (uint16_t i = 0; i < MAX_ADDR_LENGTH; i ++){
+        if (equalAddr(devAddrList[i].addr, addr)) {
+            devAddrList[i].enable = false;
+            return true;
+        }
+    }
+    return false;
+}
+
+func setOnline(addr uint8_t *, online bool) bool {
+{{={= =}=}}
+    {=# has_debug =}
+    DEBUG_PRINT_ADDR(addr);
+    if (online) {
+        DEBUG_SERIAL.print(" ONLINE  ");
+    } else {
+        DEBUG_SERIAL.print(" OFFLINE ");
+    }
+    DEBUG_SERIAL.println(get_current_time_ms());
+    {=/ has_debug =}
+    if (equalAddr(ctrlReqAddr->addr, addr)) {
+        ctrlReqAddrSended = false;
+        ctrlReqAddr->online = online;
+        if (online) {
+            ctrlReqAddr->try_count = 0;
+            if (ctrlReqAddr->offline_sent) {
+                ctrlReqAddr->offline_sent = false;
+                sendState(addr, online);
+            }
+        } else {
+            ctrlReqAddr->try_count += 1;
+            if (ctrlReqAddr->try_count > 10) {
+                if (!ctrlReqAddr->offline_sent) {
+                    ctrlReqAddr->offline_sent = true;
+                    sendState(addr, online);
+                }
+            }
+
+        }
+        return true;
+    }
+    for (uint16_t i = 0; i < MAX_ADDR_LENGTH; i ++){
+        if (equalAddr(devAddrList[i].addr, addr)) {
+            devAddrList[i].online = online;
+            if (online) {
+                devAddrList[i].try_count = 0;
+                if (devAddrList[i].offline_sent) {
+                    devAddrList[i].offline_sent = false;
+                    sendState(addr, online);
+                }
+            } else {
+                devAddrList[i].try_count += 1;
+                if (devAddrList[i].try_count > 10) {
+                    if (!devAddrList[i].offline_sent) {
+                        devAddrList[i].offline_sent = true;
+                        sendState(addr, online);
+                    }
+                }
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+STATE_ONLINE = "{\"state\": \"online\"}"
+STATE_OFFLINE = "{\"state\": \"offline\"}"
+
+func sendState(addr uint8_t *, online bool) {
+{{={= =}=}}
+    if (online) {
+        gen_packet_with_addr(ctrlReqPayload, addr, autoPayloadId, ATTRIBUTE, (uint8_t *){=& STATE_ONLINE =}, 19);
+    } else {
+        gen_packet_with_addr(ctrlReqPayload, addr, autoPayloadId, ATTRIBUTE, (uint8_t *){=& STATE_OFFLINE =}, 20);
+    }
+    nextPayloadId();
+    uint16_t size = givelink_raw_get_length(ctrlReqPayload);
+    send_packet_raw(ctrlReqPayload, size);
+}
+
+func parseAddrList(buffer uint8_t *, size uint16_t) {
+    disableAddrList();
+    uint16_t j = 0;
+    for (uint16_t i = 0; i < size; i+=PACKET_ADDR_LENGTH) {
+        memcpy(devAddrList[j].addr, buffer + i, PACKET_ADDR_LENGTH);
+        devAddrList[j].enable       = true;
+        devAddrList[j].online       = false;
+        devAddrList[j].try_count    = 0;
+        devAddrList[j].offline_sent = true;
+        j ++;
+    }
+}
+
+setup addr_list_setup {
+    disableAddrList();
+}
+
+sendToSubTimer uint32_t
+sendToSubLock bool
+SEND_TO_SUB_LOCK_TIME = 100 // 500 ms
+
+
+raw sub_queue_t {
+typedef struct {
+    uint8_t data[SUB_SERIAL_MAX_LENGTH];
+    int     length;
+} sub_queue_t;
+}
+
+MAX_QUEUE_LENGTH = 10
+subQueue[MAX_QUEUE_LENGTH] sub_queue_t
+subQueueWriteId uint32_t = 0
+subQueueReadId uint32_t = 0
+
+func sendToSub(buffer uint8_t *, len int) {
+    if (len > SUB_SERIAL_MAX_LENGTH) {
+        return;
+    }
+
+    int idx = subQueueWriteId % MAX_QUEUE_LENGTH;
+
+    memcpy(subQueue[idx].data, buffer, len);
+    subQueue[idx].length = len;
+    subQueueWriteId += 1;
+}
+
+func realSendToSub() {
+{{={= =}=}}
+    if (subQueueReadId >= subQueueWriteId) {
+        return;
+    }
+
+    if (subQueueWriteId - subQueueReadId > MAX_QUEUE_LENGTH) {
+        subQueueReadId = subQueueWriteId - MAX_QUEUE_LENGTH;
+    }
+
+    int idx = subQueueReadId % MAX_QUEUE_LENGTH;
+    subQueueReadId += 1;
+
+    givelink_raw_get_key(subQueue[idx].data, {= PACKET_DATA =}, &{= PACKET_DATA_LENGTH =});
+
+    if ({= PACKET_DATA_LENGTH =} == PACKET_ADDR_LENGTH) {
+        sendToSubLock = true;
+    }
+
+    for (int i = 0; i < subQueue[idx].length; i ++) {
+        SUB_SERIAL.write(subQueue[idx].data[i]);
+    }
+    SUB_SERIAL.println();
+
+    sendToSubTimer = get_current_time_ms();
+}
+
+func mainParser(buffer uint8_t *, len int) {
+{{={= =}=}}
+    {= GL_SERIAL_EVENT =}(buffer, len, true);
+
+    givelink_type = givelink_raw_get_type(buffer);
+
+    if (is_self(buffer, len)) {
+        givelinkParser(buffer, len);
+        return;
+    }
+    givelink_raw_get_key(buffer, {= PACKET_DATA =}, &{= PACKET_DATA_LENGTH =});
+
+    if (givelink_type == CTRLREQ1) {
+    } else if (givelink_type == CTRLREQ) {
+    } else if (givelink_type == CTRLRES) {
+    } else if (givelink_type == DROP) {
+        sendToSub(buffer, len);
+        removeAddr({= PACKET_DATA =});
+    } else if (givelink_type == AUTHRES) {
+        sendToSub(buffer, len);
+        givelink_raw_get_data(buffer, {= PACKET_DATA =}, &{= PACKET_DATA_LENGTH =});
+        addAddr({= PACKET_DATA =});
+    } else {
+        sendToSub(buffer, len);
+    }
+}
+
+func DEBUG_PRINT_ADDR(v const uint8_t *) {
+    for (int i=0; i< PACKET_ADDR_LENGTH; i++) {
+        if (v[i] < 16) {
+            DEBUG_SERIAL.print("0");
+        }
+        DEBUG_SERIAL.print(v[i], HEX);
+    }
+}
+
+func subParser(buffer uint8_t *, len int) {
+{{={= =}=}}
+    givelink_type = givelink_raw_get_type(buffer);
+
+    givelink_raw_get_key(buffer, {= PACKET_DATA =}, &{= PACKET_DATA_LENGTH =});
+    sendToSubLock = false;
+    if ({= PACKET_DATA_LENGTH =} == PACKET_ADDR_LENGTH) {
+        setOnline({= PACKET_DATA =}, true);
+    }
+
+    if (givelink_type == CTRLREQ1) {
+
+    } else if (givelink_type == CTRLREQ) {
+
+    } else if (givelink_type == CTRLRES) {
+
+    } else {
+        if (switch_inited && givelink_authed) {
+            send_packet_raw(buffer, len);
+        }
+    }
+}
+
+func fromuint32(val uint32_t, b0 uint8_t *, b1 uint8_t *, b2 uint8_t *, b3 uint8_t *) {
+ *b0 = (uint8_t)(val >> 24);
+ *b1 = (uint8_t)(val >> 16);
+ *b2 = (uint8_t)(val >> 8);
+ *b3 = (uint8_t) val;
+}
+
+func touint32(b0 uint8_t, b1 uint8_t, b2 uint8_t, b3 uint8_t) uint32_t {
+    return ((uint32_t) (b0 << 24)) |
+           ((uint32_t) (b1 << 16)) |
+           ((uint32_t) (b2 << 8))  |
+           ((uint32_t) b3);
+}
+
+ctrlReqAddr givelink_addr_t *
+ctrlReqAddrSended bool = false
+ctrlReqIndex uint16_t
+ctrlReqPayload[140] uint8_t
+autoPayloadId uint16_t
+
+func nextPayloadId() {
+    autoPayloadId += 1;
+    if (autoPayloadId > 65500) {
+        autoPayloadId = 0;
+    }
+}
+
+func setTryCountZero() {
+    for (uint16_t i = 0; i < MAX_ADDR_LENGTH; i ++){
+        if (devAddrList[i].try_count > 10) {
+            devAddrList[i].try_count = 0;
+        }
+    }
+}
+
+every setTryCountZero 60000 on switch_inited
+
+func trySendCtrlReq bool {
+{{={= =}=}}
+    ctrlReqAddr = &devAddrList[ctrlReqIndex];
+    ctrlReqIndex += 1;
+    if (ctrlReqIndex >= MAX_ADDR_LENGTH) {
+        ctrlReqIndex = 0;
+    }
+    if (!ctrlReqAddr->enable) {
+        return false;
+    }
+    if (ctrlReqAddr->try_count > 10) {
+        return false;
+    }
+    if (equalAddr(givelink_addr, ctrlReqAddr->addr)) {
+        return false;
+    }
+
+    if (ctrlReqAddr->online) {
+        givelink_type = CTRLREQ;
+    } else {
+        givelink_type = CTRLREQ1;
+    }
+    gen_packet_with_addr_no_data(
+        ctrlReqPayload, ctrlReqAddr->addr, autoPayloadId, givelink_type);
+    nextPayloadId();
+
+    {=# has_debug =}
+    DEBUG_PRINT_ADDR(ctrlReqAddr->addr);
+    DEBUG_SERIAL.print(" ");
+    DEBUG_PRINT_TYPE(givelink_type);
+    DEBUG_SERIAL.print(" ");
+    DEBUG_SERIAL.println(get_current_time_ms());
+    {=/ has_debug =}
+
+    uint16_t size = givelink_raw_get_length(ctrlReqPayload);
+    ctrlReqAddrSended = true;
+    sendToSub(ctrlReqPayload, (int)size);
+    return true;
+}
+
+func sendCtrlReqLoop {
+    if (sendToSubLock) {
+        if (sendToSubTimer + SEND_TO_SUB_LOCK_TIME < get_current_time_ms()) {
+            sendToSubLock = false;
+            if (ctrlReqAddrSended) {
+                ctrlReqAddrSended = false;
+                setOnline(ctrlReqAddr->addr, false);
+            }
+        } else {
+            return;
+        }
+    }
+
+    realSendToSub();
+
+    if (sendToSubLock) {
+        return;
+    }
+
+    for (uint16_t i = 0; i < MAX_ADDR_LENGTH; i ++) {
+        if (trySendCtrlReq()) {
+            return;
+        }
+    }
+}
+
+every sendCtrlReqLoop 10 on switch_inited
+
+
+func givelinkParser(buffer uint8_t *, len int) {
+{{={= =}=}}
+    if (givelink_type == SWITCH) {
+        switch_inited = true;
+        givelink_raw_get_data(buffer, {= PACKET_DATA =}, &{= PACKET_DATA_LENGTH =});
+        parseAddrList({= PACKET_DATA =}, {= PACKET_DATA_LENGTH =});
+        {=# low_memory =}
+        incrLastPayloadId();
+        {=/ low_memory =}
+        return;
+    }
+    if ({= PACKET_DATA_LENGTH =} < MAX_GL_PAYLOAD_LENGTH) {
+        GL_SERIAL_parse(buffer, len);
+    }
+}
+
+switch_inited bool = false
+switch_init_timer_ms uint32_t = 0;
+SWITCH_DELAY_MS = 1000
+
+func runSwitch() void {
+    if (switch_inited) {
+        GL_SERIAL_main();
+    } else {
+        if (switch_init_timer_ms + SWITCH_DELAY_MS < get_cache_time_ms()) {
+            send_packet_0(SWITCH);
+            switch_init_timer_ms = get_cache_time_ms();
+        }
+    }
+}
+
+func load_addr() {
+
+}
+
+func save_addr() {
+
+}

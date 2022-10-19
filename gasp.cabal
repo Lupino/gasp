@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a1e7689bc97d4e5de2fe0cbc08bf67c6dbd7a068646913208589df1444668a2b
+-- hash: 0ed2dc88d2e56c6ee48a20c2ff39f8ff2a55204d48df538a4d0ff1cc9a41b9ed
 
 name:           gasp
 version:        0.1.0.1
@@ -34,6 +34,7 @@ data-files:
     template/gpio.gasp
     template/Makefile
     template/module/gl_serial.gasp
+    template/module/switch.gasp
     template/rule.gasp
     template/stroage.gasp
     template/timer.gasp
