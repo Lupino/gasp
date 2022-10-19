@@ -139,7 +139,7 @@ preprocessGasp gasp = setGaspExprs gasp . foldr foldFunc [] <$> mapM mapFunc (ge
           case getTmpl n tmpls of
             Nothing -> error $ Term.applyStyles [Term.Red] $ "Inline template " ++ n ++ " not found."
             Just (Tmpl _ code) ->
-              case parseGasp0 n (T.unpack $ r code) of
+              case parseGasp0 n (T.unpack (r code) ++ "\n") of
                 Left e      -> error $ Term.applyStyles [Term.Red] $ show e
                 Right exprs -> return $ ExprRendered exprs
 
