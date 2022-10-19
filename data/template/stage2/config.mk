@@ -9,6 +9,8 @@ KEY = {= key =}
 PROJECT_NAME ?= {= name =}
 {=/ app =}
 
+PROJECT_NAME ?= $(notdir $(patsubst %/build/stage2,%,$(CURDIR)))
+
 TARGET_INO = app/app.ino
 
 ifeq ($(BOARD_TAG),rp2040:rp2040:rpipico)
