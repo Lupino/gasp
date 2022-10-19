@@ -5,7 +5,6 @@ UPLOAD_FLAGS ?= -P usbasp
 BUILD_PATH ?= $(CURDIR)/arduino_build
 
 {=# app =}
-KEY = {= key =}
 PROJECT_NAME ?= {= name =}
 {=/ app =}
 
