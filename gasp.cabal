@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 67c186550a562f645858337703978e3e3c581b0dc42027eda644fc8818b03743
+-- hash: 900752740d556eb662bee4456ac5adcaafff94ed650df94252394d22633dfd1a
 
 name:           gasp
 version:        0.1.0.1
@@ -21,28 +21,28 @@ extra-source-files:
     README.md
     ChangeLog.md
 data-files:
-    template/api.yaml
-    template/app/app.ino
-    template/attr_and_metric.gasp
-    template/combined.gasp
-    template/config.mk
-    template/constants.gasp
-    template/debug.gasp
-    template/doc.md
-    template/every.gasp
-    template/givelink.gasp
-    template/gpio.gasp
-    template/Makefile
     template/module/convert.gasp
     template/module/delay.gasp
     template/module/gl_serial.gasp
     template/module/modbus.gasp
     template/module/switch.gasp
-    template/rule.gasp
-    template/stroage.gasp
-    template/timer.gasp
-    template/uart-like.gasp
-    template/utils.gasp
+    template/stage1/attr_and_metric.gasp
+    template/stage1/combined.gasp
+    template/stage1/constants.gasp
+    template/stage1/debug.gasp
+    template/stage1/every.gasp
+    template/stage1/givelink.gasp
+    template/stage1/gpio.gasp
+    template/stage1/rule.gasp
+    template/stage1/stroage.gasp
+    template/stage1/timer.gasp
+    template/stage1/uart-like.gasp
+    template/stage1/utils.gasp
+    template/stage2/api.yaml
+    template/stage2/app/app.ino
+    template/stage2/config.mk
+    template/stage2/doc.md
+    template/stage2/Makefile
 data-dir:       data/
 
 source-repository head

@@ -6,9 +6,8 @@ BUILD_PATH ?= $(CURDIR)/arduino_build
 
 {=# app =}
 KEY = {= key =}
+PROJECT_NAME ?= {= name =}
 {=/ app =}
-
-PROJECT_NAME ?= $(notdir $(patsubst %/build,%,$(CURDIR)))
 
 TARGET_INO = app/app.ino
 

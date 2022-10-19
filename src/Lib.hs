@@ -43,7 +43,7 @@ compile gaspFile options = do
     case r of
         Left err    -> return . Left $ show err
         Right gasp -> do
-          Right r0 <- parseGasp tempDir $ tempDir </> "constants.gasp"
+          Right r0 <- parseGasp tempDir $ tempDir </> "stage1/constants.gasp"
           let gasp1 = setGaspExprs gasp (getGaspExprs gasp ++ getGaspExprs r0)
           enrichGaspASTBasedOnCompileOptions gasp1 options
             >>= preprocessGasp >>= generateCode (CompileOptions.compileType options)
