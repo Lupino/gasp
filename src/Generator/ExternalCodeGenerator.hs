@@ -17,7 +17,7 @@ generateExternalCodeDir gasp =
 
 generateFile :: EC.File -> FD.FileDraft
 generateFile file =
-  let relDstPath = dstPathInGenExtCodeDir
+  let relDstPath = "stage2/" ++ dstPathInGenExtCodeDir
       absSrcPath = EC.fileAbsPath file
   in FD.createCopyFileDraft relDstPath absSrcPath
   where
