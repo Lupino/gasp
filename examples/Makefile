@@ -6,12 +6,12 @@ BUILDS=$(patsubst %,%/build,$(PROJECTS))
 
 all: $(TARGETS)
 
-%/build/Makefile: %/main.gasp
-	cd $(patsubst %/build/Makefile,%,$@) && gasp compile
+%/build/stage2/Makefile: %/main.gasp
+	cd $(patsubst %/build/stage2/Makefile,%,$@) && gasp compile
 
 $(shell mkdir -p dist)
-dist/%.hex: %/build/Makefile
-	make -C $(dir $<)
+dist/%.hex: %/build/stage2/Makefile
+	make -C $(dir $<) PROJECT_NAME=$(patsubst %/build/stage2/Makefile,%,$<)
 	cp $(dir $<)*.hex dist
 
 %/clean:
