@@ -4,8 +4,8 @@ import <givelink_utils.h>
 import <givelink_raw.h>
 
 DEBUG_SERIAL           = Serial
-GL_SERIAL              = Serial
 MAIN_SERIAL            = Serial
+GL_SERIAL              = MAIN_SERIAL
 SUB_SERIAL             = Serial1
 
 REPORT_DELAY_MS        = 10000
