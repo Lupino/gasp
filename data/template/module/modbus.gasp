@@ -130,6 +130,6 @@ func gen10Cmd(addr0 uint8_t, addr1 uint8_t, dat0 uint8_t, dat1 uint8_t, buffer u
 func gen10u16Cmd(addr0 uint8_t, addr1 uint8_t, dat uint16_t, buffer uint8_t *, len int *) void {
     uint8_t h;
     uint8_t l;
-    fromuint16(dat, &h, &l);
+    uint2bin16(dat, &h, &l);
     gen10Cmd(addr0, addr1, l, h, buffer, len);
 }
