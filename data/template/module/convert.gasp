@@ -17,16 +17,11 @@ func bin2uint32(bin0 uint8_t , bin1 uint8_t, bin2 uint8_t, bin3 uint8_t) uint32_
 }
 
 
-func bin2uint16(h uint8_t, l uint8_t) uint16_t {
-    return ((h << 8) & 0xff00) + (l & 0xff);
-}
+bin2uint16 = givelink_bin2uint16
 
-func fromuint16(val uint16_t, b0 uint8_t *, b1 uint8_t *) {
-    *b0 = (uint8_t)(val >> 8);
-    *b1 = (uint8_t)val;
-}
+uint2bin16 = givelink_uint2bin16
 
-func fromuint32(val uint32_t, b0 uint8_t *, b1 uint8_t *, b2 uint8_t *, b3 uint8_t *) {
+func uint2bin32(val uint32_t, b0 uint8_t *, b1 uint8_t *, b2 uint8_t *, b3 uint8_t *) {
  *b0 = (uint8_t)(val >> 24);
  *b1 = (uint8_t)(val >> 16);
  *b2 = (uint8_t)(val >> 8);
