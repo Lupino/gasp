@@ -347,6 +347,7 @@ instance ToJSON Gasp where
         , "attrs"       .= attrs
         , "metrics"     .= metrics
         , "has_metric"  .= hasMetric
+        , "attr_count"  .= (length metrics + length attrs)
         , "max_req_len" .= (getMaxRequestValueLength gasp + 1)
         , "max_buf_len" .= (bufLen + 1)
         , "max_tpl_len" .= (maxTmplLen + 1)
