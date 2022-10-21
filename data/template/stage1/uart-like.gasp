@@ -4,7 +4,6 @@ unused_availabled_timer_ms unsigned long
 
 {=# uarts =}
 {= name =}_availabled_timer_ms unsigned long
-{= name =}_writer_timer_ms unsigned long
 {= name =}_received_timer_ms unsigned long = 0
 {= name =}_writed_timer_ms unsigned long = 0
 {=# readers =}
@@ -119,15 +118,16 @@ func {= name =}_write_next_index() void {
 }
 
 func prepare_{= name =}_write() void {
-    if ({= name =}_writer_timer_ms + 200 > get_current_time_ms()) {
-        while ({= name =}_writer_timer_ms + 200 > get_current_time_ms()) {
-            {= name =}_poll();
+    while ({= name =}_received_timer_ms < {= name =}_writed_timer_ms) {
+        if ({= name =}_writed_timer_ms + 120 < get_current_time_ms()) {
+            delay(10);
+            break;
         }
+        {= name =}_poll();
     }
     {=# writers =}
     is_{= name =}_write_{= wname =} = false;
     {=/ writers =}
-    {= name =}_writer_timer_ms = get_current_time_ms();
 }
 
 func {= name =}_write() void {
