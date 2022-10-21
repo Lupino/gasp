@@ -1,0 +1,42 @@
+MEMORY_SIZE = 512
+MEMORY[MEMORY_SIZE] uint8_t
+
+func writeMemoryData() {
+}
+
+func memoryRead(idx const uint16_t) uint8_t {
+    if (idx >= MEMORY_SIZE) {
+        return 0;
+    }
+    return MEMORY[idx];
+}
+
+func memoryWrite(idx const uint16_t, val const uint8_t) {
+    if (idx >= MEMORY_SIZE) {
+        return;
+    }
+    MEMORY[idx] = val;
+}
+
+func memoryReadBlock(idx const uint16_t, ptr uint8_t *, len const uint16_t) {
+    if (idx + len >= MEMORY_SIZE) {
+        return;
+    }
+    memcpy(ptr, MEMORY + idx, len);
+}
+
+func memoryWriteBlock(idx const uint16_t, ptr uint8_t *, len const uint16_t) {
+    if (idx + len >= MEMORY_SIZE) {
+        return;
+    }
+    memcpy(MEMORY + idx, ptr, len);
+}
+
+MEMORY_PUT(idx,T) = memoryWriteBlock(idx,(uint8_t*)(&(T)),sizeof(T));&(T)
+MEMORY_GET(idx,T) = memoryReadBlock(idx,(uint8_t*)(&(T)),sizeof(T));&(T)
+
+STROAGE_READ = memoryRead
+STROAGE_WRITE = memoryWrite
+STROAGE_GET = MEMORY_GET
+STROAGE_PUT = MEMORY_PUT
+STROAGE_COMMIT = writeMemoryData

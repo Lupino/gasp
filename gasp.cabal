@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 900752740d556eb662bee4456ac5adcaafff94ed650df94252394d22633dfd1a
+-- hash: 6019ee9fee12be856290c90fb0300b35be3fb1ce997ff97180a17b410a8647e1
 
 name:           gasp
 version:        0.1.0.1
@@ -24,6 +24,7 @@ data-files:
     template/module/convert.gasp
     template/module/delay.gasp
     template/module/gl_serial.gasp
+    template/module/memory.gasp
     template/module/modbus.gasp
     template/module/switch.gasp
     template/stage1/attr_and_metric.gasp
