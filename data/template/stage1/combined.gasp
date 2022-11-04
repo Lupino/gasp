@@ -7,7 +7,6 @@ require ./timer
 require ./every
 require ./rule
 require ./gpio
-require ./uart-like
 require ./utils
 require ./stroage
 require ./debug

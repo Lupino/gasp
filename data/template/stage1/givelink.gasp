@@ -303,12 +303,13 @@ func mainAction() void {
 
 func send_packet_raw(buffer const uint8_t *, len const uint16_t) void {
     delay(5);
-    for (uint16_t i = 0; i < len; i ++) {
-        GL_SERIAL.write(buffer[i]);
-    }
-    GL_SERIAL.write('\r');
-    GL_SERIAL.write('\n');
-    GL_SERIAL.flush();
+    GL_SERIAL.write(buffer, len);
+    // for (uint16_t i = 0; i < len; i ++) {
+    //     GL_SERIAL.write(buffer[i]);
+    // }
+    // GL_SERIAL.write('\r');
+    // GL_SERIAL.write('\n');
+    // GL_SERIAL.flush();
     {= GL_SERIAL_EVENT =}(buffer, len, false);
 }
 

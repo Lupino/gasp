@@ -10,7 +10,7 @@ PROJECT_NAME ?= {= name =}
 
 PROJECT_NAME ?= $(notdir $(patsubst %/build/stage2,%,$(CURDIR)))
 
-TARGET_INO = app/app.ino
+TARGET_INO = stage2.ino
 
 ifeq ($(findstring rp2040:rp2040, $(BOARD_TAG)),rp2040:rp2040)
 TARGET_APP = $(PROJECT_NAME).uf2

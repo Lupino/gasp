@@ -154,38 +154,18 @@ func {= name =}_write() void {
 {= name =}_RECEIVE_DELAY = 1000
 func {= name =}_timeout_event() {}
 func {= name =}_receive_timeout_event() {}
-{= name =}_receive_timeout_event_emited bool = false;
-{= name =}_timeout_event_emited bool = false;
 
-func check_{= name =}_state {
-    if ({= name =}_availabled_timer_ms + {= name =}_DELAY < get_cache_time_ms()) {
-        if (!{= name =}_timeout_event_emited) {
-            {= name =}_timeout_event();
-            {= name =}_timeout_event_emited = true;
-        }
-    } else {
-        {= name =}_timeout_event_emited = false;
-    }
+rule {= name =}_availabled_timer_ms + {= name =}_DELAY < get_cache_time_ms()
+  do {= name =}_timeout_event
 
-    if (is_{= name =}_receive_timeout()) {
-        if (!{= name =}_receive_timeout_event_emited) {
-            {= name =}_receive_timeout_event();
-            {= name =}_receive_timeout_event_emited = true;
-        }
-    } else {
-        {= name =}_receive_timeout_event_emited = false;
-    }
-}
+rule is_{= name =}_receive_timeout()
+  do {= name =}_receive_timeout_event
 
 func is_{= name =}_receive_timeout() bool {
     if (!{= name =}_received_timer_ms < {= name =}_writed_timer_ms) {
         return {= name =}_writed_timer_ms + {= name =}_RECEIVE_DELAY < get_current_time_ms();
     }
     return false;
-}
-
-loop check_{= name =}_state {
-    check_{= name =}_state();
 }
 
 {=/ uarts =}
