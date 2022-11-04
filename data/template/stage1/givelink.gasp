@@ -54,6 +54,7 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
             {=# low_memory =}
             incrLastPayloadId();
             {=/ low_memory =}
+            report_timer_ms = 0;
         }
         {=^ low_memory =}
         {=# auto_retry =}
@@ -74,11 +75,13 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
         if (lastPayloadId == report_attr_packet_id) {
             doneReportAttribute();
             incrLastPayloadId();
+            report_timer_ms = 0;
         }
         {=# has_metric =}
         if (lastPayloadId == report_metric_packet_id) {
             doneReportMetric();
             incrLastPayloadId();
+            report_timer_ms = 0;
         }
         {=/ has_metric =}
         {=/ low_memory =}
