@@ -44,6 +44,7 @@ import           Gasp.Gpio
 import           Gasp.Metric
 import           Gasp.Rule
 import           Gasp.Timer
+import           Gasp.Linkage
 import           Gasp.Uart
 
 
@@ -79,6 +80,7 @@ data Expr
     | ExprRequire  !Require
     | ExprImport   !Import
     | ExprTimer    !Timer
+    | ExprLinkage  !Linkage
     | ExprFlag     !Flag
     deriving (Show, Eq)
 
@@ -230,6 +232,12 @@ getTimers :: Gasp -> [Timer]
 getTimers gasp = [r | (ExprTimer r) <- gaspExprs gasp]
 
 
+-- * Linkages
+
+getLinkages :: Gasp -> [Linkage]
+getLinkages gasp = [r | (ExprLinkage r) <- gaspExprs gasp]
+
+
 -- * Flags
 
 getFlags :: Gasp -> [Flag]
@@ -267,6 +275,7 @@ getCommandLength (ExprCmd cmd)   = length $ cmdName cmd
 getCommandLength (ExprAttr attr) = setAttrLength attr
 getCommandLength (ExprMetric m)  = setMetricThresholdLength m
 getCommandLength (ExprTimer t)   = setTimerLength t
+getCommandLength (ExprLinkage t)   = setLinkageLength t
 getCommandLength _               = 0
 
 
@@ -277,6 +286,7 @@ getRequestValueLength :: Expr -> Int
 getRequestValueLength (ExprAttr attr) = getAttrValueLength attr
 getRequestValueLength (ExprMetric m)  = getMetricValueLength m
 getRequestValueLength (ExprTimer _)   = 36
+getRequestValueLength (ExprLinkage _) = 40
 getRequestValueLength _               = 0
 
 
@@ -288,6 +298,7 @@ getTmplLength (ExprCmd cmd)   = getCmdRspLength cmd
 getTmplLength (ExprAttr attr) = getAttrRspLength attr
 getTmplLength (ExprMetric m)  = getMetricThresholdRspLength m
 getTmplLength (ExprTimer _)   = timerRspLength
+getTmplLength (ExprLinkage _) = linkageRspLength
 getTmplLength _               = 0
 
 
@@ -306,6 +317,7 @@ prepareGasp sAddr flags gasp = setGaspExprs gasp . go 0 1 sAddr 0 $ gaspExprs ga
           | metricAuto x = ExprMetric x {metricAddr = addr, metricIdx = idx} : go (idx + 1) ri (addr + getMetricDataLength x) ei xs
           | otherwise  = ExprMetric x : go idx ri addr ei xs
         go idx ri addr ei (ExprTimer x:xs) = ExprTimer x {timerAddr = addr} : go idx ri (addr + timerDataLen) ei xs
+        go idx ri addr ei (ExprLinkage x:xs) = ExprLinkage x {linkageAddr = addr} : go idx ri (addr + linkageDataLen) ei xs
         go idx ri addr ei (ExprCmd x:xs) = ExprCmd (setCommandFlag flags x) : go idx ri addr ei xs
         go idx ri addr ei (ExprFunction x:xs) = ExprFunction (setFunctionFlag flags x) : go idx ri addr ei xs
         go idx ri addr ei (ExprRule x:xs) = ExprRule x {ruleIndex=ri} : go idx (ri + 1) addr ei xs
@@ -361,7 +373,9 @@ instance ToJSON Gasp where
         , "uarts"       .= uarts
         , "production"  .= prod
         , "timers"      .= timers
+        , "linkages"    .= linkages
         , "has_timer"   .= hasTimer
+        , "has_linkage" .= hasLinkage
         ] ++ map (\(Flag k v) -> Key.fromString k .= v) flags
           ++ map (\(Data k v) -> Key.fromString k .= v) datas
           ++ map (\(Constant {constName=k, constValue=v}) -> Key.fromString k .= v) consts
@@ -390,7 +404,9 @@ instance ToJSON Gasp where
               app = getApp gasp0
               rules = getRules gasp
               timers = getTimers gasp
+              linkages = getLinkages gasp
               hasTimer = not (null timers)
+              hasLinkage = not (null linkages)
               maxCmdLen = getMaxCommandLength gasp
               maxTmplLen = getMaxTmplLength gasp
               bufLen0 = getTotalMetricThresholdLength (getTotalAttrLength 0 attrs) metrics

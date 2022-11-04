@@ -497,6 +497,14 @@ func processRequest(json const char *, length int, retval char *) bool {
             return getset_timer(json, requestJsmnTokens, num_tokens, retval, false);
         }
         {=/ has_timer =}
+        {=# has_linkage =}
+        if (jsoneq(json, &requestJsmnTokens[token], {= FROM_ROM =}({= TO_ROM =}("set_linkage")))) {
+            return getset_linkage(json, requestJsmnTokens, num_tokens, retval, true);
+        }
+        if (jsoneq(json, &requestJsmnTokens[token], {= FROM_ROM =}({= TO_ROM =}("get_linkage")))) {
+            return getset_linkage(json, requestJsmnTokens, num_tokens, retval, false);
+        }
+        {=/ has_linkage =}
     }
     return false;
 }

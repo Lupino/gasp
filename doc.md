@@ -247,6 +247,13 @@ timer timerName callFuncName finishFuncName
 ```
 
 
+## linkage
+
+```
+linkage linkageName getSensorValue openFuncName closeFuncName
+```
+
+
 # Template Special
 
 README sample compiled syntax.

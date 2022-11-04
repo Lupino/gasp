@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f9472617092acc75a2b01a600bb6d11587dbdae32d39147b0fbdb7490ba61a4f
+-- hash: e44b5d12d5a6305f4af767a5d29cd5155b5c783e8761fc49b808bb2c7dbf7bed
 
 name:           gasp
 version:        0.1.0.1
@@ -28,6 +28,7 @@ data-files:
     template/module/modbus.gasp
     template/module/switch.gasp
     template/stage0/combined.gasp
+    template/stage0/linkage.gasp
     template/stage0/uart-like.gasp
     template/stage1/attr_and_metric.gasp
     template/stage1/combined.gasp
@@ -66,6 +67,7 @@ library
       Gasp.Every
       Gasp.Function
       Gasp.Gpio
+      Gasp.Linkage
       Gasp.Metric
       Gasp.Rule
       Gasp.Timer
@@ -93,6 +95,7 @@ library
       Parser.Every
       Parser.Function
       Parser.Gpio
+      Parser.Linkage
       Parser.Metric
       Parser.Rule
       Parser.Timer

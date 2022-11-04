@@ -196,3 +196,67 @@ loop get_current_time_loop {
 func get_cache_time_ms() unsigned long {
     return current_time_ms;
 }
+
+
+MAX_VALUE_BUF_LENGTH = 11
+value_buf0[MAX_VALUE_BUF_LENGTH + 1] char
+value_buf1[MAX_VALUE_BUF_LENGTH + 1] char
+value_buf_len int
+
+func get_value_buf(buf const char *, start_ptr int *) {
+    int length = strlen(buf);
+    int start = *start_ptr;
+
+    value_buf_len = 0;
+    while (start < length) {
+        if (buf[start] == ',') {
+            start += 1;
+            break;
+        }
+        if (isdigit(buf[start]) || buf[start] == '.') {
+            value_buf0[value_buf_len] = buf[start];
+            value_buf_len += 1;
+            if (value_buf_len > MAX_VALUE_BUF_LENGTH) {
+                break;
+            }
+        }
+        start += 1;
+    }
+
+    *start_ptr = start;
+    value_buf0[value_buf_len] = '\0';
+}
+
+func get_uint32_value(buf const char *, start_ptr int *) uint32_t {
+    get_value_buf(buf, start_ptr);
+    if (value_buf_len == 0) {
+        return 0;
+    }
+
+    int tp = isnum(value_buf0);
+    if (tp == -1) {
+        return 0;
+    }
+
+    if (tp == 0) {
+        return (uint32_t)atol(value_buf0);
+    }
+    return (uint32_t)atof(value_buf0);
+}
+
+func get_float_value(buf const char *, start_ptr int *) float {
+    get_value_buf(buf, start_ptr);
+    if (value_buf_len == 0) {
+        return 0;
+    }
+
+    int tp = isnum(value_buf0);
+    if (tp == -1) {
+        return 0;
+    }
+
+    if (tp == 0) {
+        return (float)atol(value_buf0);
+    }
+    return (float)atof(value_buf0);
+}

@@ -23,6 +23,7 @@ import           Parser.Gpio            (gpio)
 import           Parser.Metric          (metric)
 import           Parser.Rule            (rule)
 import           Parser.Timer           (timer)
+import           Parser.Linkage           (linkage)
 import           Parser.Uart            (uart)
 import           System.Directory       (canonicalizePath, doesFileExist)
 import           System.FilePath        (addExtension, hasExtension, (</>))
@@ -53,6 +54,7 @@ expr
     <|> exprRequire
     <|> exprImport
     <|> exprTimer
+    <|> exprLinkage
     <|> exprFlag
 
 exprApp :: Parser Expr
@@ -117,6 +119,9 @@ exprImport = ExprImport <$> import_
 
 exprTimer :: Parser Expr
 exprTimer = ExprTimer <$> timer
+
+exprLinkage :: Parser Expr
+exprLinkage = ExprLinkage <$> linkage
 
 exprFlag :: Parser Expr
 exprFlag = ExprFlag <$> flag

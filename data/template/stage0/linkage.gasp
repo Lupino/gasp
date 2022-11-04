@@ -1,0 +1,150 @@
+{{={= =}=}}
+
+// {
+//     method: set_linkage,
+//     name: linkage1
+//     data: type,mode,min,max
+// }
+// {
+//     method: get_linkage,
+//     name: linkage1
+// }
+
+// @return
+// {
+//     type: int,
+//     mode: int,
+//     min: float,
+//     max: float
+// }
+
+// linkage linkageName getSensorValue openFuncName closeFuncName
+
+
+//  min_value        max_value
+//  --------------------------
+LINKAGE_MODE_NORMAL = 0
+
+//            min_value    max_value
+//  ----CLOSE----|-----OPEN----|----CLOSE----
+//  -----left----|----right----|----left-----
+LINKAGE_MODE_OPEN = 1
+
+//           min_value     max_value
+//  ----OPEN----|----CLOSE----|----OPEN----
+//  ----left----|----right----|----left----
+LINKAGE_MODE_CLOSE = 2
+
+//           min_value     max_value
+//  ----OPEN----|-------------|----CLOSE----
+//  ----left----|-------------|----right----
+LINKAGE_MODE_OPEN_CLOSE = 3
+
+//            min_value     max_value
+//  ----CLOSE----|-------------|----OPEN-----
+//  -----left----|-------------|----right----
+LINKAGE_MODE_CLOSE_OPEN = 4
+
+{=# linkages =}
+
+linkage_{= name =}_type uint8_t = 0
+linkage_{= name =}_mode uint8_t = 0;
+linkage_{= name =}_min float = 0
+linkage_{= name =}_max float = 0
+
+setup setup_linkage_{= name =} {
+    linkage_{= name =}_type = {= STROAGE_READ =}({= addr_type =});
+    if (linkage_{= name =}_type > 32) {
+        linkage_{= name =}_type = 0;
+    }
+    linkage_{= name =}_mode = {= STROAGE_READ =}({= addr_mode =});
+    if (linkage_{= name =}_mode > 4) {
+        linkage_{= name =}_mode = LINKAGE_MODE_NORMAL;
+    }
+    {= STROAGE_GET =}({= addr_min =}, linkage_{= name =}_min);
+    {= STROAGE_GET =}({= addr_max =}, linkage_{= name =}_max);
+}
+
+func do_linkage_{= name =}_right() {
+    if (linkage_{= name =}_mode == LINKAGE_MODE_OPEN) {
+        {= open =}();
+    }
+    if (linkage_{= name =}_mode == LINKAGE_MODE_CLOSE) {
+        {= close =}();
+    }
+    if (linkage_{= name =}_mode == LINKAGE_MODE_CLOSE_OPEN) {
+        {= open =}();
+    }
+    if (linkage_{= name =}_mode == LINKAGE_MODE_OPEN_CLOSE) {
+        {= close =}();
+    }
+}
+
+func do_linkage_{= name =}_left() {
+    if (linkage_{= name =}_mode == LINKAGE_MODE_OPEN) {
+        {= close =}();
+    }
+    if (linkage_{= name =}_mode == LINKAGE_MODE_CLOSE) {
+        {= open =}();
+    }
+    if (linkage_{= name =}_mode == LINKAGE_MODE_CLOSE_OPEN) {
+        {= close =}();
+    }
+    if (linkage_{= name =}_mode == LINKAGE_MODE_OPEN_CLOSE) {
+        {= open =}();
+    }
+}
+
+rule linkage_{= name =}_min < {= get =}(linkage_{= name =}_type) && {= get =}(linkage_{= name =}_type) < linkage_{= name =}_max
+  do do_linkage_{= name =}_right
+  else do_linkage_{= name =}_left
+  on linkage_{= name =}_mode == LINKAGE_MODE_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_CLOSE
+
+rule linkage_{= name =}_min > {= get =}(linkage_{= name =}_type)
+  do do_linkage_{= name =}_left
+  on linkage_{= name =}_mode == LINKAGE_MODE_CLOSE_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_OPEN_CLOSE
+
+rule linkage_{= name =}_max < {= get =}(linkage_{= name =}_type)
+  do do_linkage_{= name =}_right
+  on linkage_{= name =}_mode == LINKAGE_MODE_CLOSE_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_OPEN_CLOSE
+
+{=/ linkages =}
+
+
+func set_linkage_raw(json const char *, tokens jsmntok_t *, num_tokens int, type uint8_t *, mode uint8_t *, min float *, max float *, addr0 int, addr1 int, addr2 int, addr3 int) void {
+    if (jsonlookup(json, tokens, num_tokens, {= FROM_ROM =}({= TO_ROM =}("data")), requestValue)) {
+        int pos = 0;
+        *type  = (uint8_t)get_uint32_value(requestValue, &pos);
+        *mode   = (uint8_t)get_uint32_value(requestValue, &pos);
+        *min   = get_float_value(requestValue, &pos);
+        *max   = get_float_value(requestValue, &pos);
+
+        {= STROAGE_PUT =}(addr0, *type);
+        {= STROAGE_PUT =}(addr1, *mode);
+        {= STROAGE_PUT =}(addr2, *min);
+        {= STROAGE_PUT =}(addr3, *max);
+        {= STROAGE_COMMIT =}();
+    }
+}
+
+func get_linkage_raw(type uint8_t, mode uint8_t, min float, max float, retval char *) bool {
+    dtostrf(min, 5, 4, value_buf0);
+    dtostrf(max, 5, 4, value_buf1);
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"type\": %d, \"mode\": %d, \"min\": %s, \"max\": %s}")), type, mode, ltrim(value_buf0), ltrim(value_buf1));
+    return true;
+}
+
+func getset_linkage(json const char *, tokens jsmntok_t *, num_tokens int, retval char *, set bool) bool {
+    int token = jsonfind(json, tokens, num_tokens, "name");
+    if (token > 1) {
+        {=# linkages =}
+        if (jsoneq(json, &tokens[token], {= FROM_ROM =}({= TO_ROM =}("{= name =}")))) {
+            if (set) {
+                set_linkage_raw(json, tokens, num_tokens, &linkage_{= name =}_type, &linkage_{= name =}_mode, &linkage_{= name =}_min, &linkage_{= name =}_max, {= addr_type =}, {= addr_mode =}, {= addr_min =}, {= addr_max =});
+            }
+            return get_linkage_raw(linkage_{= name =}_type, linkage_{= name =}_mode, linkage_{= name =}_min, linkage_{= name =}_max, retval);
+        }
+        {=/ linkages =}
+    }
+    return false;
+}

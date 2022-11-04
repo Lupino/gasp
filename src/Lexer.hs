@@ -16,6 +16,7 @@ module Lexer
   , reservedNameRequire
   , reservedNameImport
   , reservedNameTimer
+  , reservedNameLinkage
   , reservedNameFlag
   , reservedNameRaw
   , reservedNameData
@@ -112,6 +113,9 @@ reservedNameImport = "import"
 reservedNameTimer :: String
 reservedNameTimer = "timer"
 
+reservedNameLinkage :: String
+reservedNameLinkage = "linkage"
+
 reservedNameFlag :: String
 reservedNameFlag = "flag"
 
@@ -158,6 +162,7 @@ reservedNames =
     , reservedNameRequire
     , reservedNameImport
     , reservedNameTimer
+    , reservedNameLinkage
     , reservedNameFlag
     , reservedNameRaw
     , reservedNameData
