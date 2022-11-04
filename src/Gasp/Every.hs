@@ -6,7 +6,7 @@ import           Data.Aeson (ToJSON (..), object, (.=))
 
 data Every = Every
     { everyFunc    :: !String
-    , everyDelayMs :: !Integer
+    , everyDelayMs :: !String
     , everyOn      :: !String
     , everyIdx     :: !Int
     } deriving (Show, Eq)
