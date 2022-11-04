@@ -14,7 +14,7 @@ timer_action uint8_t = 0
 timer_{= name =}_sched bool = false
 {=/ timers =}
 
-timer_buf[11] uint8_t
+timer_buf[11] char
 
 {=# has_timer =}
 loop timer_loop {
