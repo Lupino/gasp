@@ -12,7 +12,7 @@ all: $(TARGET_APP)
 $(ARDUINO_LIB_PATH)/%:
 	git clone $(filter %/$(notdir $@).git, $(LIBRARIES_URL)) $@
 
-ifeq ($(BOARD_TAG),rp2040:rp2040:rpipico)
+ifeq ($(findstring rp2040:rp2040, $(BOARD_TAG)),rp2040:rp2040)
 $(TARGET_APP): $(TARGET_INO) $(LIBRARIES)
 	$(ARDUINO_COMPILE) $(dir $<)
 	cp $(BUILD_PATH)/$(notdir $<).uf2 $@

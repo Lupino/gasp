@@ -12,7 +12,7 @@ PROJECT_NAME ?= $(notdir $(patsubst %/build/stage2,%,$(CURDIR)))
 
 TARGET_INO = app/app.ino
 
-ifeq ($(BOARD_TAG),rp2040:rp2040:rpipico)
+ifeq ($(findstring rp2040:rp2040, $(BOARD_TAG)),rp2040:rp2040)
 TARGET_APP = $(PROJECT_NAME).uf2
 else
 TARGET_APP = $(PROJECT_NAME).hex
