@@ -13,10 +13,12 @@ $(ARDUINO_LIB_PATH)/%:
 
 ifeq ($(findstring rp2040:rp2040, $(BOARD_TAG)),rp2040:rp2040)
 $(TARGET_APP): $(TARGET_INO) $(LIBRARIES)
+	rm -rf $(BUILD_PATH)
 	$(ARDUINO_COMPILE) $(dir $<)
 	cp $(BUILD_PATH)/$(notdir $<).uf2 $@
 else
 $(TARGET_APP): $(TARGET_INO) $(LIBRARIES)
+	rm -rf $(BUILD_PATH)
 	$(ARDUINO_COMPILE) $(dir $<)
 	@if [ -f $(BUILD_PATH)/$(notdir $<).with_bootloader.hex ]; then \
         cp $(BUILD_PATH)/$(notdir $<).with_bootloader.hex $@; \
