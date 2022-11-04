@@ -4,8 +4,7 @@ include config.mk
 LIBRARIES_URL +=  {=# imports =}{= url =} {=/ imports =}
 LIBRARIES += $(patsubst %.git, $(ARDUINO_LIB_PATH)/%, $(notdir $(LIBRARIES_URL)))
 
-CLI_FLAGS += -b $(BOARD_TAG)
-ARDUINO_COMPILE = $(ARDUINO_CLI) compile --build-path $(BUILD_PATH) $(CLI_FLAGS)
+ARDUINO_COMPILE = $(ARDUINO_CLI) compile --build-path $(BUILD_PATH) -b $(BOARD_TAG) $(CLI_FLAGS)
 
 all: $(TARGET_APP)
 
