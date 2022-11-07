@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e44b5d12d5a6305f4af767a5d29cd5155b5c783e8761fc49b808bb2c7dbf7bed
+-- hash: 600e81b46d92f25637d9a29d5806fa105486f63fd32075cbfabc38eb532a249c
 
 name:           gasp
 version:        0.1.0.1
@@ -29,6 +29,7 @@ data-files:
     template/module/switch.gasp
     template/stage0/combined.gasp
     template/stage0/linkage.gasp
+    template/stage0/timer.gasp
     template/stage0/uart-like.gasp
     template/stage1/attr_and_metric.gasp
     template/stage1/combined.gasp
@@ -39,7 +40,6 @@ data-files:
     template/stage1/gpio.gasp
     template/stage1/rule.gasp
     template/stage1/stroage.gasp
-    template/stage1/timer.gasp
     template/stage1/utils.gasp
     template/stage2/api.yaml
     template/stage2/config.mk

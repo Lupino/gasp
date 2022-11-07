@@ -213,7 +213,7 @@ command get_linkage {
         - name is one of [{=# linkages =}{= name =} {=/ linkages =}]
        ],
       payload: {
-        method: set_linkage,
+        method: get_linkage,
         name: linkage1
       }
     },

@@ -31,6 +31,75 @@ loop timer_loop {
         }
     }
 }
+
+func set_timer(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
+    return getset_timer(json, tokens, num_tokens, retval, true);
+}
+
+command set_timer {
+  fn: set_timer,
+  docs: {
+    name: "set_timer",
+    command: {
+      docs: [
+        - name is one of [{=# timers =}{= name =} {=/ timers =}]
+        - data format is schedat,period,duration
+        - schedat is int unix timestamp
+        - period is int
+        - duration is int
+       ],
+      payload: {
+        method: set_timer,
+        name: timer1
+        data: '1617503208,1617503208,1617503208'
+      }
+    },
+    return: {
+      docs: [
+        - schedat is int unix timestamp
+        - period is int
+        - duration is int
+       ],
+      payload: {
+        schedat: 1617503208
+        period: 1617503208
+        duration: 1617503208
+      }
+    }
+  }
+}
+
+func get_timer(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
+    return getset_timer(json, tokens, num_tokens, retval, false);
+}
+
+command get_timer {
+  fn: get_timer,
+  docs: {
+    name: "get_timer",
+    command: {
+      docs: [
+        - name is one of [{=# timers =}{= name =} {=/ timers =}]
+       ],
+      payload: {
+        method: get_timer,
+        name: timer1
+      }
+    },
+    return: {
+      docs: [
+        - schedat is int unix timestamp
+        - period is int
+        - duration is int
+       ],
+      payload: {
+        schedat: 1617503208
+        period: 1617503208
+        duration: 1617503208
+      }
+    }
+  }
+}
 {=/ has_timer =}
 
 func swap_timer_event(delta_ms uint32_t) void {

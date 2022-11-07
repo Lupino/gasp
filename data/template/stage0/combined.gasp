@@ -1,3 +1,4 @@
 {{={= =}=}}
 require ./uart-like
 require ./linkage
+require ./timer

@@ -3,7 +3,6 @@ import <givelink_common.h> https://github.com/Lupino/givelink.git
 
 require ./givelink
 require ./attr_and_metric
-require ./timer
 require ./every
 require ./rule
 require ./gpio
