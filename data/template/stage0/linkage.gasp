@@ -148,3 +148,94 @@ func getset_linkage(json const char *, tokens jsmntok_t *, num_tokens int, retva
     }
     return false;
 }
+
+{=# has_linkage =}
+func set_linkage(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
+    return getset_linkage(json, tokens, num_tokens, retval, true);
+}
+
+command set_linkage {
+  fn: set_linkage,
+  docs: {
+    name: "set_linkage",
+    command: {
+      docs: [
+        - name is one of [{=# linkages =}{= name =} {=/ linkages =}]
+        - data format is type,mode,min,max
+        - type is int between [0, 32]
+        - mode is int between [0, 4]
+        - mode == 0 is mean 无|无|无,
+        - mode == 1 is mean 关|开|关,
+        - mode == 2 is mean 开|关|开,
+        - mode == 3 is mean 开|无|关,
+        - mode == 4 is mean 关|无|开,
+        - min is float prec 5
+        - max is float prec 5
+       ],
+      payload: {
+        method: set_linkage,
+        name: linkage1
+        data: '32,4,-99999.9999,99999.9999'
+      }
+    },
+    return: {
+      docs: [
+        - type is int between [0, 32]
+        - mode is int between [0, 4]
+        - mode == 0 is mean 无|无|无,
+        - mode == 1 is mean 关|开|关,
+        - mode == 2 is mean 开|关|开,
+        - mode == 3 is mean 开|无|关,
+        - mode == 4 is mean 关|无|开,
+        - min is float prec 5
+        - max is float prec 5
+       ],
+      payload: {
+        type: 32
+        mode: 4
+        min: -99999.9999
+        max: 99999.9999
+      }
+    }
+  }
+}
+
+func get_linkage(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
+    return getset_linkage(json, tokens, num_tokens, retval, false);
+}
+
+command get_linkage {
+  fn: get_linkage,
+  docs: {
+    name: "get_linkage",
+    command: {
+      docs: [
+        - name is one of [{=# linkages =}{= name =} {=/ linkages =}]
+       ],
+      payload: {
+        method: set_linkage,
+        name: linkage1
+      }
+    },
+    return: {
+      docs: [
+        - type is int between [0, 32]
+        - mode is int between [0, 4]
+        - mode == 0 is mean 无|无|无,
+        - mode == 1 is mean 关|开|关,
+        - mode == 2 is mean 开|关|开,
+        - mode == 3 is mean 开|无|关,
+        - mode == 4 is mean 关|无|开,
+        - min is float prec 5
+        - max is float prec 5
+       ],
+      payload: {
+        type: 32
+        mode: 4
+        min: -99999.9999
+        max: 99999.9999
+      }
+    }
+  }
+}
+{=/ has_linkage =}
