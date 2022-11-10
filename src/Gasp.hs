@@ -24,7 +24,7 @@ import           Data.Aeson             (ToJSON (..), object, (.=))
 import qualified Data.Aeson.Key         as Key (fromString)
 import           Data.Binary            (Binary (..))
 import           Data.Binary.Put        (Put, putByteString, putFloatle,
-                                         putInt32le)
+                                         putInt32le, putWord8)
 import           Data.ByteString.Base16 as B16 (decodeLenient)
 import           Data.ByteString.Char8  as BC (pack)
 import           Data.List              (find, nub, sort)
@@ -437,16 +437,28 @@ putExpr (ExprMetric x)
   | metricAuto x && isFloatMetric x = putFloatle . realToFrac $ metricThreshold x
   | metricAuto x = putInt32le . floor $ metricThreshold x
   | otherwise  = return ()
+putExpr (ExprTimer _) = do
+  putInt32le 0
+  putInt32le 0
+  putInt32le 0
+putExpr (ExprLinkage _) = do
+  putWord8 0
+  putWord8 0
+  putInt32le 0
+  putInt32le 0
 putExpr _ = return ()
 
 instance Binary Gasp where
   get = error "not implement"
   put gasp@Gasp {isProd=True, gaspExprs=exprs} = do
+    putByteString startByte
     putByteString $ B16.decodeLenient $ BC.pack token
     putByteString $ B16.decodeLenient $ BC.pack addr
     mapM_ putExpr exprs
     where app = getApp gasp
           token = maybe "1234567890abcdef" appToken app
           addr = maybe "00000000" appAddr app
+          len = maybe 0 appStartAddr app
+          startByte = BC.pack $ take len $ cycle "\0"
 
   put Gasp {gaspExprs=exprs} = mapM_ putExpr exprs

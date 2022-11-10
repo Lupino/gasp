@@ -9,7 +9,7 @@ import           Control.Monad              (unless)
 import           Data.Aeson                 (toJSON)
 import qualified Data.Binary                as Bin (encode)
 import qualified Data.ByteString.Char8      as BC (putStrLn)
-import qualified Data.ByteString.Lazy.Char8 as BL (putStrLn)
+import qualified Data.ByteString.Lazy.Char8 as BL (writeFile)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T (unpack)
 import           Data.UUID                  (toString)
@@ -50,9 +50,10 @@ compile gaspFile options = do
   where
     generateCode Compile gasp = writeAppCode gasp outDir tempDir >> return (Right ())
     generateCode Syntax gasp  = BC.putStrLn (encode gasp) >> return (Right ())
-    generateCode Eeprom gasp  = BL.putStrLn (Bin.encode gasp) >> return (Right ())
+    generateCode Eeprom gasp  = BL.writeFile eepFile (Bin.encode gasp) >> return (Right ())
     outDir = CompileOptions.projectRootDir options
     tempDir = CompileOptions.templateDir options
+    eepFile = outDir </> "eeprom.bin"
 
 
 preprocessGasp :: Gasp -> IO Gasp
