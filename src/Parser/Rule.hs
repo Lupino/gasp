@@ -11,7 +11,7 @@ import           Text.Parsec.String (Parser)
 laterP :: Parser String
 laterP = try $ do
   _ <- symbol "later"
-  identifier <|> (show <$> integer)
+  identifier <|> (show <$> integer) <|> block "(" ")"
 
 elseActionP :: Parser (String, String)
 elseActionP = try $ do

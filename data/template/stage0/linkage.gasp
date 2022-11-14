@@ -45,6 +45,27 @@ LINKAGE_MODE_OPEN_CLOSE = 3
 //  -----left----|-------------|----right----
 LINKAGE_MODE_CLOSE_OPEN = 4
 
+
+//         value
+// -------------|-----CLOSE-----
+// -----left----|-----right-----
+LINKAGE_MODE_DELAY_RIGHT_CLOSE = 5
+
+//         value
+// -------------|-----OPEN------
+// -----left----|-----right-----
+LINKAGE_MODE_DELAY_RIGHT_OPEN = 6
+
+//         value
+// ----CLOSE----|---------------
+// -----left----|-----right-----
+LINKAGE_MODE_DELAY_LEFT_CLOSE = 7
+
+//         value
+// -----OPEN----|---------------
+// -----left----|-----right-----
+LINKAGE_MODE_DELAY_LEFT_OPEN = 8
+
 {=# linkages =}
 
 linkage_{= name =}_type uint8_t = 0
@@ -58,7 +79,7 @@ setup setup_linkage_{= name =} {
         linkage_{= name =}_type = 0;
     }
     linkage_{= name =}_mode = {= STROAGE_READ =}({= addr_mode =});
-    if (linkage_{= name =}_mode > 4) {
+    if (linkage_{= name =}_mode > 8) {
         linkage_{= name =}_mode = LINKAGE_MODE_NORMAL;
     }
     {= STROAGE_GET =}({= addr_min =}, linkage_{= name =}_min);
@@ -95,18 +116,42 @@ func do_linkage_{= name =}_left() {
     }
 }
 
-rule linkage_{= name =}_min < {= get =}(linkage_{= name =}_type) && {= get =}(linkage_{= name =}_type) < linkage_{= name =}_max
+func do_linkage_{= name =}_later() {
+    if (linkage_{= name =}_mode == LINKAGE_MODE_DELAY_LEFT_CLOSE) {
+        {= close =}();
+    }
+    if (linkage_{= name =}_mode == LINKAGE_MODE_DELAY_RIGHT_CLOSE) {
+        {= close =}();
+    }
+    if (linkage_{= name =}_mode == LINKAGE_MODE_DELAY_LEFT_OPEN) {
+        {= open =}();
+    }
+    if (linkage_{= name =}_mode == LINKAGE_MODE_DELAY_RIGHT_OPEN) {
+        {= open =}();
+    }
+}
+
+rule linkage_{= name =}_min <= {= get =}(linkage_{= name =}_type) && {= get =}(linkage_{= name =}_type) <= linkage_{= name =}_max
   do do_linkage_{= name =}_right
   else do_linkage_{= name =}_left
   on linkage_{= name =}_mode == LINKAGE_MODE_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_CLOSE
 
-rule linkage_{= name =}_min > {= get =}(linkage_{= name =}_type)
+rule linkage_{= name =}_min >= {= get =}(linkage_{= name =}_type)
   do do_linkage_{= name =}_left
   on linkage_{= name =}_mode == LINKAGE_MODE_CLOSE_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_OPEN_CLOSE
 
-rule linkage_{= name =}_max < {= get =}(linkage_{= name =}_type)
+rule linkage_{= name =}_max <= {= get =}(linkage_{= name =}_type)
   do do_linkage_{= name =}_right
   on linkage_{= name =}_mode == LINKAGE_MODE_CLOSE_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_OPEN_CLOSE
+
+rule linkage_{= name =}_min >= {= get =}(linkage_{= name =}_type)
+  do later (linkage_{= name =}_max * 1000) do_linkage_{= name =}_later
+  on linkage_{= name =}_mode == LINKAGE_MODE_DELAY_LEFT_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_DELAY_LEFT_CLOSE
+
+rule linkage_{= name =}_min <= {= get =}(linkage_{= name =}_type)
+  do later (linkage_{= name =}_max * 1000) do_linkage_{= name =}_later
+  on linkage_{= name =}_mode == LINKAGE_MODE_DELAY_RIGHT_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_DELAY_RIGHT_CLOSE
+
 
 {=/ linkages =}
 
@@ -163,14 +208,18 @@ command set_linkage {
         - name is one of [{=# linkages =}{= name =} {=/ linkages =}]
         - data format is type,mode,min,max
         - type is int between [0, 32]
-        - mode is int between [0, 4]
+        - mode is int between [0, 8]
         - mode == 0 is mean 无|无|无,
         - mode == 1 is mean 关|开|关,
         - mode == 2 is mean 开|关|开,
         - mode == 3 is mean 开|无|关,
         - mode == 4 is mean 关|无|开,
-        - min is float prec 5
-        - max is float prec 5
+        - mode == 5 is mean 无|延时关,
+        - mode == 6 is mean 无|延时开,
+        - mode == 7 is mean 延时关|无,
+        - mode == 8 is mean 延时开|无,
+        - min is float prec 5 when mode > 5 min is value
+        - max is float prec 5 when mode > 5 max is later
        ],
       payload: {
         method: set_linkage,
@@ -181,14 +230,18 @@ command set_linkage {
     return: {
       docs: [
         - type is int between [0, 32]
-        - mode is int between [0, 4]
+        - mode is int between [0, 8]
         - mode == 0 is mean 无|无|无,
         - mode == 1 is mean 关|开|关,
         - mode == 2 is mean 开|关|开,
         - mode == 3 is mean 开|无|关,
         - mode == 4 is mean 关|无|开,
-        - min is float prec 5
-        - max is float prec 5
+        - mode == 5 is mean 无|延时关,
+        - mode == 6 is mean 无|延时开,
+        - mode == 7 is mean 延时关|无,
+        - mode == 8 is mean 延时开|无,
+        - min is float prec 5 when mode > 5 min is value
+        - max is float prec 5 when mode > 5 max is later
        ],
       payload: {
         type: 32
@@ -220,14 +273,18 @@ command get_linkage {
     return: {
       docs: [
         - type is int between [0, 32]
-        - mode is int between [0, 4]
+        - mode is int between [0, 8]
         - mode == 0 is mean 无|无|无,
         - mode == 1 is mean 关|开|关,
         - mode == 2 is mean 开|关|开,
         - mode == 3 is mean 开|无|关,
         - mode == 4 is mean 关|无|开,
-        - min is float prec 5
-        - max is float prec 5
+        - mode == 5 is mean 无|延时关,
+        - mode == 6 is mean 无|延时开,
+        - mode == 7 is mean 延时关|无,
+        - mode == 8 is mean 延时开|无,
+        - min is float prec 5 when mode > 5 min is value
+        - max is float prec 5 when mode > 5 max is later
        ],
       payload: {
         type: 32
