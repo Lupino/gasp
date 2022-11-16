@@ -466,29 +466,6 @@ func processRequest(json const char *, length int, retval char *) bool {
             }
         }
         {=/ commands =}
-        {=# attrs =}
-        {=# gen_set =}
-        if (jsoneq(json, &requestJsmnTokens[token], {= FROM_ROM =}({= TO_ROM =}("set_{= name =}")))) {
-            return set_attr_{= name =}(json, requestJsmnTokens, num_tokens, retval);
-        }
-        {=/ gen_set =}
-        if (jsoneq(json, &requestJsmnTokens[token], {= FROM_ROM =}({= TO_ROM =}("get_{= name =}")))) {
-            return get_attr_{= name =}(retval);
-        }
-        {=/ attrs =}
-        {=# metrics =}
-        {=# auto =}
-        if (jsoneq(json, &requestJsmnTokens[token], {= FROM_ROM =}({= TO_ROM =}("set_{= name =}_threshold")))) {
-            return set_metric_{= name =}_threshold(json, requestJsmnTokens, num_tokens, retval);
-        }
-        if (jsoneq(json, &requestJsmnTokens[token], {= FROM_ROM =}({= TO_ROM =}("get_{= name =}_threshold")))) {
-            return get_metric_{= name =}_threshold(retval);
-        }
-        {=/ auto =}
-        if (jsoneq(json, &requestJsmnTokens[token], {= FROM_ROM =}({= TO_ROM =}("get_{= name =}")))) {
-            return get_metric_{= name =}(retval);
-        }
-        {=/ metrics =}
     }
     return false;
 }

@@ -1,0 +1,152 @@
+{{={= =}=}}
+
+{=# attrs =}
+
+attr_{= name =} {= type =} = {= default =}
+cache_attr_{= name =} {= type =} = {= default =}
+last_attr_{= name =} {= type =} = {= default =}
+attr_{= name =}_force bool = true
+attr_{= name =}_reported bool = false
+{=# readed =}
+attr_{= name =}_readed bool = true
+{=/ readed =}
+{=^ readed =}
+attr_{= name =}_readed bool = false
+{=/ readed =}
+
+{=# has_app =}
+{=# keep =}
+setup setup_attr_{= name =} {
+    {=# onebyte =}
+    attr_{= name =} = {= STROAGE_READ =}({= addr =});
+    {=/ onebyte =}
+    {=^ onebyte =}
+    {= STROAGE_GET =}({= addr =}, attr_{= name =});
+    {=/ onebyte =}
+    {=# is_float =}
+    if (!is_valid_float(attr_{= name =}, {= scaled_min =}, {= scaled_max =})) {
+    {=/ is_float =}
+    {=^ is_float =}
+    {=# uncheckmin =}
+    if (attr_{= name =} > {= scaled_max =}) {
+    {=/ uncheckmin =}
+    {=^ uncheckmin =}
+    if (attr_{= name =} < {= scaled_min =} || attr_{= name =} > {= scaled_max =}) {
+    {=/ uncheckmin =}
+    {=/ is_float =}
+        attr_{= name =} = {= default =};
+    }
+}
+{=/ keep =}
+{=/ has_app =}
+
+func set_attr_{= name =}_raw(unscaled_value {= type =}) void {
+    attr_{= name =}_force = true;
+    attr_{= name =} = unscaled_value * {= scale =};
+    {=# keep =}
+    {=# onebyte =}
+    {= STROAGE_WRITE =}({= addr =}, attr_{= name =});
+    {=/ onebyte =}
+    {=^ onebyte =}
+    {= STROAGE_PUT =}({= addr =}, attr_{= name =});
+    {=/ onebyte =}
+    {= STROAGE_COMMIT =}();
+    {=/ keep =}
+}
+
+
+func set_attr_{= name =}(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
+    if (jsonlookup(json, tokens, num_tokens, {= FROM_ROM =}({= TO_ROM =}("data")), requestValue)) {
+        {=# is_float =}
+        float tmp;
+        bool r = prepare_float(&tmp, retval, requestValue, {= min =}, {= max =});
+        {=/ is_float =}
+        {=^ is_float =}
+        long tmp;
+        bool r = prepare_long(&tmp, retval, requestValue, {= min =}, {= max =});
+        {=/ is_float =}
+        if (!r) {
+            return false;
+        }
+        set_attr_{= name =}_raw(({= type =})tmp);
+        {=# has_event =}
+        {= event =}(({= type =})tmp);
+        {=/ has_event =}
+    }
+    get_attr_{= name =}(retval);
+    return true;
+}
+
+func get_attr_{= name =}(retval char *) bool {
+    {=^ is_float =}
+    {=# is_long =}
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"{= name =}\": %ld}")), ({= type =})attr_{= name =} / {= scale =});
+    {=/ is_long =}
+    {=^ is_long =}
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"{= name =}\": %d}")), ({= type =})attr_{= name =} / {= scale =});
+    {=/ is_long =}
+    {=/ is_float =}
+    {=# is_float =}
+    dtostrf(({= type =})attr_{= name =} / {= scale =}, {= width =}, {= prec =}, requestValue);
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"{= name =}\": %s}")), ltrim(requestValue));
+    {=/ is_float =}
+    return true;
+}
+
+func set_attr_{= name =}_readed() {
+    attr_{= name =}_readed = true;
+}
+
+
+{=# gen_set =}
+command set_{= name =} {
+  fn: set_attr_{= name =},
+  docs: {
+    name: "set_{= name =}",
+    command: {
+      docs: [
+      - data is between [{= min =}, {= max =}]
+      ],
+      payload: {
+        method: set_{= name =}
+        data: {= min =}
+      }
+    },
+    return: {
+      docs: [
+      - {= name =} is between [{= min =}, {= max =}]
+      ],
+      payload: {
+        {= name =}: {= min =}
+      }
+    },
+    error: {
+      payload: {
+        err: "data must between: [{= min =}, {= max =}]"
+      }
+    }
+  }
+}
+{=/ gen_set =}
+
+command get_{= name =} {
+  fn: get_attr_{= name =},
+  docs: {
+    name: "get_{= name =}",
+    command: {
+      payload: {
+        method: get_{= name =}
+      }
+    },
+    return: {
+      docs: [
+      - {= name =} is between [{= min =}, {= max =}]
+      ],
+      payload: {
+        {= name =}: {= min =}
+      }
+    }
+  }
+}
+
+{=/ attrs =}

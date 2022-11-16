@@ -2,3 +2,6 @@
 require ./uart-like
 require ./linkage
 require ./timer
+require ./attr
+require ./metric
+require ./report

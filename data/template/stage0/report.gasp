@@ -1,0 +1,237 @@
+{{={= =}=}}
+
+report_attr_index int = 0
+report_metric_index int = 0
+
+{=^ low_memory =}
+func reportMetric(force bool) bool {
+    bool wantSend = false;
+    int total_length = 0;
+    wantSendData[0] = '{';
+    total_length += 1;
+
+    {=# metrics =}
+    {=# auto =}
+    if ((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || force) {
+        tempSendData[0] = '\0';
+        if (get_metric_{= name =}(tempSendData)) {
+            merge_json(wantSendData, tempSendData, &total_length);
+            wantSend = true;
+            last_metric_{= name =} = metric_{= name =};
+        }
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+    if (wantSend) {
+        wantSendData[total_length-1] = '}';
+        wantSendData[total_length] = '\0';
+
+        send_packet_1(TELEMETRY, wantSendData, total_length);
+        return true;
+    }
+    return false;
+}
+
+func reportAttribute(force bool) bool {
+    int total_length = 0;
+    bool wantSend = false;
+    wantSendData[0] = '{';
+    total_length += 1;
+
+    {=# attrs =}
+    if (attr_{= name =}_readed && (last_attr_{= name =} != attr_{= name =} || force || attr_{= name =}_force)) {
+        tempSendData[0] = '\0';
+        if (get_attr_{= name =}(tempSendData)) {
+            merge_json(wantSendData, tempSendData, &total_length);
+            wantSend = true;
+            last_attr_{= name =} = attr_{= name =};
+            attr_{= name =}_force = false;
+        }
+    }
+
+    {=/ attrs =}
+    {=# metrics =}
+    {=# auto =}
+    if (last_metric_{= name =}_threshold != metric_{= name =}_threshold || force || metric_{= name =}_threshold_force) {
+        tempSendData[0] = '\0';
+        if (get_metric_{= name =}_threshold(tempSendData)) {
+            merge_json(wantSendData, tempSendData, &total_length);
+            wantSend = true;
+            last_metric_{= name =}_threshold = metric_{= name =}_threshold;
+            metric_{= name =}_threshold_force = false;
+        }
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+    if (wantSend) {
+        wantSendData[total_length-1] = '}';
+        wantSendData[total_length] = '\0';
+
+        send_packet_1(ATTRIBUTE, wantSendData, total_length);
+        return true;
+    }
+    return false;
+}
+{=/ low_memory =}
+
+{=# low_memory =}
+{=# has_metric =}
+func is_valid_report_metric_index() bool {
+    {=# metrics =}
+    {=# auto =}
+    if (report_metric_index == {= index =}) {
+        return true;
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+    return false;
+}
+
+func report_metric_next_index() void {
+    for (int i = 0; i < {= attr_count =}; i ++) {
+        report_metric_index += 1;
+        if (report_metric_index >= {= attr_count =}) {
+            report_metric_index = 0;
+        }
+        if (is_valid_report_metric_index()) {
+            break;
+        }
+    }
+}
+
+setup setup_report_metric_index {
+    report_metric_next_index();
+}
+
+func reportMetric() bool {
+    {=# metrics =}
+    {=# auto =}
+    if (metric_{= name =}_readed && ((is_valid_float(metric_{= name =}, {= min =}, {= max =}) && abs(last_metric_{= name =} - metric_{= name =}) > metric_{= name =}_threshold) || !metric_{= name =}_reported) && report_metric_index == {= index =}) {
+        wantSendData[0] = '\0';
+        if (get_metric_{= name =}(wantSendData)) {
+            send_packet_1(TELEMETRY, wantSendData, get_json_length(wantSendData));
+            cache_metric_{= name =} = metric_{= name =};
+            return false;
+        }
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+    report_metric_next_index();
+
+    return true;
+}
+
+func doneReportMetric() void {
+    {=# metrics =}
+    {=# auto =}
+    if (report_metric_index == {= index =}) {
+        last_metric_{= name =} = cache_metric_{= name =};
+        metric_{= name =}_reported = true;
+        metric_{= name =}_readed = false;
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+    report_metric_next_index();
+}
+
+func setReportMetricAll() void {
+    {=# metrics =}
+    {=# auto =}
+    metric_{= name =}_reported = false;
+    {=/ auto =}
+    {=/ metrics =}
+}
+
+{=/ has_metric =}
+func is_valid_report_attr_index() bool {
+    {=# attrs =}
+    if (report_attr_index == {= index =}) {
+        return true;
+    }
+
+    {=/ attrs =}
+    {=# metrics =}
+    {=# auto =}
+    if (report_attr_index == {= index =}) {
+        return true;
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+    return false;
+}
+
+func report_attr_next_index() void {
+    for (int i = 0; i < {= attr_count =}; i ++) {
+        report_attr_index += 1;
+        if (report_attr_index >= {= attr_count =}) {
+            report_attr_index = 0;
+        }
+        if (is_valid_report_attr_index()) {
+            break;
+        }
+    }
+}
+
+{=# has_app =}
+setup setup_report_attr_index {
+    report_attr_next_index();
+}
+{=/ has_app =}
+
+func reportAttribute() bool {
+    {=# attrs =}
+    if (attr_{= name =}_readed &&((last_attr_{= name =} != attr_{= name =} || !attr_{= name =}_reported) && report_attr_index == {= index =})) {
+        wantSendData[0] = '\0';
+        if (get_attr_{= name =}(wantSendData)) {
+            send_packet_1(ATTRIBUTE, wantSendData, get_json_length(wantSendData));
+            cache_attr_{= name =} = attr_{= name =};
+            return false;
+        }
+    }
+
+    {=/ attrs =}
+    {=# metrics =}
+    {=# auto =}
+    if ((last_metric_{= name =}_threshold != metric_{= name =}_threshold || !metric_{= name =}_threshold_reported) && report_attr_index == {= index =}) {
+        wantSendData[0] = '\0';
+        if (get_metric_{= name =}_threshold(wantSendData)) {
+            send_packet_1(ATTRIBUTE, wantSendData, get_json_length(wantSendData));
+            cache_metric_{= name =}_threshold = metric_{= name =}_threshold;
+            return false;
+        }
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+
+    report_attr_next_index();
+    return true;
+}
+
+func doneReportAttribute() void {
+    {=# attrs =}
+    if (report_attr_index == {= index =}) {
+        last_attr_{= name =} = cache_attr_{= name =};
+        attr_{= name =}_reported = true;
+    }
+
+    {=/ attrs =}
+    {=# metrics =}
+    {=# auto =}
+    if (report_attr_index == {= index =}) {
+        last_metric_{= name =}_threshold = cache_metric_{= name =}_threshold;
+        metric_{= name =}_threshold_reported = true;
+    }
+
+    {=/ auto =}
+    {=/ metrics =}
+
+    report_attr_next_index();
+}
+{=/ low_memory =}

@@ -49,7 +49,7 @@ command set_timer {
         - duration is int
        ],
       payload: {
-        method: set_timer,
+        method: set_timer
         name: timer1
         data: '1617503208,1617503208,1617503208'
       }
@@ -82,7 +82,7 @@ command get_timer {
         - name is one of [{=# timers =}{= name =} {=/ timers =}]
        ],
       payload: {
-        method: get_timer,
+        method: get_timer
         name: timer1
       }
     },
