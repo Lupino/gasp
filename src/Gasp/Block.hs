@@ -8,6 +8,7 @@ module Gasp.Block
   , Render1 (..)
   , Require (..)
   , Import (..)
+  , Fd (..)
 
   , Flag (..)
   , getFlag
@@ -150,3 +151,18 @@ defaultFlags =
   , Flag "auto_retry" True
   , Flag "low_memory" False
   ]
+
+data Fd = Fd
+  { fdId   :: !Int
+  , fdCall :: !String
+  } deriving (Show)
+
+instance Eq Fd where
+  x == y = fdId x == fdId y
+
+
+instance ToJSON Fd where
+  toJSON fd = object
+    [ "fd" .= fdId fd
+    , "call" .= fdCall fd
+    ]

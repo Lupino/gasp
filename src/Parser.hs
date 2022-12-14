@@ -20,10 +20,10 @@ import           Parser.Constant        (constant)
 import           Parser.Every           (every)
 import           Parser.Function        (function)
 import           Parser.Gpio            (gpio)
+import           Parser.Linkage         (linkage)
 import           Parser.Metric          (metric)
 import           Parser.Rule            (rule)
 import           Parser.Timer           (timer)
-import           Parser.Linkage           (linkage)
 import           Parser.Uart            (uart)
 import           System.Directory       (canonicalizePath, doesFileExist)
 import           System.FilePath        (addExtension, hasExtension, (</>))
@@ -56,6 +56,7 @@ expr
     <|> exprTimer
     <|> exprLinkage
     <|> exprFlag
+    <|> exprFd
 
 exprApp :: Parser Expr
 exprApp = ExprApp <$> app
@@ -125,6 +126,9 @@ exprLinkage = ExprLinkage <$> linkage
 
 exprFlag :: Parser Expr
 exprFlag = ExprFlag <$> flag
+
+exprFd :: Parser Expr
+exprFd = ExprFd <$> fd
 
 -- | Top level parser, produces Expr.
 gaspParser :: Parser [Expr]

@@ -18,6 +18,7 @@ module Lexer
   , reservedNameTimer
   , reservedNameLinkage
   , reservedNameFlag
+  , reservedNameFd
   , reservedNameRaw
   , reservedNameData
   , reservedNameTmpl
@@ -119,6 +120,9 @@ reservedNameLinkage = "linkage"
 reservedNameFlag :: String
 reservedNameFlag = "flag"
 
+reservedNameFd :: String
+reservedNameFd = "fd"
+
 reservedNameRaw :: String
 reservedNameRaw = "raw"
 
@@ -164,6 +168,7 @@ reservedNames =
     , reservedNameTimer
     , reservedNameLinkage
     , reservedNameFlag
+    , reservedNameFd
     , reservedNameRaw
     , reservedNameData
     , reservedNameTmpl

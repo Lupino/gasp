@@ -17,6 +17,7 @@ module Parser.Block
   , require
   , import_
   , flag
+  , fd
   ) where
 
 import           Data.Aeson         (Value)
@@ -101,3 +102,9 @@ import_ = blockLine L.reservedNameImport Import
 
 flag :: Parser Flag
 flag = blockBool L.reservedNameFlag Flag
+
+fd :: Parser Fd
+fd = do
+  L.reserved L.reservedNameFd
+  fd_ <- fromIntegral <$> L.integer
+  Fd fd_ <$> normalName

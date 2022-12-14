@@ -301,16 +301,18 @@ func mainAction() void {
     {=/ has_timer =}
 }
 
+serial_fd int = 0
+
 func send_packet_raw(buffer const uint8_t *, len const uint16_t) void {
     delay(5);
-    GL_SERIAL.write(buffer, len);
-    // for (uint16_t i = 0; i < len; i ++) {
-    //     GL_SERIAL.write(buffer[i]);
-    // }
-    // GL_SERIAL.write('\r');
-    // GL_SERIAL.write('\n');
-    // GL_SERIAL.flush();
     {= GL_SERIAL_EVENT =}(buffer, len, false);
+    {=# fds =}
+    if (serial_fd == {= fd =}) {
+        {= call =}.write(buffer, len);
+        return;
+    }
+    {=/ fds =}
+    GL_SERIAL.write(buffer, len);
 }
 
 

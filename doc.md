@@ -26,6 +26,14 @@ Avaliable flags:
 
 Relpace able only the first one avaliable
 
+## fd
+
+```
+fd int funcName
+```
+
+Relpace able only the first one avaliable
+
 ## Constant or Variable
 
 ```

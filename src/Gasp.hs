@@ -41,10 +41,10 @@ import           Gasp.Constant
 import           Gasp.Every
 import           Gasp.Function
 import           Gasp.Gpio
+import           Gasp.Linkage
 import           Gasp.Metric
 import           Gasp.Rule
 import           Gasp.Timer
-import           Gasp.Linkage
 import           Gasp.Uart
 
 
@@ -82,6 +82,7 @@ data Expr
     | ExprTimer    !Timer
     | ExprLinkage  !Linkage
     | ExprFlag     !Flag
+    | ExprFd       !Fd
     deriving (Show, Eq)
 
 fromGaspExprs :: [Expr] -> Gasp
@@ -244,6 +245,12 @@ getFlags :: Gasp -> [Flag]
 getFlags gasp = [r | (ExprFlag r) <- gaspExprs gasp]
 
 
+-- * Fds
+
+getFds :: Gasp -> [Fd]
+getFds gasp = [r | (ExprFd r) <- gaspExprs gasp]
+
+
 -- * FuncFlags
 
 getFuncFlags:: Gasp -> [FuncFlag]
@@ -275,7 +282,7 @@ getCommandLength (ExprCmd cmd)   = length $ cmdName cmd
 getCommandLength (ExprAttr attr) = setAttrLength attr
 getCommandLength (ExprMetric m)  = setMetricThresholdLength m
 getCommandLength (ExprTimer t)   = setTimerLength t
-getCommandLength (ExprLinkage t)   = setLinkageLength t
+getCommandLength (ExprLinkage t) = setLinkageLength t
 getCommandLength _               = 0
 
 
@@ -357,6 +364,7 @@ instance ToJSON Gasp where
         , "setups"      .= setups
         , "raws"        .= raws
         , "attrs"       .= attrs
+        , "fds"         .= fds
         , "metrics"     .= metrics
         , "has_metric"  .= hasMetric
         , "attr_count"  .= (length metrics + length attrs)
@@ -385,6 +393,7 @@ instance ToJSON Gasp where
               raws = getRaws gasp
               datas = getDatas gasp
               prod = getProd gasp0
+              fds = nub $ getFds gasp0
               flags = nub $ argvFlags gasp0 ++ getFlags gasp ++ defaultFlags
               attrs = getAttrs gasp
               metrics = getMetrics gasp
