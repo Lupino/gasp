@@ -23,7 +23,10 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
             givelink_addr[i] = {= PACKET_DATA =}[i];
         }
         givelink_authed = true;
+
+        {=# ctrl_mode =}
         save_addr();
+        {=/ ctrl_mode =}
         {=# low_memory =}
         incrLastPayloadId();
         {=/ low_memory =}
@@ -159,7 +162,9 @@ func setup_givelink {
     }
     {=/ production =}
     {=# production =}
+    {=# ctrl_mode =}
     load_addr();
+    {=/ ctrl_mode =}
     {=/ production =}
 }
 
