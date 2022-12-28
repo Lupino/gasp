@@ -152,8 +152,17 @@ func {= name =}_write() void {
 
 {= name =}_DELAY_MS = 12000
 {= name =}_RECEIVE_DELAY_MS = 1000
-func {= name =}_timeout_event() {}
-func {= name =}_receive_timeout_event() {}
+func {= name =}_timeout_event() {
+    {=# has_debug =}
+    DEBUG_SERIAL.println({= TO_ROM =}("emit {= name =}_timeout_event"));
+    {=/ has_debug =}
+}
+
+func {= name =}_receive_timeout_event() {
+    {=# has_debug =}
+    DEBUG_SERIAL.println({= TO_ROM =}("emit {= name =}_receive_timeout_event"));
+    {=/ has_debug =}
+}
 
 rule {= name =}_availabled_timer_ms + {= name =}_DELAY_MS < get_cache_time_ms()
   do {= name =}_timeout_event
