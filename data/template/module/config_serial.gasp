@@ -1,0 +1,15 @@
+uart CONFIG_SERIAL {
+    read MAX_GL_PAYLOAD_LENGTH givelink_reader config_parser
+}
+
+
+func config_parser(buffer uint8_t *, len int) {
+{{={= =}=}}
+    serial_fd = 1;
+    if (is_self(buffer, len)) {
+        {= GL_SERIAL_EVENT =}(buffer, len, true);
+        GL_SERIAL_parse(buffer, len);
+    }
+}
+
+fd 1 CONFIG_SERIAL
