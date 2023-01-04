@@ -25,21 +25,21 @@ writeAppCode gasp dstDir tmplDir = do
   r0 <- parseGasp "" $ dstDir </> fn0
   case r0 of
     Left err0       -> error (show err0)
-    Right combined0 -> do
-      let exprs0 = getGaspExprs combined0
+    Right main0 -> do
+      let exprs0 = getGaspExprs main0
       files1 <- generateApp stage1 tmplDir $ setGaspExprs gasp (exprs ++ exprs0)
       writeFileDrafts dstDir files1
 
       r1 <- parseGasp "" $ dstDir </> fn1
       case r1 of
         Left err1       -> error (show err1)
-        Right combined1 -> do
-          let exprs1 = getGaspExprs combined1
+        Right main1 -> do
+          let exprs1 = getGaspExprs main1
           files2 <- generateApp stage2 tmplDir $ setGaspExprs gasp (exprs ++ exprs0 ++ exprs1)
           writeFileDrafts dstDir files2
 
-  where fn1 = "stage1/combined.gasp"
-        fn0 = "stage0/combined.gasp"
+  where fn1 = "stage1/main.gasp"
+        fn0 = "stage0/main.gasp"
         exprs = getGaspExprs gasp
 
 -- | Writes file drafts while using given destination dir as root dir.
