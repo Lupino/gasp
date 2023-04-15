@@ -1,5 +1,7 @@
 {{={= =}=}}
 
+unused_xxxxxxx_xxxx unsigned long
+
 {=# metrics =}
 metric_{= name =} {= type =} = 0
 cache_metric_{= name =} {= type =} = 0
