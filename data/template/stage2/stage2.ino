@@ -42,6 +42,19 @@ void loop() {
     {=/ loops =}
 }
 
+void setup1() {
+    {=# setup1s =}
+    {=& code =}
+
+    {=/ setup1s =}
+}
+
+void loop1() {
+    {=# loop1s =}
+    {=& code =}
+    {=/ loop1s =}
+}
+
 {=# functions =}
 {= type =} {= name =}({=# argv =}{= type =} {= name =}{=^ last =}, {=/ last =}{=/ argv =}) {
     {=& code =}

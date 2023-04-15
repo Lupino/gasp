@@ -63,6 +63,8 @@ data Expr
     | ExprFunction !Function
     | ExprSetup    !Setup
     | ExprLoop     !Loop
+    | ExprSetup1   !Setup1
+    | ExprLoop1    !Loop1
     | ExprRaw      !Raw
     | ExprData     !Data
     | ExprTmpl     !Tmpl
@@ -152,6 +154,16 @@ getLoops gasp = sort . nub $ [loop | (ExprLoop loop) <- gaspExprs gasp]
 
 getSetups:: Gasp -> [Setup]
 getSetups gasp = sort . nub $ [setup | (ExprSetup setup) <- gaspExprs gasp]
+
+-- * Loop1s
+
+getLoop1s:: Gasp -> [Loop1]
+getLoop1s gasp = sort . nub $ [loop1 | (ExprLoop1 loop1) <- gaspExprs gasp]
+
+-- * Setup1s
+
+getSetup1s:: Gasp -> [Setup1]
+getSetup1s gasp = sort . nub $ [setup1 | (ExprSetup1 setup1) <- gaspExprs gasp]
 
 -- * Raws
 
@@ -362,6 +374,8 @@ instance ToJSON Gasp where
         , "imports"     .= getImports gasp
         , "loops"       .= loops
         , "setups"      .= setups
+        , "loop1s"      .= loop1s
+        , "setup1s"     .= setup1s
         , "raws"        .= raws
         , "attrs"       .= attrs
         , "fds"         .= fds
@@ -390,6 +404,8 @@ instance ToJSON Gasp where
         where gasp = prepareGasp (maybe 0 (startAddr prod) app) (getFuncFlags gasp0) gasp0
               setups = getSetups gasp
               loops = getLoops gasp
+              setup1s = getSetup1s gasp
+              loop1s = getLoop1s gasp
               raws = getRaws gasp
               datas = getDatas gasp
               prod = getProd gasp0
@@ -406,6 +422,8 @@ instance ToJSON Gasp where
                 =  T.intercalate "\n"
                 $  map loopCode loops
                 ++ map setupCode setups
+                ++ map loop1Code loop1s
+                ++ map setup1Code setup1s
                 ++ map rawCode raws
               funcs = getFunctions gasp
               (requiredVars, requiredConsts, requiredFuncs) = getRequired requiredText vars consts funcs

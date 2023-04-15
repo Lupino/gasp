@@ -9,6 +9,8 @@ module Parser.Block
   , blockV
   , setup
   , loop
+  , setup1
+  , loop1
   , raw
   , data_
   , tmpl
@@ -78,6 +80,13 @@ setup = blockP L.reservedNameSetup Setup
 
 loop :: Parser Loop
 loop = blockP L.reservedNameLoop Loop
+
+
+setup1 :: Parser Setup1
+setup1 = blockP L.reservedNameSetup1 Setup1
+
+loop1 :: Parser Loop1
+loop1 = blockP L.reservedNameLoop1 Loop1
 
 raw :: Parser Raw
 raw = blockP L.reservedNameRaw Raw

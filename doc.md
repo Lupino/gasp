@@ -50,11 +50,15 @@ import lib [url]
 
 Relpace able only the first one avaliable
 
-## setup
+## setup or setup1
 
 ```
 setup name {
 // you setup code
+}
+
+setup1 name {
+// you setup1 code
 }
 ```
 
@@ -62,11 +66,15 @@ Relpace able only the first one avaliable
 
 sorted render
 
-## loop
+## loop or loop1
 
 ```
 loop name {
 // you loop code
+}
+
+loop1 name {
+// you loop1 code
 }
 ```
 

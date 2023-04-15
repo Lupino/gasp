@@ -38,6 +38,8 @@ expr
     <|> exprFunction
     <|> exprLoop
     <|> exprSetup
+    <|> exprLoop1
+    <|> exprSetup1
     <|> exprRaw
     <|> exprData
     <|> exprTmpl
@@ -72,6 +74,12 @@ exprLoop = ExprLoop <$> loop
 
 exprSetup :: Parser Expr
 exprSetup = ExprSetup <$> setup
+
+exprLoop1 :: Parser Expr
+exprLoop1 = ExprLoop1 <$> loop1
+
+exprSetup1 :: Parser Expr
+exprSetup1 = ExprSetup1 <$> setup1
 
 exprRaw :: Parser Expr
 exprRaw = ExprRaw <$> raw

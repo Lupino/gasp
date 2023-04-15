@@ -1,6 +1,8 @@
 module Gasp.Block
   ( Loop (..)
   , Setup (..)
+  , Loop1 (..)
+  , Setup1 (..)
   , Raw (..)
   , Data (..)
   , Tmpl (..)
@@ -52,6 +54,42 @@ instance ToJSON Setup where
   toJSON setup = object
     [ "code" .= stripStart (setupCode setup)
     , "name" .= setupName setup
+    ]
+
+data Loop1 = Loop1
+  { loop1Name :: String
+  , loop1Code :: Text
+  } deriving (Show)
+
+instance Eq Loop1 where
+  x == y = loop1Name x == loop1Name y
+
+instance Ord Loop1 where
+  compare x y = compare (loop1Name x) (loop1Name y)
+
+
+instance ToJSON Loop1 where
+  toJSON loop1 = object
+    [ "code" .= stripStart (loop1Code loop1)
+    , "name" .= loop1Name loop1
+    ]
+
+data Setup1 = Setup1
+  { setup1Name :: String
+  , setup1Code :: Text
+  } deriving (Show)
+
+
+instance Eq Setup1 where
+  x == y = setup1Name x == setup1Name y
+
+instance Ord Setup1 where
+  compare x y = compare (setup1Name x) (setup1Name y)
+
+instance ToJSON Setup1 where
+  toJSON setup1 = object
+    [ "code" .= stripStart (setup1Code setup1)
+    , "name" .= setup1Name setup1
     ]
 
 data Raw = Raw
