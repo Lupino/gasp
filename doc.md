@@ -162,7 +162,7 @@ Relpace able only the first one avaliable
 ## every
 
 ```
-every funcName delay_ms [on condition]
+every [core0|core1] funcName delay_ms [on condition]
 ```
 
 ## command
@@ -237,13 +237,13 @@ metric metricName {
 ## rule
 
 ```
-rule condition do [later do_later_ms ]action [else [later do_later_ms ]elseAction] [on onCondition]
+rule [core0|core1] condition do [later do_later_ms ]action [else [later do_later_ms ]elseAction] [on onCondition]
 ```
 
 ## uart
 
 ```
-uart uartName {
+uart [core0|core1] uartName {
     write writeName ["1234"|fnGen bufLen] [on condition]  // hex command or gen function
     read bufLen fnReadName fnParseName [on condition]
 }
@@ -266,7 +266,7 @@ timer timerName callFuncName finishFuncName
 ## linkage
 
 ```
-linkage linkageName getSensorValue openFuncName closeFuncName
+linkage [core0|core1] linkageName getSensorValue openFuncName closeFuncName
 ```
 
 
