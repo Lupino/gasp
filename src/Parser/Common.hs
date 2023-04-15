@@ -10,6 +10,7 @@ module Parser.Common
   , gaspPropertyBool
   , gaspProperty
   , gaspElementNameAndClosure
+  , gaspElementNameAndClosureWithCore
   , gaspBlockClosure
   , gaspClosure
   , gaspList
@@ -23,7 +24,7 @@ module Parser.Common
 import           Data.Maybe         (fromMaybe, listToMaybe)
 import           Gasp.Common        (DataType (..))
 import qualified Lexer              as L
-import           Text.Parsec        (ParseError, try, (<|>))
+import           Text.Parsec        (ParseError, option, try, (<|>))
 import           Text.Parsec.String (Parser, parseFromFile)
 
 
@@ -42,7 +43,7 @@ gaspElementNameAndClosureContent
 gaspElementNameAndClosureContent elementType closureContent =
     gaspElementNameAndClosure elementType (gaspClosure closureContent)
 
--- | Parses declaration of a gasp element (e.g. App or Page) and the belonging closure.
+-- | Parses declaration of a gasp element (e.g. Loop) and the belonging closure.
 gaspElementNameAndClosure
     :: String -- ^ Element type
     -> Parser a -- ^ Closure parser (needs to parse braces as well, not just the content)
@@ -66,6 +67,32 @@ gaspElementNameAndClosure elementType closure =
     closureContent <- closure
 
     return (elementName, closureContent)
+
+-- | Parses declaration of a gasp element (e.g. Every) and the belonging closure.
+gaspElementNameAndClosureWithCore
+    :: String -- ^ Element type
+    -> Parser a -- ^ Closure parser (needs to parse braces as well, not just the content)
+    -> Parser (String, String, a) -- ^ Name of the element and parsed closure content.
+gaspElementNameAndClosureWithCore elementType closure =
+    -- NOTE(matija): It is important to have `try` here because we don't want to consume the
+    -- content intended for other parsers.
+    -- E.g. if we tried to parse "entity-form" this parser would have been tried first for
+    -- "entity" and would consume "entity", so entity-form parser would also fail.
+    -- This way when entity parser fails, it will backtrack and allow
+    -- entity-form parser to succeed.
+    --
+    -- TODO(matija): should I push this try higher, to the specific case of entity parser
+    -- which is causing the trouble?
+    -- This way try will be executed in more cases where it is not neccessary, this
+    -- might not be the best for the performance and the clarity of error messages.
+    -- On the other hand, it is safer?
+    try $ do
+    L.reserved elementType
+    coreName <- option "" $ L.symbol "core1"
+    elementName <- L.identifier
+    closureContent <- closure
+
+    return (drop 4 coreName, elementName, closureContent)
 
 -- | Parses gasp property along with the key, "key: value".
 gaspProperty :: String -> Parser a -> Parser a

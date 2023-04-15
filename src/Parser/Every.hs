@@ -10,12 +10,13 @@ import           Text.Parsec.String (Parser)
 
 every :: Parser Every
 every = do
-    (name, delay) <- gaspElementNameAndClosure reservedNameEvery $ (show <$> integer) <|> identifier
+    (coreName, name, delay) <- gaspElementNameAndClosureWithCore reservedNameEvery $ (show <$> integer) <|> identifier
 
     on <- option "" $ block "on" "\n"
 
     return Every
-      { everyFunc    = name
+      { everyCore    = coreName
+      , everyFunc    = name
       , everyDelayMs = delay
       , everyOn      = on
       , everyIdx     = 0
