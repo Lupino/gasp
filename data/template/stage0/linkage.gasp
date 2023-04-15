@@ -73,7 +73,7 @@ linkage_{= name =}_mode uint8_t = 0;
 linkage_{= name =}_min float = 0
 linkage_{= name =}_max float = 0
 
-setup setup_linkage_{= name =} {
+setup{= core =} setup_linkage_{= name =} {
     linkage_{= name =}_type = {= STROAGE_READ =}({= addr_type =});
     if (linkage_{= name =}_type > 32) {
         linkage_{= name =}_type = 0;
@@ -131,24 +131,24 @@ func do_linkage_{= name =}_later() {
     }
 }
 
-rule linkage_{= name =}_min <= {= get =}(linkage_{= name =}_type) && {= get =}(linkage_{= name =}_type) <= linkage_{= name =}_max
+rule core{= core =} linkage_{= name =}_min <= {= get =}(linkage_{= name =}_type) && {= get =}(linkage_{= name =}_type) <= linkage_{= name =}_max
   do do_linkage_{= name =}_right
   else do_linkage_{= name =}_left
   on linkage_{= name =}_mode == LINKAGE_MODE_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_CLOSE
 
-rule linkage_{= name =}_min >= {= get =}(linkage_{= name =}_type)
+rule core{= core =} linkage_{= name =}_min >= {= get =}(linkage_{= name =}_type)
   do do_linkage_{= name =}_left
   on linkage_{= name =}_mode == LINKAGE_MODE_CLOSE_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_OPEN_CLOSE
 
-rule linkage_{= name =}_max <= {= get =}(linkage_{= name =}_type)
+rule core{= core =} linkage_{= name =}_max <= {= get =}(linkage_{= name =}_type)
   do do_linkage_{= name =}_right
   on linkage_{= name =}_mode == LINKAGE_MODE_CLOSE_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_OPEN_CLOSE
 
-rule linkage_{= name =}_min >= {= get =}(linkage_{= name =}_type)
+rule core{= core =} linkage_{= name =}_min >= {= get =}(linkage_{= name =}_type)
   do later (linkage_{= name =}_max * 1000) do_linkage_{= name =}_later
   on linkage_{= name =}_mode == LINKAGE_MODE_DELAY_LEFT_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_DELAY_LEFT_CLOSE
 
-rule linkage_{= name =}_min <= {= get =}(linkage_{= name =}_type)
+rule core{= core =} linkage_{= name =}_min <= {= get =}(linkage_{= name =}_type)
   do later (linkage_{= name =}_max * 1000) do_linkage_{= name =}_later
   on linkage_{= name =}_mode == LINKAGE_MODE_DELAY_RIGHT_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_DELAY_RIGHT_CLOSE
 

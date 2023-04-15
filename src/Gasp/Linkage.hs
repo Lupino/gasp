@@ -10,7 +10,8 @@ import           Gasp.Function (FuncName)
 
 
 data Linkage = Linkage
-  { linkageName :: !String -- Identifier
+  { linkageCore :: !String
+  , linkageName :: !String -- Identifier
   , linkageFnG  :: !FuncName
   , linkageFn0  :: !FuncName
   , linkageFn1  :: !FuncName
@@ -19,7 +20,8 @@ data Linkage = Linkage
 
 instance ToJSON Linkage where
     toJSON linkage = object
-      [ "name"      .= linkageName linkage
+      [ "core"      .= linkageCore linkage
+      , "name"      .= linkageName linkage
       , "get"       .= linkageFnG linkage
       , "open"      .= linkageFn0 linkage
       , "close"     .= linkageFn1 linkage
