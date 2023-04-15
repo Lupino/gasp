@@ -24,7 +24,7 @@ module Parser.Common
 import           Data.Maybe         (fromMaybe, listToMaybe)
 import           Gasp.Common        (DataType (..))
 import qualified Lexer              as L
-import           Text.Parsec        (ParseError, option, try, (<|>))
+import           Text.Parsec        (ParseError, try, (<|>))
 import           Text.Parsec.String (Parser, parseFromFile)
 
 
@@ -88,11 +88,11 @@ gaspElementNameAndClosureWithCore elementType closure =
     -- On the other hand, it is safer?
     try $ do
     L.reserved elementType
-    coreName <- option "" $ L.symbol "core1"
+    coreId <- L.coreId
     elementName <- L.identifier
     closureContent <- closure
 
-    return (drop 4 coreName, elementName, closureContent)
+    return (coreId, elementName, closureContent)
 
 -- | Parses gasp property along with the key, "key: value".
 gaspProperty :: String -> Parser a -> Parser a

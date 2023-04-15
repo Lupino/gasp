@@ -75,7 +75,7 @@ func rule_{= id =}_poll() void {
     {=/ has_later =}
 }
 
-loop rule_{= id =}_loop {
+loop{= core =} rule_{= id =}_loop {
     {=# has_dep =}
     rule_depends_checked = true;
     {=# depends =}

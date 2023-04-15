@@ -47,6 +47,8 @@ module Lexer
   , json
   , jsonObject
   , jsonArray
+
+  , coreId
   ) where
 
 
@@ -320,6 +322,9 @@ jsonObject = json '{' '}'
 
 jsonArray :: FromJSON a => Parser a
 jsonArray = json '[' ']'
+
+coreId :: Parser String
+coreId = drop 4 <$> option "" (try (symbol "core1"))
 
 -- | Removes leading and trailing spaces from a string.
 strip :: String -> String

@@ -28,6 +28,7 @@ onP = block "on" "\n"
 rule :: Parser Rule
 rule = do
     reserved reservedNameRule
+    core <- coreId
     condition <- block "" "do"
     later <- option "" laterP
     action <- identifier
@@ -35,7 +36,8 @@ rule = do
     onCondition <- option "" onP
 
     return Rule
-      { ruleCondition = condition
+      { ruleCore = core
+      , ruleCondition = condition
       , ruleOnCondition = onCondition
       , ruleAction = action
       , ruleLater = later

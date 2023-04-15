@@ -11,7 +11,8 @@ import           Gasp.Metric (MetricName (..))
 
 
 data Rule = Rule
-    { ruleCondition   :: !String
+    { ruleCore        :: !String
+    , ruleCondition   :: !String
     , ruleOnCondition :: !String
     , ruleAction      :: !String
     , ruleLater       :: !String
@@ -22,7 +23,8 @@ data Rule = Rule
 
 instance ToJSON Rule where
     toJSON rule = object
-        [ "condition"      .= ruleCondition rule
+        [ "core"           .= ruleCore rule
+        , "condition"      .= ruleCondition rule
         , "on_condition"   .= ruleOnCondition rule
         , "has_on"         .= not (null $ ruleOnCondition rule)
         , "action"         .= ruleAction rule
