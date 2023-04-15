@@ -4,6 +4,8 @@ module Lexer
   , reservedNameFunction
   , reservedNameLoop
   , reservedNameSetup
+  , reservedNameLoop0
+  , reservedNameSetup0
   , reservedNameLoop1
   , reservedNameSetup1
   , reservedNameAttr
@@ -81,6 +83,12 @@ reservedNameLoop = "loop"
 
 reservedNameSetup :: String
 reservedNameSetup = "setup"
+
+reservedNameLoop0 :: String
+reservedNameLoop0 = "loop0"
+
+reservedNameSetup0 :: String
+reservedNameSetup0 = "setup0"
 
 reservedNameLoop1 :: String
 reservedNameLoop1 = "loop1"
@@ -164,6 +172,8 @@ reservedNames =
     , reservedNameFunction
     , reservedNameLoop
     , reservedNameSetup
+    , reservedNameLoop0
+    , reservedNameSetup0
     , reservedNameLoop1
     , reservedNameSetup1
     , reservedNameAttr
@@ -324,7 +334,11 @@ jsonArray :: FromJSON a => Parser a
 jsonArray = json '[' ']'
 
 coreId :: Parser String
-coreId = drop 4 <$> option "" (try (symbol "core1"))
+coreId = option "0" $ do
+  void $ symbol "core"
+  cid <- oneOf ['0', '1']
+  whiteSpace
+  return [cid]
 
 -- | Removes leading and trailing spaces from a string.
 strip :: String -> String

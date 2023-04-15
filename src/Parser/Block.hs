@@ -76,10 +76,10 @@ blockV reservedName f = do
 
 
 setup :: Parser Setup
-setup = blockP L.reservedNameSetup Setup
+setup = blockP L.reservedNameSetup Setup <|> blockP L.reservedNameSetup0 Setup
 
 loop :: Parser Loop
-loop = blockP L.reservedNameLoop Loop
+loop = blockP L.reservedNameLoop Loop <|> blockP L.reservedNameLoop0 Loop
 
 
 setup1 :: Parser Setup1
