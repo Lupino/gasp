@@ -17,14 +17,16 @@ instance ToJSON UartName where
   toJSON (UartName n) = toJSON n
 
 data Uart = Uart
-  { uartName    :: !UartName
+  { uartCore    :: !String
+  , uartName    :: !UartName
   , uartWriters :: [UartWriter]
   , uartReaders :: [UartReader]
   } deriving (Show, Eq)
 
 instance ToJSON Uart where
     toJSON uart = object
-      [ "name"    .= uartName  uart
+      [ "core"    .= uartCore  uart
+      , "name"    .= uartName  uart
       , "readers" .= uartReaders uart
       , "writers" .= uartWriters uart
       , "wcount"  .= length (filter filterFunc $ uartWriters uart)

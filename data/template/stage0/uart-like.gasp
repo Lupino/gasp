@@ -22,7 +22,7 @@ is_{= name =}_write_{= wname =} bool = false
 {=/ action =}
 {=/ writers =}
 {= name =}_write_index uint8_t = 0
-loop {= name =}_poll_loop {
+loop{= core =} {= name =}_poll_loop {
     {= name =}_poll();
 }
 func {= name =}_poll() void {
@@ -164,10 +164,10 @@ func {= name =}_receive_timeout_event() {
     {=/ has_debug =}
 }
 
-rule {= name =}_availabled_timer_ms + {= name =}_DELAY_MS < get_cache_time_ms()
+rule core{= core =} {= name =}_availabled_timer_ms + {= name =}_DELAY_MS < get_cache_time_ms()
   do {= name =}_timeout_event
 
-rule is_{= name =}_receive_timeout()
+rule core{= core =} is_{= name =}_receive_timeout()
   do {= name =}_receive_timeout_event
 
 func is_{= name =}_receive_timeout() bool {

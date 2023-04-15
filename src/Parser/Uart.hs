@@ -66,11 +66,13 @@ fillRId idx (x:xs) = x {uartRId = idx} : fillRId (idx + 1) xs
 uart :: Parser Uart
 uart = do
   reserved reservedNameUart
+  core <- coreId
   n <- UartName <$> identifier
   rws <- gaspClosure $ many readWrite
 
   return Uart
-    { uartName    = n
+    { uartCore    = core
+    , uartName    = n
     , uartReaders = fillRId 0 [x | Read x <- rws]
     , uartWriters = fillWId 0 [x | Write x <- rws]
     }
