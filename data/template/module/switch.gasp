@@ -165,7 +165,7 @@ setup addr_list_setup {
 
 sendToSubTimer uint32_t
 sendToSubLock bool
-SEND_TO_SUB_LOCK_TIME = 100 // 500 ms
+SEND_TO_SUB_LOCK_TIME = 500 // 500 ms
 
 
 raw sub_queue_t {
