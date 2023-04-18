@@ -72,6 +72,27 @@ func removeAddr(addr uint8_t *) bool {
     return false;
 }
 
+
+func setOnlineRaw(dev givelink_addr_t *, online bool) {
+    dev->online = online;
+    if (online) {
+        dev->try_count = 0;
+        if (dev->offline_sent) {
+            dev->offline_sent = false;
+            sendState(dev->addr, online);
+        }
+    } else {
+        dev->try_count += 1;
+        if (dev->try_count > SENT_MAX_TYR_COUNT) {
+            if (!dev->offline_sent) {
+                dev->offline_sent = true;
+                sendState(dev->addr, online);
+            }
+        }
+
+    }
+}
+
 func setOnline(addr uint8_t *, online bool) bool {
 {{={= =}=}}
     {=# has_debug =}
@@ -85,23 +106,7 @@ func setOnline(addr uint8_t *, online bool) bool {
     {=/ has_debug =}
     if (equalAddr(ctrlReqAddr->addr, addr)) {
         ctrlReqAddrSended = false;
-        ctrlReqAddr->online = online;
-        if (online) {
-            ctrlReqAddr->try_count = 0;
-            if (ctrlReqAddr->offline_sent) {
-                ctrlReqAddr->offline_sent = false;
-                sendState(addr, online);
-            }
-        } else {
-            ctrlReqAddr->try_count += 1;
-            if (ctrlReqAddr->try_count > SENT_MAX_TYR_COUNT) {
-                if (!ctrlReqAddr->offline_sent) {
-                    ctrlReqAddr->offline_sent = true;
-                    sendState(addr, online);
-                }
-            }
-
-        }
+        setOnlineRaw(ctrlReqAddr, online);
         return true;
     }
     for (uint16_t i = 0; i < MAX_ADDR_LENGTH; i ++){
@@ -109,22 +114,7 @@ func setOnline(addr uint8_t *, online bool) bool {
             continue;
         }
         if (equalAddr(devAddrList[i].addr, addr)) {
-            devAddrList[i].online = online;
-            if (online) {
-                devAddrList[i].try_count = 0;
-                if (devAddrList[i].offline_sent) {
-                    devAddrList[i].offline_sent = false;
-                    sendState(addr, online);
-                }
-            } else {
-                devAddrList[i].try_count += 1;
-                if (devAddrList[i].try_count > SENT_MAX_TYR_COUNT) {
-                    if (!devAddrList[i].offline_sent) {
-                        devAddrList[i].offline_sent = true;
-                        sendState(addr, online);
-                    }
-                }
-            }
+            setOnlineRaw(&devAddrList[i], online);
             return true;
         }
     }
