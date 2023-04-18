@@ -105,6 +105,9 @@ func setOnline(addr uint8_t *, online bool) bool {
         return true;
     }
     for (uint16_t i = 0; i < MAX_ADDR_LENGTH; i ++){
+        if (!devAddrList[i].enable) {
+            continue;
+        }
         if (equalAddr(devAddrList[i].addr, addr)) {
             devAddrList[i].online = online;
             if (online) {
@@ -204,8 +207,14 @@ func realSendToSub() {
 
     givelink_raw_get_key(subQueue[idx].data, {= PACKET_DATA =}, &{= PACKET_DATA_LENGTH =});
 
-    if ({= PACKET_DATA_LENGTH =} == PACKET_ADDR_LENGTH) {
+    givelink_type = givelink_raw_get_type(subQueue[idx].data);
+    if (givelink_type != SUCCESS && givelink_type != AUTHRES && givelink_type != ERROR) {
         sendToSubLock = true;
+        if (givelink_type == CTRLREQ || givelink_type == CTRLREQ1) {
+            if (equalAddr(ctrlReqAddr->addr, PACKET_DATA)) {
+                ctrlReqAddrSended = true;
+            }
+        }
     }
 
     for (int i = 0; i < subQueue[idx].length; i ++) {
@@ -336,7 +345,6 @@ func trySendCtrlReq bool {
     {=/ has_debug =}
 
     uint16_t size = givelink_raw_get_length(ctrlReqPayload);
-    ctrlReqAddrSended = true;
     sendToSub(ctrlReqPayload, (int)size);
     return true;
 }
@@ -349,9 +357,8 @@ func sendCtrlReqLoop {
                 ctrlReqAddrSended = false;
                 setOnline(ctrlReqAddr->addr, false);
             }
-        } else {
-            return;
         }
+        return;
     }
 
     realSendToSub();
