@@ -327,10 +327,10 @@ func trySendCtrlReq bool {
         return false;
     }
 
-    if (ctrlReqAddr->online) {
-        givelink_type = CTRLREQ;
-    } else {
+    if (ctrlReqAddr->offline_sent) {
         givelink_type = CTRLREQ1;
+    } else {
+        givelink_type = CTRLREQ;
     }
     gen_packet_with_addr_no_data(
         ctrlReqPayload, ctrlReqAddr->addr, autoPayloadId, givelink_type);
