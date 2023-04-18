@@ -182,10 +182,10 @@ func sendToSub(buffer uint8_t *, len int) {
     subQueueWriteId += 1;
 }
 
-func realSendToSub() {
+func realSendToSub() bool {
 {{={= =}=}}
     if (subQueueReadId >= subQueueWriteId) {
-        return;
+        return false;
     }
 
     if (subQueueWriteId - subQueueReadId > MAX_QUEUE_LENGTH) {
@@ -213,6 +213,8 @@ func realSendToSub() {
     SUB_SERIAL.println();
 
     sendToSubTimer = get_current_time_ms();
+
+    return true;
 }
 
 fd 0 GL_SERIAL
@@ -351,9 +353,7 @@ func sendCtrlReqLoop {
         return;
     }
 
-    realSendToSub();
-
-    if (sendToSubLock) {
+    if (realSendToSub()) {
         return;
     }
 
