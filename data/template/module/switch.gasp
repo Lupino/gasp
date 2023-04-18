@@ -12,6 +12,7 @@ REPORT_DELAY_MS        = 10000
 PING_DELAY_MS          = 120000
 MAIN_SERIAL_MAX_LENGTH = 512
 SUB_SERIAL_MAX_LENGTH  = 256
+SENT_MAX_TYR_COUNT     = 100
 
 raw givelink_addr_t {
 typedef struct {
@@ -93,7 +94,7 @@ func setOnline(addr uint8_t *, online bool) bool {
             }
         } else {
             ctrlReqAddr->try_count += 1;
-            if (ctrlReqAddr->try_count > 10) {
+            if (ctrlReqAddr->try_count > SENT_MAX_TYR_COUNT) {
                 if (!ctrlReqAddr->offline_sent) {
                     ctrlReqAddr->offline_sent = true;
                     sendState(addr, online);
@@ -114,7 +115,7 @@ func setOnline(addr uint8_t *, online bool) bool {
                 }
             } else {
                 devAddrList[i].try_count += 1;
-                if (devAddrList[i].try_count > 10) {
+                if (devAddrList[i].try_count > SENT_MAX_TYR_COUNT) {
                     if (!devAddrList[i].offline_sent) {
                         devAddrList[i].offline_sent = true;
                         sendState(addr, online);
@@ -292,7 +293,7 @@ func nextPayloadId() {
 
 func setTryCountZero() {
     for (uint16_t i = 0; i < MAX_ADDR_LENGTH; i ++){
-        if (devAddrList[i].try_count > 10) {
+        if (devAddrList[i].try_count > SENT_MAX_TYR_COUNT) {
             devAddrList[i].try_count = 0;
         }
     }
@@ -310,7 +311,7 @@ func trySendCtrlReq bool {
     if (!ctrlReqAddr->enable) {
         return false;
     }
-    if (ctrlReqAddr->try_count > 10) {
+    if (ctrlReqAddr->try_count > SENT_MAX_TYR_COUNT) {
         return false;
     }
     if (equalAddr(givelink_addr, ctrlReqAddr->addr)) {
