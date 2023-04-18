@@ -3,7 +3,7 @@
 // {
 //     method: set_linkage,
 //     name: linkage1
-//     data: type,mode,min,max
+//     data: type,mode,min,max,force
 // }
 // {
 //     method: get_linkage,
@@ -15,7 +15,8 @@
 //     type: int,
 //     mode: int,
 //     min: float,
-//     max: float
+//     max: float,
+//     force: int
 // }
 
 // linkage linkageName getSensorValue openFuncName closeFuncName
@@ -72,6 +73,7 @@ linkage_{= name =}_type uint8_t = 0
 linkage_{= name =}_mode uint8_t = 0;
 linkage_{= name =}_min float = 0
 linkage_{= name =}_max float = 0
+linkage_{= name =}_force uint8_t = 0
 
 setup{= core =} setup_linkage_{= name =} {
     linkage_{= name =}_type = {= STROAGE_READ =}({= addr_type =});
@@ -84,6 +86,7 @@ setup{= core =} setup_linkage_{= name =} {
     }
     {= STROAGE_GET =}({= addr_min =}, linkage_{= name =}_min);
     {= STROAGE_GET =}({= addr_max =}, linkage_{= name =}_max);
+    {= STROAGE_GET =}({= addr_force =}, linkage_{= name =}_force);
 }
 
 func do_linkage_{= name =}_right() {
@@ -134,48 +137,55 @@ func do_linkage_{= name =}_later() {
 rule core{= core =} linkage_{= name =}_min <= {= get =}(linkage_{= name =}_type) && {= get =}(linkage_{= name =}_type) <= linkage_{= name =}_max
   do do_linkage_{= name =}_right
   else do_linkage_{= name =}_left
+  onF linkage_{= name =}_force
   on linkage_{= name =}_mode == LINKAGE_MODE_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_CLOSE
 
 rule core{= core =} linkage_{= name =}_min >= {= get =}(linkage_{= name =}_type)
   do do_linkage_{= name =}_left
+  onF linkage_{= name =}_force
   on linkage_{= name =}_mode == LINKAGE_MODE_CLOSE_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_OPEN_CLOSE
 
 rule core{= core =} linkage_{= name =}_max <= {= get =}(linkage_{= name =}_type)
   do do_linkage_{= name =}_right
+  onF linkage_{= name =}_force
   on linkage_{= name =}_mode == LINKAGE_MODE_CLOSE_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_OPEN_CLOSE
 
 rule core{= core =} linkage_{= name =}_min >= {= get =}(linkage_{= name =}_type)
   do later (linkage_{= name =}_max * 1000) do_linkage_{= name =}_later
+  onF linkage_{= name =}_force
   on linkage_{= name =}_mode == LINKAGE_MODE_DELAY_LEFT_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_DELAY_LEFT_CLOSE
 
 rule core{= core =} linkage_{= name =}_min <= {= get =}(linkage_{= name =}_type)
   do later (linkage_{= name =}_max * 1000) do_linkage_{= name =}_later
+  onF linkage_{= name =}_force
   on linkage_{= name =}_mode == LINKAGE_MODE_DELAY_RIGHT_OPEN || linkage_{= name =}_mode == LINKAGE_MODE_DELAY_RIGHT_CLOSE
 
 
 {=/ linkages =}
 
 
-func set_linkage_raw(json const char *, tokens jsmntok_t *, num_tokens int, type uint8_t *, mode uint8_t *, min float *, max float *, addr0 int, addr1 int, addr2 int, addr3 int) void {
+func set_linkage_raw(json const char *, tokens jsmntok_t *, num_tokens int, type uint8_t *, mode uint8_t *, min float *, max float *, force uint8_t *, addr0 int, addr1 int, addr2 int, addr3 int, addr4 int) void {
     if (jsonlookup(json, tokens, num_tokens, {= FROM_ROM =}({= TO_ROM =}("data")), requestValue)) {
         int pos = 0;
         *type  = (uint8_t)get_uint32_value(requestValue, &pos);
         *mode   = (uint8_t)get_uint32_value(requestValue, &pos);
         *min   = get_float_value(requestValue, &pos);
         *max   = get_float_value(requestValue, &pos);
+        *force   = (uint8_t)get_uint32_value(requestValue, &pos);
 
         {= STROAGE_PUT =}(addr0, *type);
         {= STROAGE_PUT =}(addr1, *mode);
         {= STROAGE_PUT =}(addr2, *min);
         {= STROAGE_PUT =}(addr3, *max);
+        {= STROAGE_PUT =}(addr4, *force);
         {= STROAGE_COMMIT =}();
     }
 }
 
-func get_linkage_raw(type uint8_t, mode uint8_t, min float, max float, retval char *) bool {
+func get_linkage_raw(type uint8_t, mode uint8_t, min float, max float, force int, retval char *) bool {
     dtostrf(min, 5, 4, value_buf0);
     dtostrf(max, 5, 4, value_buf1);
-    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"type\": %d, \"mode\": %d, \"min\": %s, \"max\": %s}")), type, mode, ltrim(value_buf0), ltrim(value_buf1));
+    sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"type\": %d, \"mode\": %d, \"min\": %s, \"max\": %s, \"force\": %d}")), type, mode, ltrim(value_buf0), ltrim(value_buf1), force);
     return true;
 }
 
@@ -185,9 +195,9 @@ func getset_linkage(json const char *, tokens jsmntok_t *, num_tokens int, retva
         {=# linkages =}
         if (jsoneq(json, &tokens[token], {= FROM_ROM =}({= TO_ROM =}("{= name =}")))) {
             if (set) {
-                set_linkage_raw(json, tokens, num_tokens, &linkage_{= name =}_type, &linkage_{= name =}_mode, &linkage_{= name =}_min, &linkage_{= name =}_max, {= addr_type =}, {= addr_mode =}, {= addr_min =}, {= addr_max =});
+                set_linkage_raw(json, tokens, num_tokens, &linkage_{= name =}_type, &linkage_{= name =}_mode, &linkage_{= name =}_min, &linkage_{= name =}_max, &linkage_{= name =}_force, {= addr_type =}, {= addr_mode =}, {= addr_min =}, {= addr_max =}, {= addr_force =});
             }
-            return get_linkage_raw(linkage_{= name =}_type, linkage_{= name =}_mode, linkage_{= name =}_min, linkage_{= name =}_max, retval);
+            return get_linkage_raw(linkage_{= name =}_type, linkage_{= name =}_mode, linkage_{= name =}_min, linkage_{= name =}_max, linkage_{= name =}_force, retval);
         }
         {=/ linkages =}
     }

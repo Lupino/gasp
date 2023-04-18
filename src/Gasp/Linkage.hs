@@ -20,27 +20,30 @@ data Linkage = Linkage
 
 instance ToJSON Linkage where
     toJSON linkage = object
-      [ "core"      .= linkageCore linkage
-      , "name"      .= linkageName linkage
-      , "get"       .= linkageFnG linkage
-      , "open"      .= linkageFn0 linkage
-      , "close"     .= linkageFn1 linkage
-      , "addr_type" .= addr0
-      , "addr_mode" .= addr1
-      , "addr_min"  .= addr2
-      , "addr_max"  .= addr3
+      [ "core"       .= linkageCore linkage
+      , "name"       .= linkageName linkage
+      , "get"        .= linkageFnG linkage
+      , "open"       .= linkageFn0 linkage
+      , "close"      .= linkageFn1 linkage
+      , "addr_type"  .= addr0
+      , "addr_mode"  .= addr1
+      , "addr_min"   .= addr2
+      , "addr_max"   .= addr3
+      , "addr_force" .= addr4
       ]
       where addr0 = linkageAddr linkage
             addr1 = addr0 + 1
             addr2 = addr1 + 1
             addr3 = addr2 + 4
-            -- type uint8   1
-            -- mode uint8   1
-            -- min  float   4
-            -- max  float   4
+            addr4 = addr3 + 4
+            -- type   uint8   1
+            -- mode   uint8   1
+            -- min    float   4
+            -- max    float   4
+            -- force  uint8   1
 
 linkageDataLen :: Int
-linkageDataLen = 1 + 1 + 4 + 4
+linkageDataLen = 1 + 1 + 4 + 4 + 1
 
 linkageNameLen :: Linkage -> Int
 linkageNameLen = length . linkageName

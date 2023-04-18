@@ -14,6 +14,7 @@ data Rule = Rule
     { ruleCore        :: !String
     , ruleCondition   :: !String
     , ruleOnCondition :: !String
+    , ruleForceCond   :: !String
     , ruleAction      :: !String
     , ruleLater       :: !String
     , ruleElseAction  :: !String
@@ -28,6 +29,8 @@ instance ToJSON Rule where
         , "on_condition"   .= ruleOnCondition rule
         , "has_on"         .= not (null $ ruleOnCondition rule)
         , "action"         .= ruleAction rule
+        , "force_cond"     .= ruleForceCond rule
+        , "has_force"      .= not (null $ ruleForceCond rule)
         , "later"          .= ruleLater rule
         , "has_later"      .= not (null $ ruleLater rule)
         , "else_action"    .= ruleElseAction rule

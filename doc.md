@@ -237,7 +237,7 @@ metric metricName {
 ## rule
 
 ```
-rule [core0|core1] condition do [later do_later_ms ]action [else [later do_later_ms ]elseAction] [on onCondition]
+rule [core0|core1] condition do [later do_later_ms ]action [else [later do_later_ms ]elseAction] [onF forceName] [on onCondition]
 ```
 
 ## uart

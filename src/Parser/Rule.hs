@@ -20,9 +20,13 @@ elseActionP = try $ do
   v <- identifier
   return (later, v)
 
-
 onP :: Parser String
 onP = block "on" "\n"
+
+onF :: Parser String
+onF = try $ do
+  _ <- symbol "onF"
+  identifier
 
 -- | rule condition do [later later_ms ]action else [later later_ms ]elseAction
 rule :: Parser Rule
@@ -33,12 +37,14 @@ rule = do
     later <- option "" laterP
     action <- identifier
     (elseLater, elseAction) <- option ("", "") elseActionP
+    forceCond <- option "" onF
     onCondition <- option "" onP
 
     return Rule
       { ruleCore = core
       , ruleCondition = condition
       , ruleOnCondition = onCondition
+      , ruleForceCond = forceCond
       , ruleAction = action
       , ruleLater = later
       , ruleElseAction = elseAction
