@@ -1,5 +1,7 @@
 {{={= =}=}}
 
+unused_xxxxxxx_xxxx unsigned long
+
 {=# attrs =}
 
 attr_{= name =} {= type =} = {= default =}
