@@ -334,7 +334,7 @@ jsonArray :: FromJSON a => Parser a
 jsonArray = json '[' ']'
 
 coreId :: Parser String
-coreId = option "0" $ do
+coreId = option "0" $ try $ do
   void $ symbol "core"
   cid <- oneOf ['0', '1']
   whiteSpace
