@@ -230,11 +230,12 @@ command set_linkage {
         - mode == 8 is mean 延时开|无,
         - min is float prec 5 when mode > 5 min is value
         - max is float prec 5 when mode > 5 max is later
-       ],
+        - force is int between [0, 1]
+      ],
       payload: {
         method: set_linkage
         name: linkage1
-        data: '32,4,-99999.9999,99999.9999'
+        data: '32,4,-99999.9999,99999.9999,0'
       }
     },
     return: {
@@ -252,12 +253,14 @@ command set_linkage {
         - mode == 8 is mean 延时开|无,
         - min is float prec 5 when mode > 5 min is value
         - max is float prec 5 when mode > 5 max is later
-       ],
+        - force is int between [0, 1]
+      ],
       payload: {
         type: 32
         mode: 4
         min: -99999.9999
         max: 99999.9999
+        force: 0
       }
     }
   }
@@ -295,12 +298,14 @@ command get_linkage {
         - mode == 8 is mean 延时开|无,
         - min is float prec 5 when mode > 5 min is value
         - max is float prec 5 when mode > 5 max is later
-       ],
+        - force is int between [0, 1]
+      ],
       payload: {
         type: 32
         mode: 4
         min: -99999.9999
         max: 99999.9999
+        force: 0
       }
     }
   }

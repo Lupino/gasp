@@ -47,7 +47,7 @@ command set_timer {
         - schedat is int unix timestamp
         - period is int
         - duration is int
-       ],
+      ],
       payload: {
         method: set_timer
         name: timer1
@@ -59,7 +59,7 @@ command set_timer {
         - schedat is int unix timestamp
         - period is int
         - duration is int
-       ],
+      ],
       payload: {
         schedat: 1617503208
         period: 1617503208
@@ -80,7 +80,7 @@ command get_timer {
     command: {
       docs: [
         - name is one of [{=# timers =}{= name =} {=/ timers =}]
-       ],
+      ],
       payload: {
         method: get_timer
         name: timer1
@@ -91,7 +91,7 @@ command get_timer {
         - schedat is int unix timestamp
         - period is int
         - duration is int
-       ],
+      ],
       payload: {
         schedat: 1617503208
         period: 1617503208
