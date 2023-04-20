@@ -267,11 +267,12 @@ func subParser(buffer uint8_t *, len int) {
     }
 
     if (givelink_type == CTRLREQ1) {
-
     } else if (givelink_type == CTRLREQ) {
-
     } else if (givelink_type == CTRLRES) {
-
+    } else if (givelink_type == RESPONSE1) {
+        {= GL_SERIAL_EVENT =}(buffer, len, false);
+    } else if (givelink_type == REQUEST1) {
+        {= GL_SERIAL_EVENT =}(buffer, len, false);
     } else {
         if (switch_inited && givelink_authed) {
             send_packet_raw(buffer, len);

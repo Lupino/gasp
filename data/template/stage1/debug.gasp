@@ -44,6 +44,10 @@ func DEBUG_PRINT_TYPE(type uint8_t) {
         DEBUG_SERIAL.print("SYNCTIME");
     } else if (type == GETSETTOKEN) {
         DEBUG_SERIAL.print("GETSETTOKEN");
+    } else if (type == REQUEST1) {
+        DEBUG_SERIAL.print("REQUEST1");
+    } else if (type == RESPONSE1) {
+        DEBUG_SERIAL.print("RESPONSE1");
     }
 }
 

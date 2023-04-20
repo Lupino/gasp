@@ -30,6 +30,7 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
         {=# low_memory =}
         incrLastPayloadId();
         {=/ low_memory =}
+        return;
     }
     if (givelink_type == GETSETTOKEN) {
         {=# production =}
@@ -38,8 +39,9 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
         }
         {=/ production =}
         send_token();
+        return;
     }
-    if (givelink_type == REQUEST) {
+    if (givelink_type == REQUEST || givelink_type == REQUEST1) {
         wantSendData[0] = '\0';
         bool ret = processRequest((const char *){= PACKET_DATA =}, {= PACKET_DATA_LENGTH =}, wantSendData);
         if (wantSendData[0] == '\0') {
@@ -49,7 +51,12 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
                 sprintf(wantSendData, {= FROM_ROM =}({= TO_ROM =}("{\"err\": \"not support\"}")));
             }
         }
-        send_packet_rsp(wantSendData);
+        if (givelink_type == REQUEST) {
+            send_packet_rsp(RESPONSE, wantSendData);
+        } else {
+            send_packet_rsp(RESPONSE1, wantSendData);
+        }
+        return;
     }
     if (givelink_type == SUCCESS) {
         if (lastPayloadId == ping_packet_id) {
@@ -88,17 +95,20 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
         }
         {=/ has_metric =}
         {=/ low_memory =}
+        return;
     }
     {=# has_timer =}
     if (givelink_type == SYNCTIME) {
         sys_timer_s = (uint32_t)atol((const char *){= PACKET_DATA =});
         sys_timer_synced_ms = get_cache_time_ms();
+        return;
     }
     {=/ has_timer =}
     {=# ctrl_mode =}
     if (givelink_type == CTRLREQ) {
         mainAction();
         send_packet_0(CTRLRES);
+        return;
     }
     if (givelink_type == CTRLREQ1) {
         mainAction();
@@ -106,6 +116,7 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
             send_packet_0(PING);
         }
         send_packet_0(CTRLRES);
+        return;
     }
     {=/ ctrl_mode =}
 }
@@ -407,8 +418,8 @@ func send_packet_1(type const uint8_t, data_ const char *, length const int) voi
     send_packet();
 }
 
-func send_packet_rsp(data_ const char *) void {
-    givelink_type = RESPONSE;
+func send_packet_rsp(type const uint8_t, data_ const char *) void {
+    givelink_type = type;
     {= PACKET_DATA_LENGTH =} = get_json_length(data_);
     memcpy({= PACKET_DATA =}, (const uint8_t *)data_, {= PACKET_DATA_LENGTH =});
     send_packet();
