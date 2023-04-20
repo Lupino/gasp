@@ -365,7 +365,7 @@ func sendCtrlReqLoop {
     }
 }
 
-every sendCtrlReqLoop 10 on switch_inited
+every sendCtrlReqLoop 10 // on switch_inited
 
 
 func givelinkParser(buffer uint8_t *, len int) {
