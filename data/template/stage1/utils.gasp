@@ -183,6 +183,16 @@ func equal(v0 const uint8_t *, v1 const uint8_t *, len const uint16_t) bool {
 }
 
 
+func equalZero(v0 const uint8_t *, len const uint16_t) bool {
+    for (uint8_t i = 0; i < len; i ++) {
+        if (v0[i] !=  0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
 current_time_ms unsigned long = 0
 
 func get_current_time_ms() unsigned long {

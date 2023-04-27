@@ -359,6 +359,10 @@ func is_self(buffer const uint8_t *, len const int) bool {
         }
     }
 
+    if (equalZero({= PACKET_DATA =}, {= PACKET_DATA_LENGTH =})) {
+        return true;
+    }
+
     if ({= PACKET_DATA_LENGTH =} == PACKET_ADDR_LENGTH && equal({= PACKET_DATA =}, givelink_addr, {= PACKET_DATA_LENGTH =})) {
         return true;
     }
