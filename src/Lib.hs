@@ -17,10 +17,10 @@ import           Data.UUID.V4               (nextRandom)
 import           Data.Yaml                  (encode)
 import qualified ExternalCode
 import           Gasp                       (App (..), Attr (..), Expr (..),
-                                             Gasp, Metric (..), getGaspExprs,
-                                             getTmpl, getTmpls, setArgvFlags,
-                                             setExternalCodeFiles, setGaspExprs,
-                                             setProd)
+                                             Gasp, Metric (..), getFlags,
+                                             getGaspExprs, getTmpl, getTmpls,
+                                             setArgvFlags, setExternalCodeFiles,
+                                             setGaspExprs, setProd)
 import           Gasp.Block
 import           Gasp.Function
 import           Generator                  (writeAppCode)
@@ -131,20 +131,33 @@ preprocessGasp gasp = setGaspExprs gasp . foldr foldFunc [] <$> mapM mapFunc (ge
         mapFunc (ExprFunction func) = return $ ExprFunction func
           { funcCode = render $ funcCode func
           }
+        mapFunc (ExprIfEq (IfEq n code)) =
+          if ifFlag n then doRenderBlock n code render
+                      else pure (ExprRendered [])
+        mapFunc (ExprIfNeq (IfNeq n code)) =
+          if ifFlag n then pure (ExprRendered [])
+                      else doRenderBlock n code render
+
         mapFunc v = return v
 
         render =  (`compileAndRenderTextTemplate` toJSON gasp)
 
         tmpls = getTmpls gasp
+        flags = getFlags gasp
+
+        ifFlag n = getFlag False flags n
 
         doRender :: String -> (Text -> Text) -> IO Expr
         doRender n r =
           case getTmpl n tmpls of
             Nothing -> error $ Term.applyStyles [Term.Red] $ "Inline template " ++ n ++ " not found."
-            Just (Tmpl _ code) ->
-              case parseGasp0 n (T.unpack (r code) ++ "\n") of
-                Left e      -> error $ Term.applyStyles [Term.Red] $ show e
-                Right exprs -> return $ ExprRendered exprs
+            Just (Tmpl _ code) -> doRenderBlock n code r
+
+        doRenderBlock :: String -> Text -> (Text -> Text) -> IO Expr
+        doRenderBlock n code r =
+          case parseGasp0 n (T.unpack (r code) ++ "\n") of
+            Left e      -> error $ Term.applyStyles [Term.Red] $ show e
+            Right exprs -> return $ ExprRendered exprs
 
         foldFunc :: Expr -> [Expr] -> [Expr]
         foldFunc (ExprRendered xs) acc = xs ++ acc

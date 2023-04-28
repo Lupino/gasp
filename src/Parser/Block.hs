@@ -20,6 +20,8 @@ module Parser.Block
   , import_
   , flag
   , fd
+  , ifeq
+  , ifneq
   ) where
 
 import           Data.Aeson         (Value)
@@ -81,7 +83,6 @@ setup = blockP L.reservedNameSetup Setup <|> blockP L.reservedNameSetup0 Setup
 loop :: Parser Loop
 loop = blockP L.reservedNameLoop Loop <|> blockP L.reservedNameLoop0 Loop
 
-
 setup1 :: Parser Setup1
 setup1 = blockP L.reservedNameSetup1 Setup1
 
@@ -117,3 +118,9 @@ fd = do
   L.reserved L.reservedNameFd
   fd_ <- fromIntegral <$> L.integer
   Fd fd_ <$> normalName
+
+ifeq :: Parser IfEq
+ifeq = blockP L.reservedNameIfEq IfEq
+
+ifneq :: Parser IfNeq
+ifneq = blockP L.reservedNameIfNeq IfNeq

@@ -12,13 +12,16 @@ module Gasp.Block
   , Import (..)
   , Fd (..)
 
+  , IfEq (..)
+  , IfNeq (..)
+
   , Flag (..)
   , getFlag
   , defaultFlags
   ) where
 
 import           Data.Aeson (ToJSON (..), Value, object, (.=))
-import           Data.Text  (Text, stripStart)
+import           Data.Text  (Text, pack, stripStart)
 
 data Loop = Loop
   { loopName :: String
@@ -203,4 +206,26 @@ instance ToJSON Fd where
   toJSON fd = object
     [ "fd" .= fdId fd
     , "call" .= fdCall fd
+    ]
+
+data IfEq = IfEq
+  { ifeqName :: String
+  , ifeqCode :: Text
+  } deriving (Show, Eq, Ord)
+
+instance ToJSON IfEq where
+  toJSON ifeq = object
+    [ "code" .= stripStart (ifeqCode ifeq)
+    , "name" .= ifeqName ifeq
+    ]
+
+data IfNeq = IfNeq
+  { ifneqName :: String
+  , ifneqCode :: Text
+  } deriving (Show, Eq, Ord)
+
+instance ToJSON IfNeq where
+  toJSON ifneq = object
+    [ "code" .= stripStart (ifneqCode ifneq)
+    , "name" .= ifneqName ifneq
     ]

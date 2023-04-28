@@ -59,6 +59,8 @@ expr
     <|> exprLinkage
     <|> exprFlag
     <|> exprFd
+    <|> exprIfEq
+    <|> exprIfNeq
 
 exprApp :: Parser Expr
 exprApp = ExprApp <$> app
@@ -137,6 +139,12 @@ exprFlag = ExprFlag <$> flag
 
 exprFd :: Parser Expr
 exprFd = ExprFd <$> fd
+
+exprIfEq :: Parser Expr
+exprIfEq = ExprIfEq <$> ifeq
+
+exprIfNeq :: Parser Expr
+exprIfNeq = ExprIfNeq <$> ifneq
 
 -- | Top level parser, produces Expr.
 gaspParser :: Parser [Expr]

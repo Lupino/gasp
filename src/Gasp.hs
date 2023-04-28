@@ -12,6 +12,8 @@ module Gasp
   , getTmpls
   , getTmpl
 
+  , getFlags
+
   , module Gasp.App
   , module Gasp.Attr
   , module Gasp.Metric
@@ -85,6 +87,8 @@ data Expr
     | ExprLinkage  !Linkage
     | ExprFlag     !Flag
     | ExprFd       !Fd
+    | ExprIfEq     !IfEq
+    | ExprIfNeq    !IfNeq
     deriving (Show, Eq)
 
 fromGaspExprs :: [Expr] -> Gasp
@@ -262,6 +266,15 @@ getFlags gasp = [r | (ExprFlag r) <- gaspExprs gasp]
 getFds :: Gasp -> [Fd]
 getFds gasp = [r | (ExprFd r) <- gaspExprs gasp]
 
+-- * IfEqs
+
+getIfEqs :: Gasp -> [IfEq]
+getIfEqs gasp = [dat | (ExprIfEq dat) <- gaspExprs gasp]
+
+-- * IfNeqs
+
+getIfNeqs :: Gasp -> [IfNeq]
+getIfNeqs gasp = [dat | (ExprIfNeq dat) <- gaspExprs gasp]
 
 -- * FuncFlags
 

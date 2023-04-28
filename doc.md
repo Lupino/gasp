@@ -132,6 +132,19 @@ render1 tmplName {
 
 render tmpl code by yaml data
 
+## ifeq / ifneq
+
+```
+ifeq flagName {
+// you ifeq code
+}
+ifneq flagName {
+// you ifneq code
+}
+```
+
+defined ifeq or ifneq code
+
 ## gpio
 
 ```

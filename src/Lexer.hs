@@ -28,6 +28,9 @@ module Lexer
   , reservedNameTmpl
   , reservedNameRender
   , reservedNameRender1
+  , reservedNameIfEq
+  , reservedNameIfNeq
+
   , braces
   , brackets
   , symbol
@@ -156,6 +159,12 @@ reservedNameRender = "render"
 reservedNameRender1 :: String
 reservedNameRender1 = "render1"
 
+reservedNameIfEq :: String
+reservedNameIfEq = "ifeq"
+
+reservedNameIfNeq :: String
+reservedNameIfNeq = "ifneq"
+
 -- * Data types.
 
 reservedNameBooleanTrue :: String
@@ -196,6 +205,8 @@ reservedNames =
     , reservedNameTmpl
     , reservedNameRender
     , reservedNameRender1
+    , reservedNameIfEq
+    , reservedNameIfNeq
     -- * Data types
     , reservedNameBooleanTrue
     , reservedNameBooleanFalse
