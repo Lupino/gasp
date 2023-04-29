@@ -30,6 +30,9 @@ module Lexer
   , reservedNameRender1
   , reservedNameIfEq
   , reservedNameIfNeq
+  , reservedNameBin
+  , reservedNameStr
+  , reservedNameStruct
 
   , braces
   , brackets
@@ -165,6 +168,15 @@ reservedNameIfEq = "ifeq"
 reservedNameIfNeq :: String
 reservedNameIfNeq = "ifneq"
 
+reservedNameBin :: String
+reservedNameBin = "bin"
+
+reservedNameStr :: String
+reservedNameStr = "str"
+
+reservedNameStruct :: String
+reservedNameStruct = "struct"
+
 -- * Data types.
 
 reservedNameBooleanTrue :: String
@@ -207,6 +219,9 @@ reservedNames =
     , reservedNameRender1
     , reservedNameIfEq
     , reservedNameIfNeq
+    , reservedNameBin
+    , reservedNameStr
+    , reservedNameStruct
     -- * Data types
     , reservedNameBooleanTrue
     , reservedNameBooleanFalse

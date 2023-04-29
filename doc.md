@@ -42,6 +42,18 @@ name[(argv)] [type] = value
 
 Relpace able only the first one avaliable
 
+## bin/str/struct
+
+```
+bin binName size
+str strName size
+struct type typeLen structName size
+```
+
+bin or str or struct store on eeprom
+
+Relpace able only the first one avaliable
+
 ## import
 
 ```

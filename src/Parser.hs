@@ -13,6 +13,7 @@ import           Lexer
 import           Parser.AGpio           (agpio)
 import           Parser.App             (app)
 import           Parser.Attr            (attr)
+import           Parser.Bin             (bin)
 import           Parser.Block
 import           Parser.Command         (command)
 import           Parser.Common          (runGaspParser)
@@ -52,6 +53,7 @@ expr
     <|> exprAGpio
     <|> exprUart
     <|> exprRule
+    <|> exprBin
     <|> exprConst
     <|> exprRequire
     <|> exprImport
@@ -145,6 +147,9 @@ exprIfEq = ExprIfEq <$> ifeq
 
 exprIfNeq :: Parser Expr
 exprIfNeq = ExprIfNeq <$> ifneq
+
+exprBin :: Parser Expr
+exprBin = ExprBin <$> bin
 
 -- | Top level parser, produces Expr.
 gaspParser :: Parser [Expr]

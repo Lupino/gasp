@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.0.
+-- This file has been generated from package.yaml by hpack version 0.35.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 47f7c22682c3a564830aa2f8b155f7c434538c65c58d7e836e9c948d352e7f3f
+-- hash: c667f8b6f40c186e000e7fe7e753ca4e1e0190b2b34a461f9c88c10a87d65385
 
 name:           gasp
 version:        0.1.0.1
@@ -29,6 +29,7 @@ data-files:
     template/module/modbus.gasp
     template/module/switch.gasp
     template/stage0/attr.gasp
+    template/stage0/bin.gasp
     template/stage0/linkage.gasp
     template/stage0/main.gasp
     template/stage0/metric.gasp
@@ -63,6 +64,7 @@ library
       Gasp.AGpio
       Gasp.App
       Gasp.Attr
+      Gasp.Bin
       Gasp.Block
       Gasp.Command
       Gasp.Common
@@ -91,6 +93,7 @@ library
       Parser.AGpio
       Parser.App
       Parser.Attr
+      Parser.Bin
       Parser.Block
       Parser.Command
       Parser.Common

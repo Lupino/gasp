@@ -37,6 +37,7 @@ import qualified ExternalCode
 import           Gasp.AGpio
 import           Gasp.App
 import           Gasp.Attr
+import           Gasp.Bin
 import           Gasp.Block
 import           Gasp.Command
 import           Gasp.Constant
@@ -80,6 +81,7 @@ data Expr
     | ExprAGpio    !AGpio
     | ExprRule     !Rule
     | ExprConst    !Constant
+    | ExprBin      !Bin
     | ExprUart     !Uart
     | ExprRequire  !Require
     | ExprImport   !Import
@@ -213,6 +215,11 @@ getRules gasp = [rule | (ExprRule rule) <- gaspExprs gasp]
 getConstants:: Gasp -> [Constant]
 getConstants gasp = nub $ [c | (ExprConst c) <- gaspExprs gasp]
 
+-- * Bins
+
+getBins:: Gasp -> [Bin]
+getBins gasp = nub $ [c | (ExprBin c) <- gaspExprs gasp]
+
 -- * Gpios
 
 getGpios :: Gasp -> [Gpio]
@@ -265,16 +272,6 @@ getFlags gasp = [r | (ExprFlag r) <- gaspExprs gasp]
 
 getFds :: Gasp -> [Fd]
 getFds gasp = [r | (ExprFd r) <- gaspExprs gasp]
-
--- * IfEqs
-
-getIfEqs :: Gasp -> [IfEq]
-getIfEqs gasp = [dat | (ExprIfEq dat) <- gaspExprs gasp]
-
--- * IfNeqs
-
-getIfNeqs :: Gasp -> [IfNeq]
-getIfNeqs gasp = [dat | (ExprIfNeq dat) <- gaspExprs gasp]
 
 -- * FuncFlags
 
@@ -340,6 +337,7 @@ getMaxTmplLength = maximum . map getTmplLength . gaspExprs
 
 prepareGasp :: Int -> [FuncFlag] -> Gasp -> Gasp
 prepareGasp sAddr flags gasp = setGaspExprs gasp . go 0 1 sAddr 0 $ gaspExprs gasp
+        --     idx ruleid addr  everyid
   where go :: Int -> Int -> Int -> Int -> [Expr] -> [Expr]
         go _ _ _ _ []        = []
         go idx ri addr ei (ExprAttr x:xs)
@@ -354,6 +352,7 @@ prepareGasp sAddr flags gasp = setGaspExprs gasp . go 0 1 sAddr 0 $ gaspExprs ga
         go idx ri addr ei (ExprFunction x:xs) = ExprFunction (setFunctionFlag flags x) : go idx ri addr ei xs
         go idx ri addr ei (ExprRule x:xs) = ExprRule x {ruleIndex=ri} : go idx (ri + 1) addr ei xs
         go idx ri addr ei (ExprEvery x:xs) = ExprEvery x {everyIdx=ei} : go idx ri addr (ei + 1) xs
+        go idx ri addr ei (ExprBin x:xs) = ExprBin x {binAddr=addr} : go idx ri (addr + (binSize x) * (binLen x)) ei xs
         go idx ri addr ei (x:xs) = x : go idx ri addr ei xs
 
 guessFuncFlag :: FuncFlag -> [Expr] -> FuncFlag
@@ -405,6 +404,7 @@ instance ToJSON Gasp where
         , "rules"       .= rules
         , "consts"      .= reverse requiredConsts
         , "vars"        .= reverse requiredVars
+        , "bins"        .= bins
         , "uarts"       .= uarts
         , "production"  .= prod
         , "timers"      .= timers
@@ -423,6 +423,7 @@ instance ToJSON Gasp where
               datas = getDatas gasp
               prod = getProd gasp0
               fds = nub $ getFds gasp0
+              bins = getBins gasp
               flags = nub $ argvFlags gasp0 ++ getFlags gasp ++ defaultFlags
               attrs = getAttrs gasp
               metrics = getMetrics gasp

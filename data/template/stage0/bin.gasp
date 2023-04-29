@@ -1,0 +1,23 @@
+{{={= =}=}}
+
+unused_xxxxxxx_xxxx unsigned long
+
+{=# bins =}
+bin_{= name =}[{= size =}] {= type =}
+
+func bin_{= name =}_save(commit bool) {
+    {= STROAGE_PUT =}({= addr =}, bin_{= name =});
+    if (commit) {
+        {= STROAGE_COMMIT =}();
+    }
+}
+
+func bin_{= name =}_read() {
+    {= STROAGE_GET =}({= addr =}, bin_{= name =});
+}
+
+setup read_bin_{= name =} {
+    bin_{= name =}_read();
+}
+
+{=/ bins =}
