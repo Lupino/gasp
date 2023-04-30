@@ -25,6 +25,7 @@ instance ToJSON Bin where
     , "type" .= binType bin
     , "addr" .= binAddr bin
     , "size" .= binSize bin
+    , "only" .= (binSize bin == 1)
     ]
 
 instance Eq Bin where
