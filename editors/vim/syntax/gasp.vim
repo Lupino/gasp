@@ -10,7 +10,7 @@ elseif exists("b:current_syntax")
 endif
 
 " Values
-syn match gaspIdentifier "\<\(attr\|metric\|gpio\)_[A-Za-z0-9_]*\>"
+syn match gaspIdentifier "\<\(attr\|metric\|gpio\|bin\)_[A-Za-z0-9_]*\>"
 syn match gaspType "\<\(boolean\|bool\|char\|unsigned\|byte\|int\|word\|long\|short\|float\|double\|uint8_t\|uint16_t\|uint32_t\|const\)\>"
 
 syn match gaspNumber "0[xX][0-9a-fA-F]\+\|0[oO][0-7]\|[0-9]\+"
@@ -28,7 +28,7 @@ syn keyword gaspLink    link
 syn keyword gaspClick   click
 syn keyword gaspLater   later
 
-syn match gaspSection "^\(app\|setup\|loop\|agpio\|gpio\|func\|every\|command\|attr\|attr\|metric\|rule\|import\|flag\|data\|require\|uart\|raw\|fd\)"
+syn match gaspSection "^\(app\|setup\|loop\|agpio\|gpio\|func\|every\|command\|attr\|attr\|metric\|rule\|import\|flag\|data\|require\|uart\|raw\|fd\|bin\|str\|struct\)"
 
 syn keyword gaspConditional do else on
 
