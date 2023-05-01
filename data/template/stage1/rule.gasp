@@ -17,6 +17,7 @@ func rule_{= id =}_poll() void {
     {=# has_later =}
     if ({=& condition =}) {
         if (({=# has_force =}{= force_cond =} || {=/ has_force =}rule_{= id =}_do_yes) && rule_{= id =}_do_yes_timer_ms + {= later =} < get_cache_time_ms()) {
+            rule_{= id =}_do_yes_timer_ms = get_cache_time_ms();
             rule_{= id =}_do_yes = false;
             {= action =}();
         }
@@ -34,6 +35,7 @@ func rule_{= id =}_poll() void {
             rule_{= id =}_do_else = false;
             {=# has_else_later =}
             if (rule_{= id =}_do_else_timer_ms + {= else_later =} < get_cache_time_ms()) {
+                rule_{= id =}_do_else_timer_ms = get_cache_time_ms();
                 {= else_action =}();
             }
             {=/ has_else_later =}
@@ -63,6 +65,7 @@ func rule_{= id =}_poll() void {
             rule_{= id =}_do_else = false;
             {=# has_else_later =}
             if (rule_{= id =}_do_else_timer_ms + {= else_later =} < get_cache_time_ms()) {
+                rule_{= id =}_do_else_timer_ms = get_cache_time_ms();
                 {= else_action =}();
             }
             {=/ has_else_later =}
