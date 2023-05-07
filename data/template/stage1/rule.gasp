@@ -2,6 +2,7 @@
 
 // start rules
 rule_depends_checked bool = false
+rule_run_force = true
 {=# rules =}
 {=# has_later =}
 rule_{= id =}_do_yes_timer_ms unsigned long = 0

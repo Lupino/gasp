@@ -165,10 +165,12 @@ func {= name =}_receive_timeout_event() {
 }
 
 rule core{= core =} {= name =}_availabled_timer_ms + {= name =}_DELAY_MS < get_cache_time_ms()
-  do {= name =}_timeout_event
+  do later 1000 {= name =}_timeout_event
+  onF rule_run_force
 
 rule core{= core =} is_{= name =}_receive_timeout()
-  do {= name =}_receive_timeout_event
+  do later 1000 {= name =}_receive_timeout_event
+  onF rule_run_force
 
 func is_{= name =}_receive_timeout() bool {
     if (!{= name =}_received_timer_ms < {= name =}_writed_timer_ms) {
