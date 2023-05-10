@@ -21,7 +21,7 @@ module Gasp.Block
   ) where
 
 import           Data.Aeson (ToJSON (..), Value, object, (.=))
-import           Data.Text  (Text, pack, stripStart)
+import           Data.Text  (Text, stripStart)
 
 data Loop = Loop
   { loopName :: String

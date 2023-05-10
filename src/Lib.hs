@@ -10,6 +10,8 @@ import           Data.Aeson                 (toJSON)
 import qualified Data.Binary                as Bin (encode)
 import qualified Data.ByteString.Char8      as BC (putStrLn)
 import qualified Data.ByteString.Lazy.Char8 as BL (writeFile)
+import           Data.List                  (find)
+import           Data.Maybe                 (isJust)
 import           Data.Text                  (Text)
 import qualified Data.Text                  as T (unpack)
 import           Data.UUID                  (toString)
@@ -46,7 +48,9 @@ compile gaspFile options = do
           Right r0 <- parseGasp tempDir $ tempDir </> "stage1/constants.gasp"
           let gasp1 = setGaspExprs gasp (getGaspExprs gasp ++ getGaspExprs r0)
           enrichGaspASTBasedOnCompileOptions gasp1 options
-            >>= preprocessGasp >>= generateCode (CompileOptions.compileType options)
+            >>= preprocessGaspStep1
+            >>= preprocessGaspStep2
+            >>= generateCode (CompileOptions.compileType options)
   where
     generateCode Compile gasp = writeAppCode gasp outDir tempDir >> return (Right ())
     generateCode Syntax gasp  = BC.putStrLn (encode gasp) >> return (Right ())
@@ -56,8 +60,9 @@ compile gaspFile options = do
     eepFile = outDir </> "eeprom.bin"
 
 
-preprocessGasp :: Gasp -> IO Gasp
-preprocessGasp gasp = setGaspExprs gasp . foldr foldFunc [] <$> mapM mapFunc (getGaspExprs gasp)
+preprocessGaspStep2 :: Gasp -> IO Gasp
+preprocessGaspStep2 gasp =
+  setGaspExprs gasp <$> mapM mapFunc (getGaspExprs gasp)
   where mapFunc :: Expr -> IO Expr
         mapFunc (ExprAttr x)   = do
           unless (attrScale x > 0) $ gaspError $ concat
@@ -126,11 +131,36 @@ preprocessGasp gasp = setGaspExprs gasp . foldr foldFunc [] <$> mapM mapFunc (ge
         mapFunc (ExprSetup1 (Setup1 n code)) = return . ExprSetup1 . Setup1 n $ render code
         mapFunc (ExprLoop1 (Loop1 n code)) = return . ExprLoop1 . Loop1 n $ render code
         mapFunc (ExprRaw (Raw n code)) = return . ExprRaw . Raw n $ render code
-        mapFunc (ExprRender (Render n)) = doRender n render
-        mapFunc (ExprRender1 (Render1 n v)) = doRender n (`compileAndRenderTextTemplate` v)
         mapFunc (ExprFunction func) = return $ ExprFunction func
           { funcCode = render $ funcCode func
           }
+
+        mapFunc v = return v
+
+        render =  (`compileAndRenderTextTemplate` toJSON gasp)
+
+
+needStep1 :: Gasp -> Bool
+needStep1 = isJust . find findFunc . getGaspExprs
+  where findFunc :: Expr -> Bool
+        findFunc (ExprRender _)  = True
+        findFunc (ExprRender1 _) = True
+        findFunc (ExprIfEq _)    = True
+        findFunc (ExprIfNeq _)   = True
+        findFunc _               = False
+
+
+preprocessGaspStep1 :: Gasp -> IO Gasp
+preprocessGaspStep1 gasp
+  | needStep1 gasp =
+    (setGaspExprs gasp
+  . foldr foldRendered []
+  <$> mapM mapFunc (getGaspExprs gasp))
+  >>= preprocessGaspStep1
+  | otherwise = pure gasp
+  where mapFunc :: Expr -> IO Expr
+        mapFunc (ExprRender (Render n)) = doRender n render
+        mapFunc (ExprRender1 (Render1 n v)) = doRender n (`compileAndRenderTextTemplate` v)
         mapFunc (ExprIfEq (IfEq n code)) =
           if ifFlag n then doRenderBlock n code render
                       else pure (ExprRendered [])
@@ -142,26 +172,24 @@ preprocessGasp gasp = setGaspExprs gasp . foldr foldFunc [] <$> mapM mapFunc (ge
 
         render =  (`compileAndRenderTextTemplate` toJSON gasp)
 
-        tmpls = getTmpls gasp
-        flags = getFlags gasp
-
-        ifFlag n = getFlag False flags n
+        ifFlag n = getFlag False (getFlags gasp) n
 
         doRender :: String -> (Text -> Text) -> IO Expr
         doRender n r =
-          case getTmpl n tmpls of
+          case getTmpl n (getTmpls gasp) of
             Nothing -> error $ Term.applyStyles [Term.Red] $ "Inline template " ++ n ++ " not found."
             Just (Tmpl _ code) -> doRenderBlock n code r
 
-        doRenderBlock :: String -> Text -> (Text -> Text) -> IO Expr
-        doRenderBlock n code r =
-          case parseGasp0 n (T.unpack (r code) ++ "\n") of
-            Left e      -> error $ Term.applyStyles [Term.Red] $ show e
-            Right exprs -> return $ ExprRendered exprs
+doRenderBlock :: String -> Text -> (Text -> Text) -> IO Expr
+doRenderBlock n code r =
+  case parseGasp0 n (T.unpack (r code) ++ "\n") of
+    Left e      -> error $ Term.applyStyles [Term.Red] $ show e
+    Right exprs -> return $ ExprRendered exprs
 
-        foldFunc :: Expr -> [Expr] -> [Expr]
-        foldFunc (ExprRendered xs) acc = xs ++ acc
-        foldFunc e acc                 = e:acc
+foldRendered :: Expr -> [Expr] -> [Expr]
+foldRendered (ExprRendered xs) acc = xs ++ acc
+foldRendered e acc                 = e:acc
+
 
 getCenterValue :: (Ord a) => (a, a) -> a -> (Bool, a)
 getCenterValue (minv, maxv) defv =
