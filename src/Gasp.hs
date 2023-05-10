@@ -388,6 +388,7 @@ instance ToJSON Gasp where
         , "setups"      .= setups
         , "loop1s"      .= loop1s
         , "setup1s"     .= setup1s
+        , "use_core1"   .= (not (null loop1s && null setup1s))
         , "raws"        .= raws
         , "attrs"       .= attrs
         , "fds"         .= fds

@@ -42,6 +42,7 @@ void loop() {
     {=/ loops =}
 }
 
+{=# use_core1 =}
 void setup1() {
     {=# setup1s =}
     {=& code =}
@@ -55,6 +56,7 @@ void loop1() {
     {=/ loop1s =}
 }
 
+{=/ use_core1 =}
 {=# functions =}
 {= type =} {= name =}({=# argv =}{= type =} {= name =}{=^ last =}, {=/ last =}{=/ argv =}) {
     {=& code =}
