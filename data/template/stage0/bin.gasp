@@ -21,7 +21,7 @@ func bin_{= name =}_read() {
     {= STROAGE_GET =}({= addr =}, bin_{= name =});
 }
 
-setup read_bin_{= name =} {
+setup bin_{= name =}_read {
     bin_{= name =}_read();
 }
 
