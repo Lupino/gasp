@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.1.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c667f8b6f40c186e000e7fe7e753ca4e1e0190b2b34a461f9c88c10a87d65385
+-- hash: bc1099f7a36ca06233b65346fa525705de042ce5aeb4aa4565b876a914f004e5
 
 name:           gasp
 version:        0.1.0.1
@@ -49,6 +49,7 @@ data-files:
     template/stage2/config.mk
     template/stage2/doc.md
     template/stage2/Makefile
+    template/stage2/stage2.h
     template/stage2/stage2.ino
 data-dir:       data/
 
