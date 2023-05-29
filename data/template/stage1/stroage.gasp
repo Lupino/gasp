@@ -4,4 +4,9 @@
 import <EEPROM.h>
 {=/ disable_eeprom =}
 
-NO_USED = NO_USED
+
+func init_storage(length int) {
+    for (int i = 0; i < length - 1; i ++) {
+        {= STROAGE_WRITE =}(i, 0);
+    }
+}
