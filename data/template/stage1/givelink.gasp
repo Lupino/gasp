@@ -163,7 +163,6 @@ func load_addr() {
     for (int i = 0; i < PACKET_ADDR_LENGTH; i ++) {
         givelink_addr[i] = {= STROAGE_READ =}({= addr_addr =} + i);
     }
-    givelink_authed = true;
 }
 
 func setup_givelink {
