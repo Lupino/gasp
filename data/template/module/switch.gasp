@@ -4,13 +4,13 @@ import <givelink_utils.h>
 import <givelink_raw.h>
 
 DEBUG_SERIAL           = Serial
-MAIN_SERIAL            = Serial
-GL_SERIAL              = MAIN_SERIAL
+GL_SERIAL              = Serial
+// GL_SERIAL           = MAIN_SERIAL
 SUB_SERIAL             = Serial1
 
 REPORT_DELAY_MS        = 10000
 PING_DELAY_MS          = 120000
-MAIN_SERIAL_MAX_LENGTH = 512
+GL_SERIAL_MAX_LENGTH   = 512
 SUB_SERIAL_MAX_LENGTH  = 256
 SENT_MAX_TYR_COUNT     = 100
 
@@ -24,8 +24,8 @@ typedef struct {
 } givelink_addr_t;
 }
 
-uart MAIN_SERIAL {
-    read MAIN_SERIAL_MAX_LENGTH givelink_reader mainParser
+uart GL_SERIAL {
+    read GL_SERIAL_MAX_LENGTH givelink_reader mainParser
 }
 
 uart SUB_SERIAL {
@@ -36,7 +36,7 @@ MAX_ADDR_LENGTH = 100
 devAddrList[MAX_ADDR_LENGTH] givelink_addr_t
 packetData[MAX_ADDR_LENGTH * PACKET_ADDR_LENGTH] uint8_t
 PACKET_DATA = packetData
-READED_PAYLOAD = MAIN_SERIAL_read_0_buffer
+READED_PAYLOAD = GL_SERIAL_read_0_buffer
 
 func disableAddrList {
     for (uint16_t i = 0; i < MAX_ADDR_LENGTH; i ++){
