@@ -150,8 +150,13 @@ func {= name =}_write() void {
     {= name =}_write_next_index();
 }
 
-{= name =}_DELAY_MS = 12000
-{= name =}_RECEIVE_DELAY_MS = 1000
+{= name =}_DELAY_MS = 24000
+
+// EMIT_DELAY_MS must smaller RECEIVE_DELAY_MS
+{= name =}_EMIT_DELAY_MS = 12000
+{= name =}_RECEIVE_DELAY_MS = 20000
+
+
 func {= name =}_timeout_event() {
     {=# has_debug =}
     DEBUG_SERIAL.println({= TO_ROM =}("emit {= name =}_timeout_event"));
@@ -165,15 +170,15 @@ func {= name =}_receive_timeout_event() {
 }
 
 rule core{= core =} {= name =}_availabled_timer_ms + {= name =}_DELAY_MS < get_cache_time_ms()
-  do later 1000 {= name =}_timeout_event
+  do later {= name =}_EMIT_DELAY_MS {= name =}_timeout_event
   onF rule_run_force
 
 rule core{= core =} is_{= name =}_receive_timeout()
-  do later 1000 {= name =}_receive_timeout_event
+  do later {= name =}_EMIT_DELAY_MS {= name =}_receive_timeout_event
   onF rule_run_force
 
 func is_{= name =}_receive_timeout() bool {
-    if (!{= name =}_received_timer_ms < {= name =}_writed_timer_ms) {
+    if ({= name =}_received_timer_ms < {= name =}_writed_timer_ms) {
         return {= name =}_writed_timer_ms + {= name =}_RECEIVE_DELAY_MS < get_current_time_ms();
     }
     return false;
