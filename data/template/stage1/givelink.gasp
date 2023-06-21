@@ -27,6 +27,9 @@ func GL_SERIAL_parse(buffer const uint8_t *, len const int) {
         {=# ctrl_mode =}
         save_addr();
         {=/ ctrl_mode =}
+        {=^ ctrl_mode =}
+        send_packet_0(SWITCH);
+        {=/ ctrl_mode =}
         {=# low_memory =}
         incrLastPayloadId();
         {=/ low_memory =}
