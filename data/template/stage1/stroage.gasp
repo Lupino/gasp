@@ -5,8 +5,42 @@ import <EEPROM.h>
 {=/ disable_eeprom =}
 
 
-func init_storage(length int) {
-    for (int i = 0; i < length - 1; i ++) {
+func init_storage() {
+    int length = {= STROAGE_LENGTH =}();
+    for (int i = 16; i < length - 1; i ++) {
         {= STROAGE_WRITE =}(i, 0);
+    }
+
+    {=# attrs =}
+    {=# has_app =}
+    {=# keep =}
+    {=# onebyte =}
+    {= STROAGE_WRITE =}({= addr =}, ({= type =}){= default =});
+    {=/ onebyte =}
+    {=^ onebyte =}
+    {= STROAGE_PUT =}({= addr =},  ({= type =}){= default =});
+    {=/ onebyte =}
+    {=/ keep =}
+    {=/ has_app =}
+    {=/ attrs =}
+    {=# metrics =}
+    {=# onebyte =}
+    {= STROAGE_WRITE =}({= addr =}, ({= type =}){= threshold =});
+    {=/ onebyte =}
+    {=^ onebyte =}
+    {= STROAGE_PUT =}({= addr =}, ({= type =}){= threshold =});
+    {=/ onebyte =}
+    {=/ metrics =}
+    {= STROAGE_COMMIT =}();
+}
+
+func try_init_storage(magic uint32_t) {
+    uint32_t storage_magic = 0;
+    int magic_addr = {= STROAGE_LENGTH =}() - 4;
+    {= STROAGE_GET =}(magic_addr, storage_magic);
+
+    if (storage_magic != magic) {
+        {= STROAGE_PUT =}(magic_addr, magic);
+        init_storage();
     }
 }
