@@ -1,6 +1,11 @@
 {{={= =}=}}
 #include "stage2.h"
 
+{=# raws =}
+{=& code =}
+
+{=/ raws =}
+
 void setup() {
     {=# setups =}
     {=& code =}
@@ -35,3 +40,8 @@ void loop1() {
 }
 
 {=/ functions =}
+
+{=# func_raws =}
+{=& code =}
+
+{=/ func_raws =}

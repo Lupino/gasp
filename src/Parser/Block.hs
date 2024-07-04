@@ -22,6 +22,7 @@ module Parser.Block
   , fd
   , ifeq
   , ifneq
+  , functionRaw
   ) where
 
 import           Data.Aeson         (Value)
@@ -124,3 +125,6 @@ ifeq = blockP L.reservedNameIfEq IfEq
 
 ifneq :: Parser IfNeq
 ifneq = blockP L.reservedNameIfNeq IfNeq
+
+functionRaw :: Parser FunctionRaw
+functionRaw = blockP L.reservedNameFunctionRaw FunctionRaw

@@ -2,6 +2,7 @@ module Lexer
   ( reservedNameApp
   , reservedNameCommand
   , reservedNameFunction
+  , reservedNameFunctionRaw
   , reservedNameLoop
   , reservedNameSetup
   , reservedNameLoop0
@@ -83,6 +84,9 @@ reservedNameCommand = "command"
 
 reservedNameFunction :: String
 reservedNameFunction = "func"
+
+reservedNameFunctionRaw :: String
+reservedNameFunctionRaw = "func_raw"
 
 reservedNameLoop :: String
 reservedNameLoop = "loop"
@@ -191,6 +195,7 @@ reservedNames =
     [ reservedNameApp
     , reservedNameCommand
     , reservedNameFunction
+    , reservedNameFunctionRaw
     , reservedNameLoop
     , reservedNameSetup
     , reservedNameLoop0

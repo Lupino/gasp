@@ -1,6 +1,5 @@
 {{={= =}=}}
-import <givelink_common.h> https://github.com/Lupino/givelink.git
-
+require ./givelink_module
 require ./givelink
 require ./every
 require ./rule

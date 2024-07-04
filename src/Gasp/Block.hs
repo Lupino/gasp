@@ -15,13 +15,20 @@ module Gasp.Block
   , IfEq (..)
   , IfNeq (..)
 
+  , FunctionRaw (..)
+  , getRequiredFunctionRaw
+
   , Flag (..)
   , getFlag
   , defaultFlags
   ) where
 
-import           Data.Aeson (ToJSON (..), Value, object, (.=))
-import           Data.Text  (Text, stripStart)
+import           Data.Aeson    (ToJSON (..), Value, object, (.=))
+import           Data.List     (partition)
+import           Data.Text     (Text, stripStart)
+import qualified Data.Text     as T (breakOnEnd, dropEnd, intercalate, length,
+                                     null, pack, take, takeEnd, takeWhileEnd)
+import           Gasp.Function (hasToken)
 
 data Loop = Loop
   { loopName :: String
@@ -229,3 +236,30 @@ instance ToJSON IfNeq where
     [ "code" .= stripStart (ifneqCode ifneq)
     , "name" .= ifneqName ifneq
     ]
+
+data FunctionRaw = FunctionRaw
+  { funcRawName :: String
+  , funcRawCode :: Text
+  } deriving (Show, Eq, Ord)
+
+instance ToJSON FunctionRaw where
+  toJSON funcRaw = object
+    [ "code" .= stripStart (funcRawCode funcRaw)
+    , "name" .= funcRawName funcRaw
+    ]
+
+
+isRequired :: Text -> FunctionRaw -> Bool
+isRequired txt funcRaw = hasToken (T.pack fn) (" " <> txt)
+  where fn = funcRawName funcRaw
+
+splitRequired :: Text -> [FunctionRaw] -> ([FunctionRaw], [FunctionRaw])
+splitRequired = partition . isRequired
+
+getRequiredFunctionRaw :: Text -> [FunctionRaw] -> ([FunctionRaw], [FunctionRaw])
+getRequiredFunctionRaw txt funcs
+  | null required = ([], unrequired)
+  | otherwise     = (required ++ nextRequired, nextUnrequired)
+  where (required, unrequired) = splitRequired txt funcs
+        nextText = T.intercalate "\n" $ map funcRawCode required
+        (nextRequired, nextUnrequired) = getRequiredFunctionRaw nextText unrequired

@@ -37,6 +37,7 @@ expr
     =   exprApp
     <|> exprCmd
     <|> exprFunction
+    <|> exprFunctionRaw
     <|> exprLoop
     <|> exprSetup
     <|> exprLoop1
@@ -72,6 +73,9 @@ exprCmd = ExprCmd <$> command
 
 exprFunction :: Parser Expr
 exprFunction = ExprFunction <$> function
+
+exprFunctionRaw :: Parser Expr
+exprFunctionRaw = ExprFuncRaw <$> functionRaw
 
 exprLoop :: Parser Expr
 exprLoop = ExprLoop <$> loop

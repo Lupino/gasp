@@ -1,8 +1,5 @@
 flag ctrl_mode false
 
-import <givelink_utils.h>
-import <givelink_raw.h>
-
 DEBUG_SERIAL           = Serial
 GL_SERIAL              = Serial
 // GL_SERIAL           = MAIN_SERIAL

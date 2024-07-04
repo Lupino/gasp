@@ -1,6 +1,5 @@
 {{={= =}=}}
 {=# has_app =}
-import <givelink_raw.h> https://github.com/Lupino/givelink.git
 import <jsmn.h> https://github.com/zserge/jsmn.git
 {=/ has_app =}
 

@@ -64,6 +64,7 @@ data Expr
     = ExprApp      !App
     | ExprCmd      !Command
     | ExprFunction !Function
+    | ExprFuncRaw  !FunctionRaw
     | ExprSetup    !Setup
     | ExprLoop     !Loop
     | ExprSetup1   !Setup1
@@ -150,6 +151,11 @@ getCmds gasp = [cmd | (ExprCmd cmd) <- gaspExprs gasp]
 
 getFunctions:: Gasp -> [Function]
 getFunctions gasp = nub $ [func | (ExprFunction func) <- gaspExprs gasp]
+
+-- * FunctionRaws
+
+getFunctionRaws:: Gasp -> [FunctionRaw]
+getFunctionRaws gasp = nub $ [funcRaw | (ExprFuncRaw funcRaw) <- gaspExprs gasp]
 
 -- * Loops
 
@@ -383,6 +389,7 @@ instance ToJSON Gasp where
         , "has_app"     .= isJust app
         , "commands"    .= cmds
         , "functions"   .= requiredFuncs
+        , "func_raws"   .= requiredFuncRaws
         , "imports"     .= getImports gasp
         , "loops"       .= loops
         , "setups"      .= setups
@@ -441,7 +448,8 @@ instance ToJSON Gasp where
                 ++ map setup1Code setup1s
                 ++ map rawCode raws
               funcs = getFunctions gasp
-              (requiredVars, requiredConsts, requiredFuncs) = getRequired requiredText vars consts funcs
+              funcRaws = getFunctionRaws gasp
+              (requiredVars, requiredConsts, requiredFuncs, requiredFuncRaws) = getRequired requiredText vars consts funcs funcRaws
               hasMetric = not (null metrics)
               app = getApp gasp0
               rules = getRules gasp
@@ -456,11 +464,12 @@ instance ToJSON Gasp where
               bufLen = if isLowMemory then max maxCmdLen maxTmplLen else max maxCmdLen bufLen0
               contextLen = maybe 0 appContexLen app
 
-getRequired :: Text -> [Constant] -> [Constant] -> [Function] -> ([Constant], [Constant], [Function])
-getRequired requiredText vars consts funcs
-  | null requiredVars && null requiredConsts && null requiredFuncs = ([], [], [])
-  | otherwise = (requiredVars ++ rv, requiredConsts ++ rc, requiredFuncs ++ rf)
+getRequired :: Text -> [Constant] -> [Constant] -> [Function] -> [FunctionRaw] -> ([Constant], [Constant], [Function], [FunctionRaw])
+getRequired requiredText vars consts funcs funcRaws
+  | null requiredVars && null requiredConsts && null requiredFuncs = ([], [], [], [])
+  | otherwise = (requiredVars ++ rv, requiredConsts ++ rc, requiredFuncs ++ rf, requiredFuncRaws ++ rfr)
   where (requiredFuncs, unrequiredFuncs) = getRequiredFunction requiredText funcs
+        (requiredFuncRaws, unrequiredFuncRaws) = getRequiredFunctionRaw requiredText funcRaws
         (requiredVars, unrequiredVars) = getRequiredConstant requiredText vars
         (requiredConsts, unrequiredConsts) = getRequiredConstant requiredText consts
         txt
@@ -468,7 +477,8 @@ getRequired requiredText vars consts funcs
           $ map (T.pack . constValue) requiredConsts
           ++ map (\(Constant a b c) -> T.pack $ concat [a, " ", b, " ", c]) requiredVars
           ++ map funcCode requiredFuncs
-        (rv, rc, rf) = getRequired txt unrequiredVars unrequiredConsts unrequiredFuncs
+          ++ map funcRawCode requiredFuncRaws
+        (rv, rc, rf, rfr) = getRequired txt unrequiredVars unrequiredConsts unrequiredFuncs unrequiredFuncRaws
 
 putExpr :: Expr -> Put
 putExpr (ExprAttr x)
