@@ -8,7 +8,6 @@ import           Command                  (runCommand)
 import           Command.Clean            (clean)
 import           Command.Compile          (compile)
 import           Command.CreateNewProject (createNewProject)
-import           Command.Watch            (compileAndWatch)
 import           CompileOptions           (CompileType (..))
 
 
@@ -21,7 +20,6 @@ main = do
         ("compile":xs)       -> runCommand $ compile Compile xs
         ("syntax":xs)        -> runCommand $ compile Syntax xs
         ("eeprom":xs)        -> runCommand $ compile Eeprom xs
-        ("watch":xs)         -> runCommand $ compileAndWatch xs
         ["version"]          -> printVersion
         _                    -> printUsage
 

@@ -140,7 +140,6 @@ executable gasp
       Command.Common
       Command.Compile
       Command.CreateNewProject
-      Command.Watch
       Paths_gasp
   hs-source-dirs:
       cli
@@ -151,7 +150,6 @@ executable gasp
       base >=4.7 && <5
     , directory
     , filepath
-    , fsnotify
     , gasp
     , mtl
     , text

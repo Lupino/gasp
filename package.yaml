@@ -65,6 +65,5 @@ executables:
       - filepath
       - directory
       - mtl
-      - fsnotify
       - time
       - text
