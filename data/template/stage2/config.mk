@@ -18,9 +18,6 @@ else
 TARGET_APP = $(PROJECT_NAME).hex
 endif
 
-define get_arduino_dir
-    $(shell $(ARDUINO_CLI) config dump | grep $1 | awk -F ':' '{print $$2}')
-endef
 
-ARDUINO_DATA = $(call get_arduino_dir, data)
-ARDUINO_LIB_PATH = $(call get_arduino_dir, user)/libraries
+ARDUINO_DATA = $(HOME)/Library/Arduino15
+ARDUINO_LIB_PATH = $(HOME)/Documents/Arduino/libraries
