@@ -34,7 +34,7 @@ func init_storage() {
     {= STROAGE_COMMIT =}();
 }
 
-func try_init_storage(magic uint32_t) {
+func try_init_storage(magic uint32_t) bool {
     uint32_t storage_magic = 0;
     int magic_addr = {= STROAGE_LENGTH =}() - 4;
     {= STROAGE_GET =}(magic_addr, storage_magic);
@@ -42,5 +42,8 @@ func try_init_storage(magic uint32_t) {
     if (storage_magic != magic) {
         {= STROAGE_PUT =}(magic_addr, magic);
         init_storage();
+        return true;
     }
+
+    return false;
 }
