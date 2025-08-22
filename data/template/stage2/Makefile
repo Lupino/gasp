@@ -16,6 +16,11 @@ $(TARGET_APP): $(TARGET_INO) $(LIBRARIES)
 	rm -rf $(BUILD_PATH)
 	$(ARDUINO_COMPILE) $(dir $<)
 	cp $(BUILD_PATH)/$(notdir $<).uf2 $@
+else ifeq ($(findstring esp32:esp32, $(BOARD_TAG)),esp32:esp32)
+$(TARGET_APP): $(TARGET_INO) $(LIBRARIES)
+	rm -rf $(BUILD_PATH)
+	$(ARDUINO_COMPILE) $(dir $<)
+	cp $(BUILD_PATH)/$(notdir $<).merged.bin $@
 else
 $(TARGET_APP): $(TARGET_INO) $(LIBRARIES)
 	rm -rf $(BUILD_PATH)
