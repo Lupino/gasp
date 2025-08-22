@@ -26,8 +26,7 @@ module Gasp.Block
 import           Data.Aeson    (ToJSON (..), Value, object, (.=))
 import           Data.List     (partition)
 import           Data.Text     (Text, stripStart)
-import qualified Data.Text     as T (breakOnEnd, dropEnd, intercalate, length,
-                                     null, pack, take, takeEnd, takeWhileEnd)
+import qualified Data.Text     as T (intercalate, pack)
 import           Gasp.Function (hasToken)
 
 data Loop = Loop

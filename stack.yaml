@@ -18,7 +18,7 @@
 #
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
-resolver: lts-22.20
+resolver: lts-24.0
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -37,7 +37,6 @@ packages:
 - .
 
 extra-deps:
-- mustache-2.4.1@sha256:dc92ddbf90e3a64c3f2ec7785cf2937d6dcf6ffcebbc38ad9c8b33b6a70bb298,3180
 # Dependency packages to be pulled from upstream that are not in the resolver
 # using the same syntax as the packages field.
 # (e.g., acme-missiles-0.3)
