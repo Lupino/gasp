@@ -4,6 +4,7 @@ unused_availabled_timer_ms unsigned long
 
 {=# uarts =}
 {= name =}_availabled_timer_ms unsigned long
+{= name =}_readed_timer_ms unsigned long
 {= name =}_received_timer_ms unsigned long = 0
 {= name =}_writed_timer_ms unsigned long = 0
 {=# readers =}
@@ -45,6 +46,7 @@ func {= name =}_poll() void {
             }
             {=/ readers =}
         }
+        {= name =}_readed_timer_ms = get_current_time_ms();
         {=# readers =}
         if (is_{= name =}_{= index =}_readed_flag) {
             is_{= name =}_{= index =}_readed_flag = false;
