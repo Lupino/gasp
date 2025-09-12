@@ -4,6 +4,7 @@ module Gasp.Block
   , Loop1 (..)
   , Setup1 (..)
   , Raw (..)
+  , RawH (..)
   , Data (..)
   , Tmpl (..)
   , Render (..)
@@ -16,18 +17,16 @@ module Gasp.Block
   , IfNeq (..)
 
   , FunctionRaw (..)
-  , getRequiredFunctionRaw
 
   , Flag (..)
   , getFlag
   , defaultFlags
   ) where
 
-import           Data.Aeson    (ToJSON (..), Value, object, (.=))
-import           Data.List     (partition)
-import           Data.Text     (Text, stripStart)
-import qualified Data.Text     as T (intercalate, pack)
-import           Gasp.Function (hasToken)
+import           Data.Aeson  (ToJSON (..), Value, object, (.=))
+import           Data.Text   (Text, stripStart)
+import qualified Data.Text   as T (pack)
+import           Gasp.Common (GetCode (..), GetName (..))
 
 data Loop = Loop
   { loopName :: String
@@ -119,6 +118,37 @@ instance ToJSON Raw where
     [ "code" .= stripStart (rawCode raw)
     , "name" .= rawName raw
     ]
+
+instance GetName Raw where
+  getName = T.pack . rawName
+
+instance GetCode Raw where
+  getCode = rawCode
+
+data RawH = RawH
+  { rawHName :: String
+  , rawHCode :: Text
+  } deriving (Show)
+
+
+instance Eq RawH where
+  x == y = rawHName x == rawHName y
+
+instance Ord RawH where
+  compare x y = compare (rawHName x) (rawHName y)
+
+
+instance ToJSON RawH where
+  toJSON rawH = object
+    [ "code" .= stripStart (rawHCode rawH)
+    , "name" .= rawHName rawH
+    ]
+
+instance GetName RawH where
+  getName = T.pack . rawHName
+
+instance GetCode RawH where
+  getCode = rawHCode
 
 data Data = Data
   { dataName :: String
@@ -248,17 +278,8 @@ instance ToJSON FunctionRaw where
     ]
 
 
-isRequired :: Text -> FunctionRaw -> Bool
-isRequired txt funcRaw = hasToken (T.pack fn) (" " <> txt)
-  where fn = funcRawName funcRaw
+instance GetName FunctionRaw where
+  getName = T.pack . funcRawName
 
-splitRequired :: Text -> [FunctionRaw] -> ([FunctionRaw], [FunctionRaw])
-splitRequired = partition . isRequired
-
-getRequiredFunctionRaw :: Text -> [FunctionRaw] -> ([FunctionRaw], [FunctionRaw])
-getRequiredFunctionRaw txt funcs
-  | null required = ([], unrequired)
-  | otherwise     = (required ++ nextRequired, nextUnrequired)
-  where (required, unrequired) = splitRequired txt funcs
-        nextText = T.intercalate "\n" $ map funcRawCode required
-        (nextRequired, nextUnrequired) = getRequiredFunctionRaw nextText unrequired
+instance GetCode FunctionRaw where
+  getCode = funcRawCode

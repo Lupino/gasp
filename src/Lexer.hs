@@ -25,6 +25,7 @@ module Lexer
   , reservedNameFlag
   , reservedNameFd
   , reservedNameRaw
+  , reservedNameRawH
   , reservedNameData
   , reservedNameTmpl
   , reservedNameRender
@@ -154,6 +155,9 @@ reservedNameFd = "fd"
 reservedNameRaw :: String
 reservedNameRaw = "raw"
 
+reservedNameRawH :: String
+reservedNameRawH = "raw_h"
+
 reservedNameData :: String
 reservedNameData = "data"
 
@@ -218,6 +222,7 @@ reservedNames =
     , reservedNameFlag
     , reservedNameFd
     , reservedNameRaw
+    , reservedNameRawH
     , reservedNameData
     , reservedNameTmpl
     , reservedNameRender

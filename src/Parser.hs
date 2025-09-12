@@ -43,6 +43,7 @@ expr
     <|> exprLoop1
     <|> exprSetup1
     <|> exprRaw
+    <|> exprRawH
     <|> exprData
     <|> exprTmpl
     <|> exprRender
@@ -91,6 +92,9 @@ exprSetup1 = ExprSetup1 <$> setup1
 
 exprRaw :: Parser Expr
 exprRaw = ExprRaw <$> raw
+
+exprRawH :: Parser Expr
+exprRawH = ExprRawH <$> rawH
 
 exprData :: Parser Expr
 exprData = ExprData <$> data_

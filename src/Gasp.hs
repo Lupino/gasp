@@ -40,6 +40,7 @@ import           Gasp.Attr
 import           Gasp.Bin
 import           Gasp.Block
 import           Gasp.Command
+import           Gasp.Common            (getCode, partitionRequired)
 import           Gasp.Constant
 import           Gasp.Every
 import           Gasp.Function
@@ -70,6 +71,7 @@ data Expr
     | ExprSetup1   !Setup1
     | ExprLoop1    !Loop1
     | ExprRaw      !Raw
+    | ExprRawH     !RawH
     | ExprData     !Data
     | ExprTmpl     !Tmpl
     | ExprRender   !Render
@@ -181,6 +183,11 @@ getSetup1s gasp = sort . nub $ [setup1 | (ExprSetup1 setup1) <- gaspExprs gasp]
 
 getRaws:: Gasp -> [Raw]
 getRaws gasp = sort . nub $ [raw | (ExprRaw raw) <- gaspExprs gasp]
+
+-- * RawHs
+
+getRawHs:: Gasp -> [RawH]
+getRawHs gasp = sort . nub $ [rawH | (ExprRawH rawH) <- gaspExprs gasp]
 
 -- * Datas
 
@@ -396,7 +403,8 @@ instance ToJSON Gasp where
         , "loop1s"      .= loop1s
         , "setup1s"     .= setup1s
         , "use_core1"   .= (not (null loop1s && null setup1s))
-        , "raws"        .= raws
+        , "raws"        .= requiredRaws
+        , "rawhs"       .= requiredRawHs
         , "attrs"       .= attrs
         , "fds"         .= fds
         , "metrics"     .= metrics
@@ -428,6 +436,7 @@ instance ToJSON Gasp where
               setup1s = getSetup1s gasp
               loop1s = getLoop1s gasp
               raws = getRaws gasp
+              rawHs = getRawHs gasp
               datas = getDatas gasp
               prod = getProd gasp0
               fds = nub $ getFds gasp0
@@ -446,10 +455,9 @@ instance ToJSON Gasp where
                 ++ map setupCode setups
                 ++ map loop1Code loop1s
                 ++ map setup1Code setup1s
-                ++ map rawCode raws
               funcs = getFunctions gasp
               funcRaws = getFunctionRaws gasp
-              (requiredVars, requiredConsts, requiredFuncs, requiredFuncRaws) = getRequired requiredText vars consts funcs funcRaws
+              (requiredVars, requiredConsts, requiredFuncs, requiredFuncRaws, requiredRaws, requiredRawHs) = getRequired requiredText vars consts funcs funcRaws raws rawHs
               hasMetric = not (null metrics)
               app = getApp gasp0
               rules = getRules gasp
@@ -464,21 +472,25 @@ instance ToJSON Gasp where
               bufLen = if isLowMemory then max maxCmdLen maxTmplLen else max maxCmdLen bufLen0
               contextLen = maybe 0 appContexLen app
 
-getRequired :: Text -> [Constant] -> [Constant] -> [Function] -> [FunctionRaw] -> ([Constant], [Constant], [Function], [FunctionRaw])
-getRequired requiredText vars consts funcs funcRaws
-  | null requiredVars && null requiredConsts && null requiredFuncs = ([], [], [], [])
-  | otherwise = (requiredVars ++ rv, requiredConsts ++ rc, requiredFuncs ++ rf, requiredFuncRaws ++ rfr)
-  where (requiredFuncs, unrequiredFuncs) = getRequiredFunction requiredText funcs
-        (requiredFuncRaws, unrequiredFuncRaws) = getRequiredFunctionRaw requiredText funcRaws
-        (requiredVars, unrequiredVars) = getRequiredConstant requiredText vars
-        (requiredConsts, unrequiredConsts) = getRequiredConstant requiredText consts
+getRequired :: Text -> [Constant] -> [Constant] -> [Function] -> [FunctionRaw] -> [Raw] -> [RawH] -> ([Constant], [Constant], [Function], [FunctionRaw], [Raw], [RawH])
+getRequired requiredText vars consts funcs funcRaws raws rawHs
+  | null requiredVars && null requiredConsts && null requiredFuncs && null requiredFuncRaws && null requiredRaws && null requiredRawHs = ([], [], [], [], [], [])
+  | otherwise = (requiredVars ++ rv, requiredConsts ++ rc, requiredFuncs ++ rf, requiredFuncRaws ++ rfr, requiredRaws ++ rrw, requiredRawHs ++ rrwh)
+  where (requiredFuncs, unrequiredFuncs) = partitionRequired requiredText funcs
+        (requiredFuncRaws, unrequiredFuncRaws) = partitionRequired requiredText funcRaws
+        (requiredVars, unrequiredVars) = partitionRequired requiredText vars
+        (requiredConsts, unrequiredConsts) = partitionRequired requiredText consts
+        (requiredRaws, unrequiredRaws) = partitionRequired requiredText raws
+        (requiredRawHs, unrequiredRawHs) = partitionRequired requiredText rawHs
         txt
           = T.intercalate "\n"
           $ map (T.pack . constValue) requiredConsts
           ++ map (\(Constant a b c) -> T.pack $ concat [a, " ", b, " ", c]) requiredVars
-          ++ map funcCode requiredFuncs
-          ++ map funcRawCode requiredFuncRaws
-        (rv, rc, rf, rfr) = getRequired txt unrequiredVars unrequiredConsts unrequiredFuncs unrequiredFuncRaws
+          ++ map getCode requiredFuncs
+          ++ map getCode requiredFuncRaws
+          ++ map getCode requiredRaws
+          ++ map getCode requiredRawHs
+        (rv, rc, rf, rfr, rrw, rrwh) = getRequired txt unrequiredVars unrequiredConsts unrequiredFuncs unrequiredFuncRaws unrequiredRaws unrequiredRawHs
 
 putExpr :: Expr -> Put
 putExpr (ExprAttr x)

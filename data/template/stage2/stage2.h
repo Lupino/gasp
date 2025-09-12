@@ -11,6 +11,11 @@
 extern "C" {
 #endif
 
+{=# rawhs =}
+{=& code =}
+
+{=/ rawhs =}
+
 {=# consts =}
 {=# has_value =}
 #define {= name =} {=& value =}

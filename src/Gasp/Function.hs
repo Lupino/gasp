@@ -4,7 +4,6 @@ module Gasp.Function
   , hasRetval
   , hasToken
   , FuncName (..)
-  , getRequiredFunction
   , FuncFlag (..)
   , genFuncFlag
   , Arg
@@ -14,11 +13,10 @@ module Gasp.Function
   ) where
 
 
-import           Data.Aeson (ToJSON (..), object, (.=))
-import           Data.List  (partition)
-import           Data.Text  (Text, stripStart)
-import qualified Data.Text  as T (breakOnEnd, dropEnd, intercalate, length,
-                                  null, pack, take, takeEnd, takeWhileEnd)
+import           Data.Aeson  (ToJSON (..), object, (.=))
+import           Data.Text   (Text, stripStart)
+import qualified Data.Text   as T (pack)
+import           Gasp.Common (GetCode (..), GetName (..), hasToken)
 
 data FuncFlag = FuncFlag
   { flagJson   :: !Bool
@@ -112,42 +110,15 @@ instance ToJSON Function where
     where argv = if null (funcArgv func) then funcFlagToArgv argTokens (funcFlag func)
                                          else funcArgv func
 
+instance GetName Function where
+  getName func = T.pack fn
+    where FuncName fn = funcName func
 
-
-hasToken :: Text -> Text -> Bool
-hasToken tok txt
-  | isNotComment && isToken = True
-  | tokLen > prevLen = False
-  | otherwise = hasToken tok $ T.dropEnd tokLen prev
-  where (prev, next) = T.breakOnEnd tok txt
-        tokLen = T.length tok
-        prevLen = T.length prev
-        endC = T.take 1 next
-        startC = T.take 1 $ T.takeEnd (tokLen + 1) prev
-        validC = [" ", ",", "=", "(", ")", "[", "]", ";", "\n", "!", ".", "+", "-", "*", "/", "&", ">", "<", "{", "}"]
-        isToken = endC `elem` validC && startC `elem` validC
-        prevLine = T.takeWhileEnd (/='\n') prev
-        (comment, _) = T.breakOnEnd "//" prevLine
-        isNotComment = T.null comment
+instance GetCode Function where
+  getCode = funcCode
 
 hasRetval :: Function -> Bool
 hasRetval = hasToken "retval" . (" " <>) . funcCode
 
 hasJson :: Function -> Bool
 hasJson = hasToken "tokens" . (" " <>) . funcCode
-
-
-isRequired :: Text -> Function -> Bool
-isRequired txt func = hasToken (T.pack fn) (" " <> txt)
-  where FuncName fn = funcName func
-
-splitRequired :: Text -> [Function] -> ([Function], [Function])
-splitRequired = partition . isRequired
-
-getRequiredFunction :: Text -> [Function] -> ([Function], [Function])
-getRequiredFunction txt funcs
-  | null required = ([], unrequired)
-  | otherwise     = (required ++ nextRequired, nextUnrequired)
-  where (required, unrequired) = splitRequired txt funcs
-        nextText = T.intercalate "\n" $ map funcCode required
-        (nextRequired, nextUnrequired) = getRequiredFunction nextText unrequired

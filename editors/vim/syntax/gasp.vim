@@ -28,7 +28,7 @@ syn keyword gaspLink    link
 syn keyword gaspClick   click
 syn keyword gaspLater   later
 
-syn match gaspSection "^\(app\|setup\|loop\|agpio\|gpio\|func\|every\|command\|attr\|attr\|metric\|rule\|import\|flag\|data\|require\|uart\|raw\|fd\|bin\|str\|struct\)"
+syn match gaspSection "^\(app\|setup\|loop\|agpio\|gpio\|func\|every\|command\|attr\|attr\|metric\|rule\|import\|flag\|data\|require\|uart\|raw\|raw_h\|fd\|bin\|str\|struct\)"
 
 syn keyword gaspConditional do else on
 

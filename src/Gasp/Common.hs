@@ -7,9 +7,19 @@ module Gasp.Common
   , minValue
   , isLong
   , DataType (..)
+
+  , hasToken
+
+  , GetName (..)
+  , GetCode (..)
+  , partitionRequired
   ) where
 
 import           Data.Aeson (ToJSON (..))
+import           Data.List  (partition)
+import           Data.Text  (Text)
+import qualified Data.Text  as T (breakOnEnd, dropEnd, intercalate, length,
+                                  null, take, takeEnd, takeWhileEnd)
 
 newtype DataType = DataType String
   deriving (Show, Eq)
@@ -110,3 +120,40 @@ isLong (DataType "unsigned int")  = True
 isLong (DataType "word")          = True
 isLong (DataType "long")          = True
 isLong _                          = False
+
+
+hasToken :: Text -> Text -> Bool
+hasToken tok text
+  | isNotComment && isToken = True
+  | tokLen > prevLen = False
+  | otherwise = hasToken tok $ T.dropEnd tokLen prev
+  where (prev, next) = T.breakOnEnd tok text
+        tokLen = T.length tok
+        prevLen = T.length prev
+        endC = T.take 1 next
+        startC = T.take 1 $ T.takeEnd (tokLen + 1) prev
+        validC = [" ", ",", "=", "(", ")", "[", "]", ";", "\n", "!", ".", "+", "-", "*", "/", "&", ">", "<", "{", "}"]
+        isToken = endC `elem` validC && startC `elem` validC
+        prevLine = T.takeWhileEnd (/='\n') prev
+        (comment, _) = T.breakOnEnd "//" prevLine
+        isNotComment = T.null comment
+
+class GetName a where
+  getName :: a -> Text
+
+class GetCode a where
+  getCode :: a -> Text
+
+isRequired :: GetName a => Text -> a -> Bool
+isRequired text a = hasToken (getName a) (" " <> text)
+
+splitRequired :: GetName a => Text -> [a] -> ([a], [a])
+splitRequired = partition . isRequired
+
+partitionRequired :: (GetName a, GetCode a) => Text -> [a] -> ([a], [a])
+partitionRequired text a
+  | null required = ([], unrequired)
+  | otherwise     = (required ++ nextRequired, nextUnrequired)
+  where (required, unrequired) = splitRequired text a
+        nextText = T.intercalate "\n" $ map getCode required
+        (nextRequired, nextUnrequired) = partitionRequired nextText unrequired

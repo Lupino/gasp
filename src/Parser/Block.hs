@@ -12,6 +12,7 @@ module Parser.Block
   , setup1
   , loop1
   , raw
+  , rawH
   , data_
   , tmpl
   , render
@@ -92,6 +93,9 @@ loop1 = blockP L.reservedNameLoop1 Loop1
 
 raw :: Parser Raw
 raw = blockP L.reservedNameRaw Raw
+
+rawH :: Parser RawH
+rawH = blockP L.reservedNameRawH RawH
 
 data_ :: Parser Data
 data_ = blockV L.reservedNameData Data
