@@ -32,8 +32,8 @@ loop timer_loop {
     }
 }
 
-func set_timer(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
-    return getset_timer(json, tokens, num_tokens, retval, true);
+func set_timer(json const char *, toks jsmntok_t *, num_toks int, retval char *) bool {
+    return getset_timer(json, toks, num_toks, retval, true);
 }
 
 command set_timer {
@@ -69,8 +69,8 @@ command set_timer {
   }
 }
 
-func get_timer(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
-    return getset_timer(json, tokens, num_tokens, retval, false);
+func get_timer(json const char *, toks jsmntok_t *, num_toks int, retval char *) bool {
+    return getset_timer(json, toks, num_toks, retval, false);
 }
 
 command get_timer {
@@ -115,8 +115,8 @@ func swap_timer_event(delta_ms uint32_t) void {
     }
 }
 
-func set_timer_raw(json const char *, tokens jsmntok_t *, num_tokens int, addr0 int, addr1 int, addr2 int) void {
-    if (jsonlookup(json, tokens, num_tokens, {= FROM_ROM =}({= TO_ROM =}("data")), requestValue)) {
+func set_timer_raw(json const char *, toks jsmntok_t *, num_toks int, addr0 int, addr1 int, addr2 int) void {
+    if (jsonlookup(json, toks, num_toks, {= FROM_ROM =}({= TO_ROM =}("data")), requestValue)) {
         int pos = 0;
         timer_schedat_s  = get_uint32_value(requestValue, &pos);
         timer_period_s   = get_uint32_value(requestValue, &pos);
@@ -146,13 +146,13 @@ func get_timer_raw(addr0 int, addr1 int, addr2 int, retval char *) bool {
     return true;
 }
 
-func getset_timer(json const char *, tokens jsmntok_t *, num_tokens int, retval char *, set bool) bool {
-    int token = jsonfind(json, tokens, num_tokens, "name");
-    if (token > 1) {
+func getset_timer(json const char *, toks jsmntok_t *, num_toks int, retval char *, set bool) bool {
+    int tok = jsonfind(json, toks, num_toks, "name");
+    if (tok > 1) {
         {=# timers =}
-        if (jsoneq(json, &tokens[token], {= FROM_ROM =}({= TO_ROM =}("{= name =}")))) {
+        if (jsoneq(json, &toks[tok], {= FROM_ROM =}({= TO_ROM =}("{= name =}")))) {
             if (set) {
-                set_timer_raw(json, tokens, num_tokens, {= addr0 =}, {= addr1 =}, {= addr2 =});
+                set_timer_raw(json, toks, num_toks, {= addr0 =}, {= addr1 =}, {= addr2 =});
             }
             return get_timer_raw({= addr0 =}, {= addr1 =}, {= addr2 =}, retval);
         }

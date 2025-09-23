@@ -164,8 +164,8 @@ rule core{= core =} linkage_{= name =}_min <= {= get =}(linkage_{= name =}_type)
 {=/ linkages =}
 
 
-func set_linkage_raw(json const char *, tokens jsmntok_t *, num_tokens int, type uint8_t *, mode uint8_t *, min float *, max float *, force uint8_t *, addr0 int, addr1 int, addr2 int, addr3 int, addr4 int) void {
-    if (jsonlookup(json, tokens, num_tokens, {= FROM_ROM =}({= TO_ROM =}("data")), requestValue)) {
+func set_linkage_raw(json const char *, toks jsmntok_t *, num_toks int, type uint8_t *, mode uint8_t *, min float *, max float *, force uint8_t *, addr0 int, addr1 int, addr2 int, addr3 int, addr4 int) void {
+    if (jsonlookup(json, toks, num_toks, {= FROM_ROM =}({= TO_ROM =}("data")), requestValue)) {
         int pos = 0;
         *type  = (uint8_t)get_uint32_value(requestValue, &pos);
         *mode   = (uint8_t)get_uint32_value(requestValue, &pos);
@@ -189,13 +189,13 @@ func get_linkage_raw(type uint8_t, mode uint8_t, min float, max float, force int
     return true;
 }
 
-func getset_linkage(json const char *, tokens jsmntok_t *, num_tokens int, retval char *, set bool) bool {
-    int token = jsonfind(json, tokens, num_tokens, "name");
-    if (token > 1) {
+func getset_linkage(json const char *, toks jsmntok_t *, num_toks int, retval char *, set bool) bool {
+    int tok = jsonfind(json, toks, num_toks, "name");
+    if (tok > 1) {
         {=# linkages =}
-        if (jsoneq(json, &tokens[token], {= FROM_ROM =}({= TO_ROM =}("{= name =}")))) {
+        if (jsoneq(json, &toks[tok], {= FROM_ROM =}({= TO_ROM =}("{= name =}")))) {
             if (set) {
-                set_linkage_raw(json, tokens, num_tokens, &linkage_{= name =}_type, &linkage_{= name =}_mode, &linkage_{= name =}_min, &linkage_{= name =}_max, &linkage_{= name =}_force, {= addr_type =}, {= addr_mode =}, {= addr_min =}, {= addr_max =}, {= addr_force =});
+                set_linkage_raw(json, toks, num_toks, &linkage_{= name =}_type, &linkage_{= name =}_mode, &linkage_{= name =}_min, &linkage_{= name =}_max, &linkage_{= name =}_force, {= addr_type =}, {= addr_mode =}, {= addr_min =}, {= addr_max =}, {= addr_force =});
             }
             return get_linkage_raw(linkage_{= name =}_type, linkage_{= name =}_mode, linkage_{= name =}_min, linkage_{= name =}_max, linkage_{= name =}_force, retval);
         }
@@ -205,8 +205,8 @@ func getset_linkage(json const char *, tokens jsmntok_t *, num_tokens int, retva
 }
 
 {=# has_linkage =}
-func set_linkage(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
-    return getset_linkage(json, tokens, num_tokens, retval, true);
+func set_linkage(json const char *, toks jsmntok_t *, num_toks int, retval char *) bool {
+    return getset_linkage(json, toks, num_toks, retval, true);
 }
 
 command set_linkage {
@@ -266,8 +266,8 @@ command set_linkage {
   }
 }
 
-func get_linkage(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
-    return getset_linkage(json, tokens, num_tokens, retval, false);
+func get_linkage(json const char *, toks jsmntok_t *, num_toks int, retval char *) bool {
+    return getset_linkage(json, toks, num_toks, retval, false);
 }
 
 command get_linkage {

@@ -72,10 +72,10 @@ argJson :: Arg
 argJson = mkArg "json" "const char *"
 
 argTokens :: Arg
-argTokens = mkArg "tokens" "jsmntok_t *"
+argTokens = mkArg "toks" "jsmntok_t *"
 
 argNumToken :: Arg
-argNumToken = mkArg "num_tokens" "int"
+argNumToken = mkArg "num_toks" "int"
 
 argRetVal :: Arg
 argRetVal = mkArg "retval" "char *"
@@ -121,4 +121,4 @@ hasRetval :: Function -> Bool
 hasRetval = hasToken "retval" . (" " <>) . funcCode
 
 hasJson :: Function -> Bool
-hasJson = hasToken "tokens" . (" " <>) . funcCode
+hasJson = hasToken "toks" . (" " <>) . funcCode

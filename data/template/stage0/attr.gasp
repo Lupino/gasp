@@ -57,8 +57,8 @@ func set_attr_{= name =}_raw(unscaled_value {= type =}) void {
 }
 
 
-func set_attr_{= name =}(json const char *, tokens jsmntok_t *, num_tokens int, retval char *) bool {
-    if (jsonlookup(json, tokens, num_tokens, {= FROM_ROM =}({= TO_ROM =}("data")), requestValue)) {
+func set_attr_{= name =}(json const char *, toks jsmntok_t *, num_toks int, retval char *) bool {
+    if (jsonlookup(json, toks, num_toks, {= FROM_ROM =}({= TO_ROM =}("data")), requestValue)) {
         {=# is_float =}
         float tmp;
         bool r = prepare_float(&tmp, retval, requestValue, {= min =}, {= max =});

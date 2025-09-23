@@ -468,18 +468,18 @@ func incrLastPayloadId() {
 func processRequest(json const char *, length int, retval char *) bool {
     /* Prepare parser */
     jsmn_init(&requestJsmnParser);
-    int num_tokens = jsmn_parse(&requestJsmnParser, json, length, requestJsmnTokens, {= MAX_NUM_TOKENS =});
+    int num_toks = jsmn_parse(&requestJsmnParser, json, length, requestJsmnTokens, {= MAX_NUM_TOKENS =});
 
-    if (num_tokens < 0) {
-        sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"err\": \"Failed to parse JSON: %d\"}")), num_tokens);
+    if (num_toks < 0) {
+        sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"err\": \"Failed to parse JSON: %d\"}")), num_toks);
         return false;
     }
 
-    int token = jsonfind(json, requestJsmnTokens, num_tokens, "method");
+    int tok = jsonfind(json, requestJsmnTokens, num_toks, "method");
 
-    if (token > 1) {
+    if (tok > 1) {
         {=# commands =}
-        if (jsoneq(json, &requestJsmnTokens[token], {= FROM_ROM =}({= TO_ROM =}("{= name =}")))) {
+        if (jsoneq(json, &requestJsmnTokens[tok], {= FROM_ROM =}({= TO_ROM =}("{= name =}")))) {
             if ({= fn =}({=# argv =}{= name =}{=^ last =}, {=/ last =}{=/ argv =})) {
                 return true;
             } else {
