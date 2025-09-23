@@ -10,6 +10,26 @@ bin_{= name =} {= type =}
 bin_{= name =}[{= size =}] {= type =}
 {=/ only =}
 
+{=# is_string =}
+func bin_{= name =}_save(commit bool) {
+    for (int i = 0; i < bin_{= name =}.length() && i < {= length =} - 1; i++) {
+        {= STROAGE_WRITE =}({= addr =} + i, bin_{= name =}[i]);
+    }
+
+    if (commit) {
+        {= STROAGE_COMMIT =}();
+    }
+}
+
+func bin_{= name =}_read() {
+    for (int i = 0; i < {= length =}; i++) {
+        char c = {= STROAGE_READ =}({= addr =} + i);
+        if (c == 0) break;
+        bin_{= name =} += c;
+    }
+}
+{=/ is_string =}
+{=^ is_string =}
 func bin_{= name =}_save(commit bool) {
     {= STROAGE_PUT =}({= addr =}, bin_{= name =});
     if (commit) {
@@ -20,6 +40,7 @@ func bin_{= name =}_save(commit bool) {
 func bin_{= name =}_read() {
     {= STROAGE_GET =}({= addr =}, bin_{= name =});
 }
+{=/ is_string =}
 
 setup bin_{= name =}_read {
     bin_{= name =}_read();

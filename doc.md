@@ -45,8 +45,16 @@ Relpace able only the first one avaliable
 ## bin/str/struct
 
 ```
+# uint8_t
 bin binName size
+
+# chr
+chr strName size
+
+# String
 str strName size
+
+# struct
 struct type typeLen structName size
 ```
 

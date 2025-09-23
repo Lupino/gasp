@@ -13,11 +13,18 @@ bin' = do
   bn <- BinName <$> identifier
   Bin bn "uint8_t" 1 0 . fromIntegral <$> integer
 
+chr :: Parser Bin
+chr = do
+  reserved reservedNameChr
+  bn <- BinName <$> identifier
+  Bin bn "char" 1 0 . fromIntegral <$> integer
+
 str :: Parser Bin
 str = do
   reserved reservedNameStr
   bn <- BinName <$> identifier
-  Bin bn "char" 1 0 . fromIntegral <$> integer
+  strLen <- fromIntegral <$> integer
+  pure $ Bin bn "String" strLen 0 1
 
 struct :: Parser Bin
 struct = do
@@ -29,4 +36,4 @@ struct = do
 
 
 bin :: Parser Bin
-bin = bin' <|> struct <|> str
+bin = bin' <|> struct <|> chr <|> str

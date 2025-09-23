@@ -34,6 +34,7 @@ module Lexer
   , reservedNameIfNeq
   , reservedNameBin
   , reservedNameStr
+  , reservedNameChr
   , reservedNameStruct
 
   , braces
@@ -182,6 +183,9 @@ reservedNameBin = "bin"
 reservedNameStr :: String
 reservedNameStr = "str"
 
+reservedNameChr :: String
+reservedNameChr = "chr"
+
 reservedNameStruct :: String
 reservedNameStruct = "struct"
 
@@ -231,6 +235,7 @@ reservedNames =
     , reservedNameIfNeq
     , reservedNameBin
     , reservedNameStr
+    , reservedNameChr
     , reservedNameStruct
     -- * Data types
     , reservedNameBooleanTrue

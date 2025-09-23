@@ -21,11 +21,14 @@ data Bin = Bin
 
 instance ToJSON Bin where
   toJSON bin = object
-    [ "name" .= binName bin
-    , "type" .= binType bin
-    , "addr" .= binAddr bin
-    , "size" .= binSize bin
-    , "only" .= (binSize bin == 1)
+    [ "name"      .= binName bin
+    , "type"      .= binType bin
+    , "addr"      .= binAddr bin
+    , "size"      .= binSize bin
+    , "only"      .= (binSize bin == 1)
+    , "length"    .= binLen bin
+    , "total"     .= (binLen bin * binSize bin)
+    , "is_string" .= (binType bin == "String")
     ]
 
 instance Eq Bin where
