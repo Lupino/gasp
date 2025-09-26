@@ -125,6 +125,20 @@ func close_gpio_{= name =}() void {
     digitalWrite({= pin =}, gpio_{= name =}_state);
 }
 
+func soft_open_gpio_{= name =}() void {
+    if (gpio_{= name =}_state == {= open =}) {
+        return;
+    }
+    open_gpio_{= name =}();
+}
+
+func soft_close_gpio_{= name =}() void {
+    if (gpio_{= name =}_state == {= close =}) {
+        return;
+    }
+    close_gpio_{= name =}();
+}
+
 func toggle_gpio_{= name =}() void {
     if (gpio_{= name =}_state == {= open =}) {
         close_gpio_{= name =}();

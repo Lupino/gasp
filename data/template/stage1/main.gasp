@@ -7,3 +7,4 @@ require ./gpio
 require ./utils
 require ./stroage
 require ./debug
+require ./request

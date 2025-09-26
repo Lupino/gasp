@@ -1,0 +1,132 @@
+import <PubSubClient.h> https://github.com/knolleary/pubsubclient.git
+
+MQTT_PUBLISH = client.publish
+
+MQTT_CLIENT_ID = mqtt_client_id.c_str()
+MQTT_USER = mqtt_user.c_str()
+MQTT_PASSWD = mqtt_passwd.c_str()
+
+// MQTT Topics
+topic_request const char* = "/request/+"
+topic_pong const char* = "/request/+"
+topic_response const char* = "/response/"
+topic_ping const char* = "/ping"
+
+// Last Will and Testament configuration
+lwt_topic const char* = "/attributes"
+lwt_message const char* = "{\"state\": \"offline\"}"
+online_message const char* = "{\"state\": \"online\"}"
+lwt_qos const int = 1
+lwt_retain const boolean = true
+lwt_telemetry const char* = "/telemetry"
+
+// Timing variables
+lastReconnectAttempt unsigned long = 0;
+reconnectInterval const unsigned long = 5000;  // 5 seconds
+
+// Connection status
+mqttConnected bool = false;
+
+func getLastPart(input String) String {
+  int lastIndex = input.lastIndexOf('/');
+  if (lastIndex == -1) {
+    return input; // No '/' found, return original string
+  }
+  return input.substring(lastIndex + 1);
+}
+
+
+func onMqttMessage(topic char*, payload byte*, length unsigned int) void {
+{{={= =}=}}
+    {=# has_debug =}
+    DEBUG_SERIAL.print("Message received [");
+    DEBUG_SERIAL.print(topic);
+    DEBUG_SERIAL.print("]: ");
+
+    DEBUG_PRINT_HEX(payload, length);
+    {=/ has_debug =}
+
+    wantSendData[0] = '\0';
+    handleRequest((const char *)payload, length, wantSendData);
+    String reqId = getLastPart(String(topic));
+    {= MQTT_PUBLISH =}((String(topic_response) + reqId).c_str(), wantSendData);
+}
+
+func send_packet_1(type const uint8_t, data_ const char *, length const int) void {
+{{={= =}=}}
+    if (type == ATTRIBUTE) {
+        {= MQTT_PUBLISH =}(lwt_topic, data_, true);
+    }
+    if (type == TELEMETRY) {
+        {= MQTT_PUBLISH =}(lwt_telemetry, data_);
+    }
+}
+
+func mqttConnect(_client PubSubClient&, client_id const char *, user const char *, passwd const char *) bool {
+{{={= =}=}}
+    unsigned long now = get_cache_time_ms();
+    if (now - lastReconnectAttempt < reconnectInterval) {
+        return false; // Too soon to retry
+    }
+
+    lastReconnectAttempt = now;
+    {=# has_debug =}
+    DEBUG_SERIAL.print("Attempting MQTT connection...");
+    {=/ has_debug =}
+    // Attempt to connect
+    bool connected = _client.connect(client_id, user, passwd, lwt_topic, lwt_qos, lwt_retain, lwt_message);
+
+    if (connected) {
+        {=# has_debug =}
+        DEBUG_SERIAL.println(" connected!");
+        {=/ has_debug =}
+        // Subscribe to topics
+        _client.subscribe(topic_request);
+        {=# has_debug =}
+        DEBUG_SERIAL.print("Subscribed to: ");
+        DEBUG_SERIAL.println(topic_request);
+        {=/ has_debug =}
+
+        // Publish connection status
+        _client.publish(lwt_topic, online_message, lwt_retain);
+    } else {
+        {=# has_debug =}
+        DEBUG_SERIAL.print(" failed, rc=");
+        DEBUG_SERIAL.print(_client.state());
+        DEBUG_SERIAL.println(" retrying in 5 seconds");
+        {=/ has_debug =}
+    }
+
+    return connected;
+}
+
+func mqttSetup(_client PubSubClient&, mqtt_server const char *, mqtt_port uint32_t) void {
+    // Initialize MQTT
+    _client.setServer(mqtt_server, mqtt_port);
+    _client.setCallback(onMqttMessage);
+
+    // Set keepalive and socket timeout for better reliability
+    _client.setKeepAlive(60);
+    _client.setSocketTimeout(30);
+}
+
+func connectToMqtt(_client PubSubClient&) void {
+{{={= =}=}}
+    if (_client.connected()) {
+        mqttConnected = true;
+        return; // Already connected
+    }
+
+    mqttConnected = mqttConnect(_client, {= MQTT_CLIENT_ID =}, {= MQTT_USER =}, {= MQTT_PASSWD =});
+}
+
+func mqttLoop(_client PubSubClient&) void {
+{{={= =}=}}
+    if (!_client.connected()) {
+        mqttConnected = false;
+        connectToMqtt(_client);
+    } else {
+        _client.loop(); // Process MQTT messages
+        reportLoop();
+    }
+}

@@ -1,0 +1,98 @@
+{{={= =}=}}
+
+{=# has_app =}
+import <jsmn.h> https://github.com/zserge/jsmn.git
+{=/ has_app =}
+
+requestJsmnParser jsmn_parser
+requestJsmnTokens[{= MAX_NUM_TOKENS =}] jsmntok_t
+requestValue[MAX_REQUEST_VALUE_LENGTH] char
+wantSendData[MAX_BUFFER_LENGTH] char
+tempSendData[MAX_TMPL_LENGTH] char
+wantSendDataTpl[MAX_TMPL_LENGTH] char
+
+metric_timer_ms unsigned long = 0
+requireReportAttribute bool = true
+requireReportMetric bool = true
+
+func handleRequest(json const char *, length int, retval char *) void {
+    bool ret = processRequest(json, length, retval);
+    if (retval[0] == '\0') {
+        if (ret) {
+            sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"result\": \"OK\"}")));
+        } else {
+            sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"err\": \"not support\"}")));
+        }
+    }
+}
+
+func processRequest(json const char *, length int, retval char *) bool {
+    /* Prepare parser */
+    jsmn_init(&requestJsmnParser);
+    int num_toks = jsmn_parse(&requestJsmnParser, json, length, requestJsmnTokens, {= MAX_NUM_TOKENS =});
+
+    if (num_toks < 0) {
+        sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"err\": \"Failed to parse JSON: %d\"}")), num_toks);
+        return false;
+    }
+
+    int tok = jsonfind(json, requestJsmnTokens, num_toks, "method");
+
+    if (tok > 1) {
+        {=# commands =}
+        if (jsoneq(json, &requestJsmnTokens[tok], {= FROM_ROM =}({= TO_ROM =}("{= name =}")))) {
+            if ({= fn =}({=# argv =}{= name =}{=^ last =}, {=/ last =}{=/ argv =})) {
+                return true;
+            } else {
+                {=# error =}
+                sprintf(retval, {= FROM_ROM =}({= TO_ROM =}("{\"err\": \"{= error =}\"}")));
+                {=/ error =}
+                return false;
+            }
+        }
+        {=/ commands =}
+    }
+    return false;
+}
+
+
+func reportLoop() bool {
+    {=# low_memory =}
+    if (!reportAttribute()) {
+        return true;
+    }
+
+    {=# has_metric =}
+    if (reportMetric()) {
+        if (metric_timer_ms + {= METRIC_DELAY_MS =} < get_cache_time_ms()) {
+            setReportMetricAll();
+        }
+    } else {
+        metric_timer_ms = get_cache_time_ms();
+        return true;
+    }
+
+    {=/ has_metric =}
+    {=/ low_memory =}
+    {=^ low_memory =}
+    if (reportAttribute(requireReportAttribute)) {
+        requireReportAttribute = false;
+        return true;
+    }
+
+    {=# has_metric =}
+    if (metric_timer_ms + {= METRIC_DELAY_MS =} < get_cache_time_ms()) {
+        requireReportMetric = true;
+    }
+
+    if (reportMetric(requireReportMetric)) {
+        metric_timer_ms = get_cache_time_ms();
+        requireReportMetric = false;
+        return true;
+    }
+
+    {=/ has_metric =}
+    {=/ low_memory =}
+
+    return false;
+}

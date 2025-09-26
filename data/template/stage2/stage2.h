@@ -35,7 +35,7 @@ extern "C" {
 {=/ vars =}
 
 {=# functions =}
-{= type =} {= name =}({=# argv =}{= type =} {= name =}{=^ last =}, {=/ last =}{=/ argv =});
+{=& type =} {= name =}({=# argv =}{=& type =} {= name =}{=^ last =}, {=/ last =}{=/ argv =});
 {=/ functions =}
 
 
