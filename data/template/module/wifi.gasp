@@ -1,0 +1,41 @@
+import <WiFi.h>
+
+wifiConnected bool = false
+
+func onWifiBegined() {
+}
+
+WIFI_DELAY = delay
+
+func connectToWiFi(ssid String, password String, max_attempts int) bool {
+{{={= =}=}}
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid.c_str(), password.c_str());
+
+    onWifiBegined();
+
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < max_attempts) {
+      {= WIFI_DELAY =}(500);
+      {=# has_debug =}
+      DEBUG_SERIAL.print(".");
+      {=/ has_debug =}
+      attempts++;
+    }
+
+    checkWifiStatus();
+    return wifiConnected;
+}
+
+func checkWifiStatus() {
+    wifiConnected = WiFi.status() == WL_CONNECTED;
+}
+
+every checkWifiStatus 60000
+
+
+func wifiLoop(ssid String, password String, max_attempts int) {
+    if (!wifiConnected) {
+        connectToWiFi(ssid, password, max_attempts);
+    }
+}

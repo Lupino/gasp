@@ -1,0 +1,256 @@
+import <WiFi.h>
+import <WebServer.h>
+import <DNSServer.h>
+
+require ./wifi
+
+// Web server and DNS for captive portal
+softApServer(80) WebServer
+dnsServer DNSServer
+
+func startSoftAp(ssid String, passwd String) {
+{{={= =}=}}
+    // Start SoftAP
+    WiFi.mode(WIFI_AP);
+    WiFi.softAP(ssid, passwd);
+
+    {=# has_debug =}
+    DEBUG_SERIAL.print("AP IP address: ");
+    DEBUG_SERIAL.println(WiFi.softAPIP());
+    DEBUG_SERIAL.println("Connect to WiFi: " + String(bin_ap_ssid));
+    DEBUG_SERIAL.println("Password: " + String(passwd));
+    DEBUG_SERIAL.println("Open browser and go to: 192.168.4.1");
+    {=/ has_debug =}
+
+    // Start DNS server for captive portal
+    dnsServer.start(53, "*", WiFi.softAPIP());
+
+    // Setup web server routes
+    setupSoftApWebServer();
+    onSoftApServerSetup();
+    softApServer.begin();
+}
+
+func setupSoftApWebServer() void {
+    // Captive portal - redirect all requests to config page
+    softApServer.onNotFound(handleRoot);
+
+    // Configuration page
+    softApServer.on("/", handleRoot);
+    softApServer.on("/config", HTTP_POST, handleConfig);
+    softApServer.on("/scan", handleScan);
+    softApServer.on("/reset", handleReset);
+}
+
+func handleRoot() void  {
+    String html = R"(
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WiFi 配置</title>
+     <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <style>
+        body { font-family: Arial; margin: 20px; background: #f0f0f0; }
+        .container { max-width: 400px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center; }
+        input[type='text'], input[type='password'], select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { background: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin: 5px 0; }
+        button:hover { background: #0056b3; }
+        .scan-btn { background: #28a745; }
+        .scan-btn:hover { background: #218838; }
+        .reset-btn { background: #dc3545; }
+        .reset-btn:hover { background: #c82333; }
+        .networks { margin: 10px 0; }
+        .network { padding: 8px; margin: 5px 0; background: #f8f9fa; border-radius: 3px; cursor: pointer; }
+        .network:hover { background: #e9ecef; }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <h1>🛜 WiFi 配置</h1>
+
+        <button class='scan-btn' onclick='scanNetworks()'>📡 扫描网络</button>
+        <div id='networks' class='networks'></div>
+
+        <form action='/config' method='POST'>
+            <label>WiFi 名称:</label>
+            <input type='text' id='ssid' name='ssid' placeholder='输入 WiFi 名称' required>
+
+            <label>密码:</label>
+            <input type='password' name='password' placeholder='输入 WiFi 密码'>
+
+            <button type='submit'>💾 保存并连接</button>
+        </form>
+
+        <button class='reset-btn' onclick='resetConfig()'>🗑️ 重置配置</button>
+
+        <div id='status' style='margin-top: 20px; text-align: center;'></div>
+    </div>
+
+    <script>
+        function scanNetworks() {
+            document.getElementById('status').innerHTML = '正在扫描...';
+            fetch('/scan')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('networks').innerHTML = data;
+                    document.getElementById('status').innerHTML = '扫描结束';
+                })
+                .catch(error => {
+                    document.getElementById('status').innerHTML = '扫描失败';
+                });
+        }
+
+        function selectNetwork(ssid) {
+            document.getElementById('ssid').value = ssid;
+        }
+
+        function resetConfig() {
+            if (confirm('确定重置 WiFi 配置?')) {
+                fetch('/reset', {method: 'POST'})
+                    .then(() => {
+                        document.getElementById('status').innerHTML = '配置已重置! 设备重启中...';
+                        setTimeout(() => location.reload(), 3000);
+                    });
+            }
+        }
+    </script>
+</body>
+</html>
+)";
+
+    softApServer.send(200, "text/html", html);
+}
+
+func handleScan() void {
+{{={= =}=}}
+    {=# has_debug =}
+    DEBUG_SERIAL.println("Scanning for WiFi networks...");
+    {=/ has_debug =}
+    int n = WiFi.scanNetworks();
+
+    String networks = "";
+    for (int i = 0; i < n; i++) {
+        String security = (WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? "🔓" : "🔒";
+        int rssi = WiFi.RSSI(i);
+        String signal = "";
+        if (rssi > -50) signal = "📶📶📶📶";
+        else if (rssi > -60) signal = "📶📶📶";
+        else if (rssi > -70) signal = "📶📶";
+        else signal = "📶";
+
+        networks += "<div class='network' onclick='selectNetwork(\"" + String(WiFi.SSID(i)) + "\")'>";
+        networks += security + " " + String(WiFi.SSID(i)) + " " + signal;
+        networks += "</div>";
+    }
+
+    if (n == 0) {
+        networks = "<div class='network'>无可用网络</div>";
+    }
+
+    softApServer.send(200, "text/html", networks);
+}
+
+func handleConfig() void {
+{{={= =}=}}
+    String ssid = softApServer.arg("ssid");
+    String password = softApServer.arg("password");
+    {=# has_debug =}
+
+    DEBUG_SERIAL.println("Received WiFi configuration:");
+    DEBUG_SERIAL.println("SSID: " + ssid);
+    DEBUG_SERIAL.println("Password: " + password);
+    {=/ has_debug =}
+
+    if (ssid.length() > 0) {
+        String response = R"(
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WiFi 配置</title>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <style>
+        body { font-family: Arial; margin: 20px; background: #f0f0f0; text-align: center; }
+        .container { max-width: 400px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .success { color: #28a745; }
+        .loading { color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <h1 class='success'>✅ 配置保存成功!</h1>
+        <p class='loading'>设备正在连接 WiFi 网络...</p>
+        <p>设备将自动重启.</p>
+        <p>如果连接失败, 重启后设备将自动进入配置模式.</p>
+    </div>
+    <script>
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 10000);
+    </script>
+</body>
+</html>
+)";
+
+        softApServer.send(200, "text/html", response);
+
+        // Save credentials to EEPROM
+        onSoftApConfig(ssid, password);
+
+        // Attempt connection with new credentials
+        attemptWiFiConnection(ssid, password);
+
+    } else {
+        softApServer.send(400, "text/plain", "WiFi 名称不能为空");
+    }
+}
+
+func handleReset() void {
+{{={= =}=}}
+    {=# has_debug =}
+    DEBUG_SERIAL.println("Resetting WiFi configuration...");
+    {=/ has_debug =}
+    softApServer.send(200, "text/plain", "配置已重置");
+    onSoftApReset(true);
+}
+
+func attemptWiFiConnection(ssid String, password String) void {
+{{={= =}=}}
+    {=# has_debug =}
+    DEBUG_SERIAL.println("Attempting to connect with new credentials...");
+    {=/ has_debug =}
+
+    connectToWiFi(ssid, password, 40);
+
+    if (WiFi.status() == WL_CONNECTED) {
+        {=# has_debug =}
+        DEBUG_SERIAL.println();
+        DEBUG_SERIAL.println("WiFi connected successfully!");
+        DEBUG_SERIAL.print("IP address: ");
+        DEBUG_SERIAL.println(WiFi.localIP());
+        {=/ has_debug =}
+        onSoftApFinished();
+
+        // Stop SoftAP and DNS server
+        dnsServer.stop();
+        softApServer.stop();
+        WiFi.softAPdisconnect(true);
+    } else {
+        {=# has_debug =}
+        DEBUG_SERIAL.println();
+        DEBUG_SERIAL.println("Failed to connect. Restarting configuration mode...");
+        {=/ has_debug =}
+        onSoftApReset(false);
+    }
+}
+
+func softApLoop() {
+{{={= =}=}}
+    // Handle DNS requests for captive portal
+    dnsServer.processNextRequest();
+
+    // Handle web server requests
+    softApServer.handleClient();
+}

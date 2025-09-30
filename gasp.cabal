@@ -25,7 +25,10 @@ data-files:
     template/module/gl_serial.gasp
     template/module/memory.gasp
     template/module/modbus.gasp
+    template/module/mqtt.gasp
+    template/module/softap.gasp
     template/module/switch.gasp
+    template/module/wifi.gasp
     template/stage0/attr.gasp
     template/stage0/bin.gasp
     template/stage0/linkage.gasp
@@ -41,6 +44,7 @@ data-files:
     template/stage1/givelink_module.gasp
     template/stage1/gpio.gasp
     template/stage1/main.gasp
+    template/stage1/request.gasp
     template/stage1/rule.gasp
     template/stage1/stroage.gasp
     template/stage1/utils.gasp
