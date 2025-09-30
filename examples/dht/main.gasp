@@ -84,6 +84,10 @@ loop mqtt_main {
     }
 }
 
+gpio work LED_BUILTIN
+
+every toggle_gpio_work 1000 on mqttConnected
+
 require module/mqtt
 require module/delay
 require module/wifi
