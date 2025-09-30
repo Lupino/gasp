@@ -45,7 +45,11 @@ func onMqttMessage(topic char*, payload byte*, length unsigned int) void {
 
     DEBUG_PRINT_HEX(payload, length);
     {=/ has_debug =}
+    onRequest(topic, payload, length);
+}
 
+func onRequest(topic char*, payload byte*, length unsigned int) {
+{{={= =}=}}
     wantSendData[0] = '\0';
     handleRequest((const char *)payload, length, wantSendData);
     String reqId = getLastPart(String(topic));
@@ -60,6 +64,10 @@ func send_packet_1(type const uint8_t, data_ const char *, length const int) voi
     if (type == TELEMETRY) {
         {= MQTT_PUBLISH =}(lwt_telemetry, data_);
     }
+}
+
+func onMqttConnected(_client PubSubClient&) void {
+
 }
 
 func mqttConnect(_client PubSubClient&, client_id const char *, user const char *, passwd const char *) bool {
@@ -80,6 +88,7 @@ func mqttConnect(_client PubSubClient&, client_id const char *, user const char 
         {=# has_debug =}
         DEBUG_SERIAL.println(" connected!");
         {=/ has_debug =}
+        onMqttConnected(_client);
         // Subscribe to topics
         _client.subscribe(topic_request);
         {=# has_debug =}
