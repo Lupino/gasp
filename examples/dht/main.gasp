@@ -1,26 +1,36 @@
 app dht {
-  key: "bdde6db9f3daf38f3a",
-  token: "14b61d617a9c428a95542dbd097d7a0e"
+   key: "00"
 }
 
-require module/gl_serial
+// flag has_debug true
 
-GL_SERIAL = Serial
+mqtt_client_id String = "dht-demo"
+mqtt_server String = "iot.huabot.com"
+mqtt_port uint32_t = 11883
+mqtt_user String = "7b8b7d6b"
+mqtt_passwd String = "9078e75046b5403db28976f20d3fb9e4"
+saved_ssid String = "givecloud"
+saved_password String = "gewuyun@520"
+// saved_ssid String = "SSENSS"
+// saved_password String = "ssenss@kazuo"
+
 DEBUG_SERIAL = Serial
-METRIC_DELAY_MS = attr_delay
 
-setup gl_serial_setup {
-    GL_SERIAL.begin(115200);
-    while (!GL_SERIAL) {;}
+setup a_debug_serial {
+{{={= =}=}}
+    {=# has_debug =}
+    DEBUG_SERIAL.begin(9600);
+    {=/ has_debug =}
 }
 
 
 DHTPIN = 9     // what digital pin we're connected to
 // Uncomment whatever type you're using!
-DHTTYPE = DHT11   // DHT 11
+DHTTYPE = DHT12   // DHT 11
 // DHTTYPE = DHT22   // DHT 22  (AM2302), AM2321
 // DHTTYPE = DHT21   // DHT 21 (AM2301)
 
+import <Adafruit_Sensor.h> https://github.com/adafruit/Adafruit_Sensor.git
 import <DHT.h> https://github.com/adafruit/DHT-sensor-library.git
 dht(DHTPIN, DHTTYPE) DHT
 
@@ -33,14 +43,6 @@ func read_temp {
     // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
     metric_humidity = dht.readHumidity();
     metric_temperature = dht.readTemperature();
-}
-
-attr delay {
-  type: unsigned long,
-  default: 300,
-  min: 60,
-  max: 86400,
-  scale: 1000
 }
 
 metric temperature {
@@ -64,3 +66,24 @@ metric humidity {
 }
 
 every read_temp 6000
+
+loop wifi_loop {
+    wifiLoop(saved_ssid, saved_password, 20);
+}
+
+espClient WiFiClient
+client(espClient) PubSubClient
+
+setup d_mqtt {
+    mqttSetup(client, mqtt_server.c_str(), mqtt_port);
+}
+
+loop mqtt_main {
+    if (wifiConnected) {
+        mqttLoop(client);
+    }
+}
+
+require module/mqtt
+require module/delay
+require module/wifi
