@@ -16,6 +16,8 @@ func bin_{= name =}_save(commit bool) {
         {= STROAGE_WRITE =}({= addr =} + i, bin_{= name =}[i]);
     }
 
+    {= STROAGE_WRITE =}({= addr =} + bin_{= name =}.length(), 0x00);
+
     if (commit) {
         {= STROAGE_COMMIT =}();
     }
